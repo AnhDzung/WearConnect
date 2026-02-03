@@ -5,99 +5,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WearConnect - Đăng Nhập</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-styles.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary-gradient);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: var(--spacing-lg);
         }
         
         .login-container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
             width: 100%;
             max-width: 450px;
-            padding: 40px;
+            padding: var(--spacing-4xl);
         }
         
         .login-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: var(--spacing-3xl);
         }
         
         .login-header h1 {
-            font-size: 32px;
-            color: #333;
-            margin-bottom: 10px;
+            font-size: var(--font-size-3xl);
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-md);
         }
         
         .login-header p {
-            color: #666;
-            font-size: 14px;
+            color: var(--gray-600);
+            font-size: var(--font-size-base);
         }
         
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-        
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 5px rgba(102, 126, 234, 0.1);
+        @media (max-width: 480px) {
+            .login-container {
+                padding: var(--spacing-2xl);
+            }
+            .login-header h1 {
+                font-size: 24px;
+            }
         }
         
         .error-message {
-            background-color: #fee;
-            color: #c33;
-            padding: 12px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            border-left: 4px solid #c33;
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-xl);
+            font-size: var(--font-size-base);
+            border-left: 4px solid var(--danger-color);
         }
         
         .btn-login {
             width: 100%;
-            padding: 12px;
-            background-color: #667eea;
+            padding: var(--spacing-md);
+            background: var(--primary-gradient);
             color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 16px;
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-lg);
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all var(--transition-base);
+            min-height: 44px;
         }
         
         .btn-login:hover {
-            background-color: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
         }
         
         .register-link {
@@ -156,14 +135,14 @@
         <% } %>
         
         <form method="POST" action="<%= request.getContextPath() %>/login">
-            <div class="form-group">
-                <label for="username">Tên đăng nhập:</label>
-                <input type="text" id="username" name="username" required>
+            <div class="wc-form-group">
+                <label for="username" class="wc-form-label">Tên đăng nhập:</label>
+                <input type="text" id="username" name="username" class="wc-form-input" required>
             </div>
             
-            <div class="form-group">
-                <label for="password">Mật khẩu:</label>
-                <input type="password" id="password" name="password" required>
+            <div class="wc-form-group">
+                <label for="password" class="wc-form-label">Mật khẩu:</label>
+                <input type="password" id="password" name="password" class="wc-form-input" required>
             </div>
             
             <button type="submit" class="btn-login">Đăng Nhập</button>

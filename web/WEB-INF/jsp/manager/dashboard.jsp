@@ -8,17 +8,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - WearConnect Manager</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
+            background-color: var(--gray-100);
             min-height: 100vh;
         }
         
@@ -86,16 +80,22 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: var(--spacing-xl);
+            margin-bottom: var(--spacing-3xl);
         }
         
         .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-left: 4px solid #667eea;
+            background: var(--white);
+            padding: var(--spacing-2xl);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        @media (max-width: 639px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
         .stat-card.revenue {

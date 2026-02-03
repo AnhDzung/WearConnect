@@ -177,9 +177,9 @@
             <!-- Menu cho Admin -->
             <% if ("Admin".equals(userRole)) { %>
                 <li><a href="${pageContext.request.contextPath}/">🏠 Trang Chủ</a></li>
-                <li><a href="${pageContext.request.contextPath}/admin">👥 Người Dùng</a></li>
-                <li><a href="${pageContext.request.contextPath}/admin?action=orders">📦 Đơn Hàng</a></li>
-                <li><a href="${pageContext.request.contextPath}/admin?action=statistics">📊 Thống Kê</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin"> Người Dùng</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin?action=orders">Đơn Hàng</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin?action=statistics">Thống Kê</a></li>
             <% } %>
             
             <!-- User Info -->
@@ -189,15 +189,15 @@
                         <div class="header-user-name">
                             <% if ("Manager".equals(userRole)) { %>
                                 <a href="${pageContext.request.contextPath}/manager?action=profile" style="color: white; text-decoration: none;">
-                                    👤 <%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %>
+                                    <%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %>
                                 </a>
                             <% } else { %>
                                 <a href="${pageContext.request.contextPath}/user?action=profile" style="color: white; text-decoration: none;">
-                                    👤 <%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %>
+                                    <%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %>
                                 </a>
                             <% } %>
                         </div>
-                        <a href="${pageContext.request.contextPath}/logout" class="logout-btn">🚪 Đăng Xuất</a>
+                        <a href="${pageContext.request.contextPath}/logout" class="logout-btn"> Đăng Xuất</a>
                     </div>
                 </li>
             <% } else { %>

@@ -5,75 +5,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WearConnect - Đăng Ký</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-styles.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary-gradient);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: var(--spacing-lg);
         }
         
         .register-container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
             width: 100%;
             max-width: 500px;
-            padding: 40px;
+            padding: var(--spacing-4xl);
         }
         
         .register-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: var(--spacing-3xl);
         }
         
         .register-header h1 {
-            font-size: 32px;
-            color: #333;
-            margin-bottom: 10px;
+            font-size: var(--font-size-3xl);
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-md);
         }
         
         .register-header p {
-            color: #666;
-            font-size: 14px;
+            color: var(--gray-600);
+            font-size: var(--font-size-base);
         }
         
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 5px rgba(102, 126, 234, 0.1);
+        @media (max-width: 480px) {
+            .register-container {
+                padding: var(--spacing-2xl);
+            }
+            .register-header h1 {
+                font-size: 24px;
+            }
         }
         
         .error-message {
