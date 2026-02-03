@@ -165,9 +165,9 @@
         
         <div class="menu-container">
             <nav style="margin-bottom: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                <a href="${pageContext.request.contextPath}/user" style="padding: 12px 24px; background-color: #cc3399; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#b8278a'" onmouseout="this.style.backgroundColor='#cc3399'">📊 Dashboard</a>
-                <a href="${pageContext.request.contextPath}/user?action=rentalHistory" style="padding: 12px 24px; background-color: #ff69b4; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#ff3fa0'" onmouseout="this.style.backgroundColor='#ff69b4'">📜 Lịch Sử Thuê</a>
-                <a href="${pageContext.request.contextPath}/user?action=favorites" style="padding: 12px 24px; background-color: #ff1493; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#e60a7e'" onmouseout="this.style.backgroundColor='#ff1493'">❤️ Sản Phẩm Yêu Thích</a>
+                <a href="${pageContext.request.contextPath}/user" style="padding: 12px 24px; background-color: #cc3399; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#b8278a'" onmouseout="this.style.backgroundColor='#cc3399'"> Dashboard</a>
+                <a href="${pageContext.request.contextPath}/user?action=rentalHistory" style="padding: 12px 24px; background-color: #ff69b4; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#ff3fa0'" onmouseout="this.style.backgroundColor='#ff69b4'"> Lịch Sử Thuê</a>
+                <a href="${pageContext.request.contextPath}/user?action=favorites" style="padding: 12px 24px; background-color: #ff1493; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#e60a7e'" onmouseout="this.style.backgroundColor='#ff1493'"> Sản Phẩm Yêu Thích</a>
             </nav>
         </div>
         
