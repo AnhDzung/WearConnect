@@ -411,5 +411,6 @@
             '<div class="empty-state"><p>Chưa có dữ liệu doanh thu</p></div>';
     }
 </script>
+<jsp:include page="/WEB-INF/jsp/components/footer.jsp" />
 </body>
 </html>

@@ -181,5 +181,6 @@
         displayStars('avgRating', Math.round(${avgRating}));
     </script>
 </div>
+<jsp:include page="/WEB-INF/jsp/components/footer.jsp" />
 </body>
 </html>

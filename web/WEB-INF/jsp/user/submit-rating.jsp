@@ -46,7 +46,7 @@
         <button type="button" onclick="history.back()">Quay lại</button>
     </form>
 </div>
-
+<jsp:include page="/WEB-INF/jsp/components/footer.jsp" />
 <script>
     function setRating(stars) {
         document.getElementById('rating').value = stars;
