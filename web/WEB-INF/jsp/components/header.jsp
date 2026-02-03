@@ -137,25 +137,36 @@
 
 <header class="wearconnect-header">
     <div class="header-container">
-        <!-- Logo -->
-        <a href="${pageContext.request.contextPath}/" class="header-logo">
+        <!-- Logo with Dynamic Navigation Based on Role -->
+        <%
+            String userRole = (String) session.getAttribute("userRole");
+            String logoHref = request.getContextPath() + "/";
+            String username = "";
+            String fullName = "";
+            Object account = session.getAttribute("account");
+            if (account != null) {
+                Model.Account acc = (Model.Account) account;
+                username = acc.getUsername();
+                fullName = acc.getFullName();
+            }
+            
+            // Determine logo link based on role
+            if ("User".equals(userRole)) {
+                logoHref = request.getContextPath() + "/home";
+            } else if ("Manager".equals(userRole)) {
+                logoHref = request.getContextPath() + "/manager";
+            } else if ("Admin".equals(userRole)) {
+                logoHref = request.getContextPath() + "/admin";
+            }
+        %>
+        
+        <a href="<%= logoHref %>" class="header-logo">
             <img class="logo-img" src="${pageContext.request.contextPath}/assets/images/wear-connect-logo.png" alt="Wear Connect logo">
             <span class="brand-name">Wear Connect</span>
         </a>
         
         <!-- Navigation Menu -->
         <ul class="header-nav">
-            <%
-                String userRole = (String) session.getAttribute("userRole");
-                String username = "";
-                String fullName = "";
-                Object account = session.getAttribute("account");
-                if (account != null) {
-                    Model.Account acc = (Model.Account) account;
-                    username = acc.getUsername();
-                    fullName = acc.getFullName();
-                }
-            %>
             
             <!-- Menu cho User -->
             <% if ("User".equals(userRole)) { %>

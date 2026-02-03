@@ -6,16 +6,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WearConnect - User Dashboard</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-styles.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
+            background-color: var(--gray-100);
             min-height: 100vh;
         }
         
@@ -83,23 +77,32 @@
         .menu-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
+            gap: var(--spacing-xl);
+            margin-bottom: var(--spacing-4xl);
         }
         
         .menu-card {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-3xl);
             text-align: center;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-md);
             cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: all var(--transition-base);
         }
         
         .menu-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        @media (max-width: 639px) {
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+            .menu-card {
+                padding: var(--spacing-xl);
+            }
         }
         
         .menu-card .icon {
@@ -162,9 +165,9 @@
         
         <div class="menu-container">
             <nav style="margin-bottom: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                <a href="${pageContext.request.contextPath}/user" style="padding: 12px 24px; background-color: #cc3399; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#b8278a'" onmouseout="this.style.backgroundColor='#cc3399'">📊 Dashboard</a>
-                <a href="${pageContext.request.contextPath}/user?action=rentalHistory" style="padding: 12px 24px; background-color: #ff69b4; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#ff3fa0'" onmouseout="this.style.backgroundColor='#ff69b4'">📜 Lịch Sử Thuê</a>
-                <a href="${pageContext.request.contextPath}/user?action=favorites" style="padding: 12px 24px; background-color: #ff1493; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#e60a7e'" onmouseout="this.style.backgroundColor='#ff1493'">❤️ Sản Phẩm Yêu Thích</a>
+                <a href="${pageContext.request.contextPath}/user" style="padding: 12px 24px; background-color: #cc3399; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#b8278a'" onmouseout="this.style.backgroundColor='#cc3399'"> Dashboard</a>
+                <a href="${pageContext.request.contextPath}/user?action=rentalHistory" style="padding: 12px 24px; background-color: #ff69b4; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#ff3fa0'" onmouseout="this.style.backgroundColor='#ff69b4'"> Lịch Sử Thuê</a>
+                <a href="${pageContext.request.contextPath}/user?action=favorites" style="padding: 12px 24px; background-color: #ff1493; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#e60a7e'" onmouseout="this.style.backgroundColor='#ff1493'"> Sản Phẩm Yêu Thích</a>
             </nav>
         </div>
         

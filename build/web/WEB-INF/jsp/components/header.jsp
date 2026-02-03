@@ -137,25 +137,36 @@
 
 <header class="wearconnect-header">
     <div class="header-container">
-        <!-- Logo -->
-        <a href="${pageContext.request.contextPath}/" class="header-logo">
+        <!-- Logo with Dynamic Navigation Based on Role -->
+        <%
+            String userRole = (String) session.getAttribute("userRole");
+            String logoHref = request.getContextPath() + "/";
+            String username = "";
+            String fullName = "";
+            Object account = session.getAttribute("account");
+            if (account != null) {
+                Model.Account acc = (Model.Account) account;
+                username = acc.getUsername();
+                fullName = acc.getFullName();
+            }
+            
+            // Determine logo link based on role
+            if ("User".equals(userRole)) {
+                logoHref = request.getContextPath() + "/home";
+            } else if ("Manager".equals(userRole)) {
+                logoHref = request.getContextPath() + "/manager";
+            } else if ("Admin".equals(userRole)) {
+                logoHref = request.getContextPath() + "/admin";
+            }
+        %>
+        
+        <a href="<%= logoHref %>" class="header-logo">
             <img class="logo-img" src="${pageContext.request.contextPath}/assets/images/wear-connect-logo.png" alt="Wear Connect logo">
             <span class="brand-name">Wear Connect</span>
         </a>
         
         <!-- Navigation Menu -->
         <ul class="header-nav">
-            <%
-                String userRole = (String) session.getAttribute("userRole");
-                String username = "";
-                String fullName = "";
-                Object account = session.getAttribute("account");
-                if (account != null) {
-                    Model.Account acc = (Model.Account) account;
-                    username = acc.getUsername();
-                    fullName = acc.getFullName();
-                }
-            %>
             
             <!-- Menu cho User -->
             <% if ("User".equals(userRole)) { %>
@@ -177,9 +188,9 @@
             <!-- Menu cho Admin -->
             <% if ("Admin".equals(userRole)) { %>
                 <li><a href="${pageContext.request.contextPath}/">🏠 Trang Chủ</a></li>
-                <li><a href="${pageContext.request.contextPath}/admin">👥 Người Dùng</a></li>
-                <li><a href="${pageContext.request.contextPath}/admin?action=orders">📦 Đơn Hàng</a></li>
-                <li><a href="${pageContext.request.contextPath}/admin?action=statistics">📊 Thống Kê</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin"> Người Dùng</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin?action=orders">Đơn Hàng</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin?action=statistics">Thống Kê</a></li>
             <% } %>
             
             <!-- User Info -->
@@ -189,15 +200,15 @@
                         <div class="header-user-name">
                             <% if ("Manager".equals(userRole)) { %>
                                 <a href="${pageContext.request.contextPath}/manager?action=profile" style="color: white; text-decoration: none;">
-                                    👤 <%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %>
+                                    <%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %>
                                 </a>
                             <% } else { %>
                                 <a href="${pageContext.request.contextPath}/user?action=profile" style="color: white; text-decoration: none;">
-                                    👤 <%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %>
+                                    <%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %>
                                 </a>
                             <% } %>
                         </div>
-                        <a href="${pageContext.request.contextPath}/logout" class="logout-btn">🚪 Đăng Xuất</a>
+                        <a href="${pageContext.request.contextPath}/logout" class="logout-btn"> Đăng Xuất</a>
                     </div>
                 </li>
             <% } else { %>

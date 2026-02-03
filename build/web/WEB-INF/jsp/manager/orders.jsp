@@ -99,7 +99,7 @@
     
     <div class="container">
         <div class="page-header">
-            <h1>📋 Đơn Đặt Thuê</h1>
+            <h1> Đơn Đặt Thuê</h1>
             <p>Quản lý các đơn đặt thuê sản phẩm của bạn</p>
         </div>
         
