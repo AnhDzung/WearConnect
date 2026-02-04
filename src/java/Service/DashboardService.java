@@ -55,7 +55,7 @@ public class DashboardService {
     public static int getPendingOrderCount(int renterID) {
         String sql = "SELECT COUNT(*) as PendingCount FROM RentalOrder ro " +
                      "JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
-                     "WHERE c.RenterID = ? AND ro.Status IN ('PENDING', 'CONFIRMED')";
+                     "WHERE c.RenterID = ? AND ro.Status IN ('PENDING_PAYMENT', 'PAYMENT_VERIFIED')";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, renterID);
@@ -74,7 +74,7 @@ public class DashboardService {
     public static int getConfirmedOrderCount(int renterID) {
         String sql = "SELECT COUNT(*) as ConfirmedCount FROM RentalOrder ro " +
                      "JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
-                     "WHERE c.RenterID = ? AND ro.Status = 'CONFIRMED'";
+                     "WHERE c.RenterID = ? AND ro.Status = 'PAYMENT_VERIFIED'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, renterID);
@@ -249,11 +249,11 @@ public class DashboardService {
                      "c.ClothingID, c.ClothingName, c.Category, c.HourlyPrice, " +
                      "a.FullName as ManagerName, " +
                      "COUNT(ro.RentalOrderID) as RentalCount, " +
-                     "SUM(ro.TotalPrice) as TotalRevenue " +
-                     "FROM Clothing c " +
-                     "JOIN Accounts a ON c.RenterID = a.AccountID " +
-                     "LEFT JOIN RentalOrder ro ON c.ClothingID = ro.ClothingID " +
-                     "WHERE ro.Status IN ('CONFIRMED', 'RENTED', 'RETURNED') " +
+                 "SUM(ro.TotalPrice) as TotalRevenue " +
+                 "FROM Clothing c " +
+                 "JOIN Accounts a ON c.RenterID = a.AccountID " +
+                 "LEFT JOIN RentalOrder ro ON c.ClothingID = ro.ClothingID " +
+                 "WHERE ro.Status IN ('PAYMENT_VERIFIED', 'RENTED', 'RETURNED') " +
                      "GROUP BY c.ClothingID, c.ClothingName, c.Category, c.HourlyPrice, a.FullName " +
                      "ORDER BY RentalCount DESC, TotalRevenue DESC";
         
@@ -343,6 +343,6 @@ public class DashboardService {
      * Get orders that need verification (status = VERIFYING)
      */
     public static List<Map<String, Object>> getOrdersNeedingVerification() {
-        return getAllOrdersWithDetails("VERIFYING");
+        return getAllOrdersWithDetails("PAYMENT_SUBMITTED");
     }
 }

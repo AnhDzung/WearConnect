@@ -65,6 +65,9 @@ public class AdminServlet extends HttpServlet {
         } else if ("verifyPayment".equals(action)) {
             verifyPayment(request, response);
             return;
+        } else if ("rejectPayment".equals(action)) {
+            rejectPayment(request, response);
+            return;
         } else if ("statistics".equals(action)) {
             showStatistics(request, response);
             return;
@@ -74,9 +77,9 @@ public class AdminServlet extends HttpServlet {
         List<Account> users = UserController.getAllUsers();
         request.setAttribute("users", users);
 
-        // Thông báo đơn cần xác nhận (PENDING hoặc VERIFYING)
-        int pendingCount = RentalOrderService.countOrdersByStatus("PENDING");
-        int verifyingCount = RentalOrderService.countOrdersByStatus("VERIFYING");
+        // Thông báo đơn cần xác nhận (PENDING_PAYMENT hoặc PAYMENT_SUBMITTED)
+        int pendingCount = RentalOrderService.countOrdersByStatus("PENDING_PAYMENT");
+        int verifyingCount = RentalOrderService.countOrdersByStatus("PAYMENT_SUBMITTED");
         request.setAttribute("pendingCount", pendingCount);
         request.setAttribute("verifyingCount", verifyingCount);
         request.setAttribute("newOrdersCount", pendingCount + verifyingCount);
@@ -117,14 +120,38 @@ public class AdminServlet extends HttpServlet {
         try {
             int orderID = Integer.parseInt(request.getParameter("orderID"));
             
-            // Update order status to CONFIRMED
-            RentalOrderService.updateOrderStatus(orderID, "CONFIRMED");
+            // Update order status to PAYMENT_VERIFIED
+            RentalOrderService.updateOrderStatus(orderID, "PAYMENT_VERIFIED");
             
-            System.out.println("[AdminServlet] Order " + orderID + " verified - Status changed to CONFIRMED");
+            System.out.println("[AdminServlet] Order " + orderID + " verified - Status changed to PAYMENT_VERIFIED");
             
             // Redirect back to ALL to show all orders and newly confirmed one
             // This avoids showing empty page if last VERIFYING order was confirmed
             response.sendRedirect(request.getContextPath() + "/admin?action=orders&status=ALL&verified=true");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?action=orders&error=true");
+        }
+    }
+
+    /**
+     * Reject payment and return order to PENDING_PAYMENT
+     */
+    private void rejectPayment(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        try {
+            int orderID = Integer.parseInt(request.getParameter("orderID"));
+            // Optionally clear stored payment proof on RentalOrder
+            Controller.RentalOrderController.setPaymentProofPath(orderID, null);
+            // Set order back to PENDING_PAYMENT
+            RentalOrderService.updateOrderStatus(orderID, "PENDING_PAYMENT");
+            // If payment record exists, mark as failed (best-effort)
+            Model.Payment payment = PaymentController.getPaymentStatus(orderID);
+            if (payment != null) {
+                PaymentController.failPayment(payment.getPaymentID());
+            }
+
+            response.sendRedirect(request.getContextPath() + "/admin?action=orders&status=ALL&rejected=true");
         } catch (Exception e) {
             e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/admin?action=orders&error=true");

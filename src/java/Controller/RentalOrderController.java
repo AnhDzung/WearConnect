@@ -77,6 +77,22 @@ public class RentalOrderController {
         return RentalOrderService.updateOrderStatus(rentalOrderID, status);
     }
 
+    public static boolean updateOrderStatusWithNotes(int rentalOrderID, String status, String notes) {
+        return RentalOrderService.updateOrderStatusWithNotes(rentalOrderID, status, notes);
+    }
+
+    public static boolean setPaymentProofPath(int rentalOrderID, String path) {
+        return RentalOrderService.setPaymentProofPath(rentalOrderID, path);
+    }
+
+    public static boolean setReceivedProofPath(int rentalOrderID, String path) {
+        return RentalOrderService.setReceivedProofPath(rentalOrderID, path);
+    }
+
+    public static boolean setTrackingNumber(int rentalOrderID, String trackingNumber) {
+        return RentalOrderService.setTrackingNumber(rentalOrderID, trackingNumber);
+    }
+
     public static RentalOrder getRentalOrderByID(int rentalOrderID) {
         return RentalOrderService.getRentalOrderByID(rentalOrderID);
     }

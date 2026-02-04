@@ -82,6 +82,35 @@ public class ManagerServlet extends HttpServlet {
                 return;
             }
             
+            // Manager ships order (set tracking number and status SHIPPING)
+            if ("shipOrder".equals(action)) {
+                try {
+                    int rentalOrderID = Integer.parseInt(request.getParameter("rentalOrderID"));
+                    String trackingNumber = request.getParameter("trackingNumber");
+                    if (trackingNumber != null && !trackingNumber.trim().isEmpty()) {
+                        boolean stored = RentalOrderController.setTrackingNumber(rentalOrderID, trackingNumber.trim());
+                        boolean updated = RentalOrderController.updateOrderStatus(rentalOrderID, "SHIPPING");
+                        System.out.println("[ManagerServlet] shipOrder stored=" + stored + " updated=" + updated);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                response.sendRedirect(request.getContextPath() + "/manager?action=orders&success=true");
+                return;
+            }
+
+            // Manager confirms delivery (set DELIVERED_PENDING_CONFIRMATION)
+            if ("confirmDelivery".equals(action)) {
+                try {
+                    int rentalOrderID = Integer.parseInt(request.getParameter("rentalOrderID"));
+                    RentalOrderController.updateOrderStatus(rentalOrderID, "DELIVERED_PENDING_CONFIRMATION");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                response.sendRedirect(request.getContextPath() + "/manager?action=orders&success=true");
+                return;
+            }
+            
             if ("ratings".equals(action)) {
                 List<Rating> ratings = RatingDAO.getRatingsByRenter(managerId);
                 double avgRating = RatingDAO.getAverageRatingForRenter(managerId);
@@ -154,7 +183,7 @@ public class ManagerServlet extends HttpServlet {
                 int newConfirmedCount = 0;
                 if (rentalOrders != null) {
                     for (RentalOrder ro : rentalOrders) {
-                        if ("CONFIRMED".equals(ro.getStatus())) {
+                        if ("PAYMENT_VERIFIED".equals(ro.getStatus())) {
                             newConfirmedCount++;
                         }
                     }

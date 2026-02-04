@@ -150,12 +150,19 @@
                     </td>
                     <td>
                         <a href="${pageContext.request.contextPath}/rental?action=viewOrder&id=${order.rentalOrderID}" class="btn btn-info">Chi tiết</a>
-                        <c:if test="${order.status == 'CONFIRMED'}">
+                        <c:if test="${order.status == 'PAYMENT_VERIFIED'}">
                             <form method="POST" action="${pageContext.request.contextPath}/manager" style="display:inline-block;">
-                                <input type="hidden" name="action" value="updateStatus" />
+                                <input type="hidden" name="action" value="shipOrder" />
                                 <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
-                                <input type="hidden" name="status" value="RENTED" />
-                                <button type="submit" class="btn btn-success">Bàn giao</button>
+                                <input type="text" name="trackingNumber" placeholder="Mã tracking" required style="padding:6px 8px; margin-right:6px;" />
+                                <button type="submit" class="btn btn-success">Bàn giao (Gửi)</button>
+                            </form>
+                        </c:if>
+                        <c:if test="${order.status == 'SHIPPING'}">
+                            <form method="POST" action="${pageContext.request.contextPath}/manager" style="display:inline-block;">
+                                <input type="hidden" name="action" value="confirmDelivery" />
+                                <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
+                                <button type="submit" class="btn btn-success">Xác nhận đã giao</button>
                             </form>
                         </c:if>
                         <c:if test="${order.status == 'RENTED'}">

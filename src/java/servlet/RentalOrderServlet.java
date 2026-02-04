@@ -86,6 +86,16 @@ public class RentalOrderServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
+
+        // Expire old PENDING_PAYMENT orders (24 hours)
+        try {
+            int removed = Service.RentalOrderService.expirePendingPayments(24);
+            if (removed > 0) {
+                System.out.println("[RentalOrderServlet] Expired PENDING_PAYMENT orders: " + removed);
+            }
+        } catch (Exception e) {
+            System.out.println("[RentalOrderServlet] Error expiring pending payments: " + e.getMessage());
+        }
         
         int userID = (int) session.getAttribute("accountID");
         
@@ -239,6 +249,67 @@ public class RentalOrderServlet extends HttpServlet {
             } else {
                 response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&issueReported=false");
             }
+        } else if ("confirmReceipt".equals(action)) {
+            int rentalOrderID = Integer.parseInt(request.getParameter("rentalOrderID"));
+            try {
+                Part filePart = request.getPart("receivedImage");
+                String proofPath = null;
+                if (filePart != null && filePart.getSize() > 0) {
+                    proofPath = handleReceiptUpload(request, rentalOrderID, filePart);
+                }
+
+                // store received proof and update status to RENTED
+                boolean stored = RentalOrderController.setReceivedProofPath(rentalOrderID, proofPath);
+                boolean ok = RentalOrderController.updateOrderStatus(rentalOrderID, "RENTED");
+                if (ok) {
+                    response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&received=true");
+                } else {
+                    response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&received=false");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + request.getParameter("rentalOrderID") + "&received=false");
+            }
         }
+    }
+
+    private String handleReceiptUpload(HttpServletRequest request, int rentalOrderID, Part filePart) {
+        try {
+            String fileName = java.nio.file.Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+            String fileExtension = getFileExtension(fileName);
+
+            if (!isValidFileType(fileExtension)) {
+                return null;
+            }
+
+            // Limit size to 5MB for receipt images
+            if (filePart.getSize() > 5 * 1024 * 1024) {
+                return null;
+            }
+
+            String appPath = request.getServletContext().getRealPath("");
+            String uploadPath = appPath + java.io.File.separator + "uploads" + java.io.File.separator + "received-proof";
+            java.io.File uploadDir = new java.io.File(uploadPath);
+            if (!uploadDir.exists()) uploadDir.mkdirs();
+
+            String uniqueFileName = "received_" + rentalOrderID + "_" + System.currentTimeMillis() + "." + fileExtension;
+            String filePath = uploadPath + java.io.File.separator + uniqueFileName;
+
+            filePart.write(filePath);
+
+            return "uploads/received-proof/" + uniqueFileName;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private String getFileExtension(String fileName) {
+        int lastDot = fileName.lastIndexOf('.');
+        return lastDot > 0 ? fileName.substring(lastDot + 1).toLowerCase() : "";
+    }
+
+    private boolean isValidFileType(String extension) {
+        return extension.equals("jpg") || extension.equals("jpeg") || extension.equals("png") || extension.equals("pdf");
     }
 }

@@ -52,7 +52,7 @@ public class RentalOrderService {
     }
 
     public static boolean confirmOrder(int rentalOrderID) {
-        return RentalOrderDAO.updateRentalOrderStatus(rentalOrderID, "CONFIRMED");
+        return RentalOrderDAO.updateRentalOrderStatus(rentalOrderID, "PAYMENT_VERIFIED");
     }
 
     public static boolean markAsRented(int rentalOrderID) {
@@ -80,7 +80,7 @@ public class RentalOrderService {
     }
 
     public static List<RentalOrder> getAllConfirmedOrders() {
-        return RentalOrderDAO.getRentalOrdersByStatus("CONFIRMED");
+        return RentalOrderDAO.getRentalOrdersByStatus("PAYMENT_VERIFIED");
     }
 
     public static boolean isAvailable(int clothingID, LocalDateTime startDate, LocalDateTime endDate) {
@@ -95,8 +95,8 @@ public class RentalOrderService {
         int rentedCount = 0;
         
         for (RentalOrder order : orders) {
-            // Skip cancelled and pending orders
-            if (order.getStatus().equals("CANCELLED") || order.getStatus().equals("PENDING")) {
+            // Skip cancelled orders only. PENDING_PAYMENT should reserve the item.
+            if (order.getStatus().equals("CANCELLED")) {
                 continue;
             }
             
@@ -115,8 +115,8 @@ public class RentalOrderService {
         List<RentalOrder> orders = RentalOrderDAO.getRentalOrdersByClothing(clothingID);
         
         for (RentalOrder order : orders) {
-            // Skip cancelled and pending orders
-            if (order.getStatus().equals("CANCELLED") || order.getStatus().equals("PENDING")) {
+            // Skip cancelled orders only. PENDING_PAYMENT and PAYMENT_SUBMITTED still conflict.
+            if (order.getStatus().equals("CANCELLED")) {
                 continue;
             }
             
@@ -138,6 +138,10 @@ public class RentalOrderService {
         return totalQuantity - conflictingOrders.size();
     }
 
+    public static int expirePendingPayments(int hours) {
+        return RentalOrderDAO.cancelExpiredPendingPayments(hours);
+    }
+
     public static double calculateTotalPrice(int clothingID, LocalDateTime startDate, LocalDateTime endDate) {
         Clothing clothing = ClothingDAO.getClothingByID(clothingID);
         if (clothing == null) return 0;
@@ -152,6 +156,22 @@ public class RentalOrderService {
     
     public static boolean updateOrderStatus(int rentalOrderID, String status) {
         return RentalOrderDAO.updateRentalOrderStatus(rentalOrderID, status);
+    }
+
+    public static boolean updateOrderStatusWithNotes(int rentalOrderID, String status, String notes) {
+        return RentalOrderDAO.updateRentalOrderStatusWithNotes(rentalOrderID, status, notes);
+    }
+
+    public static boolean setPaymentProofPath(int rentalOrderID, String path) {
+        return RentalOrderDAO.updatePaymentProofPath(rentalOrderID, path);
+    }
+
+    public static boolean setReceivedProofPath(int rentalOrderID, String path) {
+        return RentalOrderDAO.updateReceivedProofPath(rentalOrderID, path);
+    }
+
+    public static boolean setTrackingNumber(int rentalOrderID, String trackingNumber) {
+        return RentalOrderDAO.updateTrackingNumber(rentalOrderID, trackingNumber);
     }
 
     public static RentalOrder getRentalOrderByID(int rentalOrderID) {

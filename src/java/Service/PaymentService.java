@@ -15,7 +15,7 @@ public class PaymentService {
         int paymentID = PaymentDAO.addPayment(payment);
         
         if (paymentID > 0) {
-            RentalOrderDAO.updateRentalOrderStatus(rentalOrderID, "CONFIRMED");
+            RentalOrderDAO.updateRentalOrderStatus(rentalOrderID, "PAYMENT_VERIFIED");
         }
         
         return paymentID;

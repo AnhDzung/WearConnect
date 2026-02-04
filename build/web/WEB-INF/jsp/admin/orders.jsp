@@ -292,9 +292,11 @@
             <div class="filters">
                 <select name="status" id="statusFilter">
                     <option value="ALL" ${statusFilter == 'ALL' ? 'selected' : ''}>Tất cả trạng thái</option>
-                    <option value="PENDING" ${statusFilter == 'PENDING' ? 'selected' : ''}>Chờ thanh toán</option>
-                    <option value="VERIFYING" ${statusFilter == 'VERIFYING' ? 'selected' : ''}>Đang kiểm tra</option>
-                    <option value="CONFIRMED" ${statusFilter == 'CONFIRMED' ? 'selected' : ''}>Đã xác nhận</option>
+                    <option value="PENDING_PAYMENT" ${statusFilter == 'PENDING_PAYMENT' ? 'selected' : ''}>Chờ thanh toán</option>
+                    <option value="PAYMENT_SUBMITTED" ${statusFilter == 'PAYMENT_SUBMITTED' ? 'selected' : ''}>Đã gửi thông tin thanh toán</option>
+                    <option value="PAYMENT_VERIFIED" ${statusFilter == 'PAYMENT_VERIFIED' ? 'selected' : ''}>Thanh toán xác thực</option>
+                    <option value="SHIPPING" ${statusFilter == 'SHIPPING' ? 'selected' : ''}>Đang vận chuyển</option>
+                    <option value="DELIVERED_PENDING_CONFIRMATION" ${statusFilter == 'DELIVERED_PENDING_CONFIRMATION' ? 'selected' : ''}>Đã giao - chờ xác nhận</option>
                     <option value="RENTED" ${statusFilter == 'RENTED' ? 'selected' : ''}>Đang thuê</option>
                     <option value="RETURNED" ${statusFilter == 'RETURNED' ? 'selected' : ''}>Đã trả</option>
                     <option value="CANCELLED" ${statusFilter == 'CANCELLED' ? 'selected' : ''}>Đã hủy</option>
@@ -357,13 +359,21 @@
                                     </td>
                                     <td>
                                         <div class="actions" style="flex-wrap: wrap;">
-                                            <c:if test="${order.status == 'PENDING' || order.status == 'VERIFYING'}">
+                                            <c:if test="${order.status == 'PAYMENT_SUBMITTED'}">
                                                 <form method="post" action="${pageContext.request.contextPath}/admin" style="display: inline;">
                                                     <input type="hidden" name="action" value="verifyPayment">
                                                     <input type="hidden" name="orderID" value="${order.rentalOrderID}">
                                                     <button type="submit" class="btn btn-verify" 
                                                             onclick="return confirm('Xác nhận thanh toán cho đơn hàng #${order.rentalOrderID}?')">
                                                         Xác nhận
+                                                    </button>
+                                                </form>
+                                                <form method="post" action="${pageContext.request.contextPath}/admin" style="display: inline; margin-left:6px;">
+                                                    <input type="hidden" name="action" value="rejectPayment">
+                                                    <input type="hidden" name="orderID" value="${order.rentalOrderID}">
+                                                    <button type="submit" class="btn" style="background:#dc3545;color:white;" 
+                                                            onclick="return confirm('Từ chối thanh toán và hoàn trả về chờ thanh toán?')">
+                                                        Từ chối
                                                     </button>
                                                 </form>
                                             </c:if>

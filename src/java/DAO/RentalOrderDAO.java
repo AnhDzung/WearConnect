@@ -126,6 +126,39 @@ public class RentalOrderDAO {
         return false;
     }
 
+    public static boolean updateRentalOrderStatusWithNotes(int rentalOrderID, String newStatus, String notes) {
+        String sql = "UPDATE RentalOrder SET Status = ? WHERE RentalOrderID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newStatus);
+            ps.setInt(2, rentalOrderID);
+
+            if (ps.executeUpdate() > 0) {
+                // Add history with notes (e.g., proof image path)
+                addRentalHistory(rentalOrderID, newStatus, notes);
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static int cancelExpiredPendingPayments(int hours) {
+        String sql = "UPDATE RentalOrder SET Status = 'CANCELLED' " +
+                     "WHERE Status = 'PENDING_PAYMENT' AND CreatedAt < ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            long cutoffMillis = System.currentTimeMillis() - hours * 3600L * 1000L;
+            ps.setTimestamp(1, new Timestamp(cutoffMillis));
+            int updated = ps.executeUpdate();
+            return updated;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     public static List<RentalOrder> getRentalOrdersByStatus(String status) {
         List<RentalOrder> list = new ArrayList<>();
         String sql = "SELECT ro.*, c.ClothingName, a.Username AS RenterUsername " +
@@ -228,7 +261,49 @@ public class RentalOrderDAO {
                 order.setColorID(colorID);
             }
         } catch (SQLException ignore) {}
+        try { order.setPaymentProofImage(rs.getString("PaymentProofImage")); } catch (SQLException ignore) {}
+        try { order.setReceivedProofImage(rs.getString("ReceivedProofImage")); } catch (SQLException ignore) {}
+        try { order.setTrackingNumber(rs.getString("TrackingNumber")); } catch (SQLException ignore) {}
         
         return order;
+    }
+
+    public static boolean updatePaymentProofPath(int rentalOrderID, String path) {
+        String sql = "UPDATE RentalOrder SET PaymentProofImage = ? WHERE RentalOrderID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, path);
+            ps.setInt(2, rentalOrderID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static boolean updateReceivedProofPath(int rentalOrderID, String path) {
+        String sql = "UPDATE RentalOrder SET ReceivedProofImage = ? WHERE RentalOrderID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, path);
+            ps.setInt(2, rentalOrderID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static boolean updateTrackingNumber(int rentalOrderID, String trackingNumber) {
+        String sql = "UPDATE RentalOrder SET TrackingNumber = ? WHERE RentalOrderID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, trackingNumber);
+            ps.setInt(2, rentalOrderID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

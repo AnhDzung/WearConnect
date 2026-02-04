@@ -12,7 +12,7 @@ public class RentalOrder {
     private LocalDateTime rentalEndDate;
     private double totalPrice;
     private double depositAmount;
-    private String status; // PENDING, CONFIRMED, RENTED, RETURNED, CANCELLED
+    private String status; // PENDING_PAYMENT, PAYMENT_SUBMITTED, PAYMENT_VERIFIED, SHIPPING, DELIVERED_PENDING_CONFIRMATION, RENTED, RETURNED, CANCELLED
     private LocalDateTime createdAt;
     private String selectedSize;
     private Integer colorID; // Màu sắc được chọn
@@ -21,6 +21,9 @@ public class RentalOrder {
     private String clothingName;
     private String renterUsername;
     private String selectedColorName;
+    private String paymentProofImage;
+    private String receivedProofImage;
+    private String trackingNumber;
 
     public RentalOrder() {}
 
@@ -32,7 +35,7 @@ public class RentalOrder {
         this.rentalEndDate = rentalEndDate;
         this.totalPrice = totalPrice;
         this.depositAmount = depositAmount;
-        this.status = "PENDING";
+        this.status = "PENDING_PAYMENT";
     }
 
     // Getters and Setters
@@ -80,6 +83,15 @@ public class RentalOrder {
 
     public String getSelectedColorName() { return selectedColorName; }
     public void setSelectedColorName(String selectedColorName) { this.selectedColorName = selectedColorName; }
+
+    public String getPaymentProofImage() { return paymentProofImage; }
+    public void setPaymentProofImage(String paymentProofImage) { this.paymentProofImage = paymentProofImage; }
+
+    public String getReceivedProofImage() { return receivedProofImage; }
+    public void setReceivedProofImage(String receivedProofImage) { this.receivedProofImage = receivedProofImage; }
+
+    public String getTrackingNumber() { return trackingNumber; }
+    public void setTrackingNumber(String trackingNumber) { this.trackingNumber = trackingNumber; }
 
     // Format order code as WRC + 5-digit ID (e.g., WRC00001)
     public String getOrderCode() {

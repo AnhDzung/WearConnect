@@ -66,13 +66,12 @@
 <div class="container">
     <h1>Chi tiết đơn thuê</h1>
     
-    <!-- Success message for payment verifying -->
-    <c:if test="${param.paymentVerifying == 'true'}">
+    <!-- Success message for payment submission -->
+    <c:if test="${param.paymentSubmitted == 'true'}">
         <div class="alert alert-success">
-            <strong>Thanh toán thành công!</strong><br>
-            Cảm ơn bạn đã tải ảnh chứng minh thanh toán.<br>
-            Đơn hàng của bạn đang được hệ thống kiểm tra và xác thực.<br>
-            Vui lòng đợi admin xác nhận thanh toán.
+            <strong>Thông tin thanh toán đã gửi!</strong><br>
+            Cảm ơn bạn đã gửi thông tin thanh toán (kèm ảnh nếu có).<br>
+            Đơn hàng của bạn đang chờ admin xác thực.
         </div>
     </c:if>
 
@@ -179,12 +178,29 @@
                 </div>
             </div>
             
-            <c:if test="${order.status == 'PENDING' && sessionScope.userRole == 'User'}">
+            <c:if test="${order.status == 'PENDING_PAYMENT' && sessionScope.userRole == 'User'}">
                 <a href="${pageContext.request.contextPath}/payment?rentalOrderID=${order.rentalOrderID}" class="btn">Thanh toán</a>
                 <form method="POST" action="${pageContext.request.contextPath}/rental">
                     <input type="hidden" name="action" value="cancelOrder">
                     <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}">
                     <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn chắc chắn muốn hủy đơn?')">Hủy đơn</button>
+                </form>
+            </c:if>
+
+            <c:if test="${order.status == 'DELIVERED_PENDING_CONFIRMATION' && sessionScope.userRole == 'User'}">
+                <c:if test="${param.received == 'true'}">
+                    <div class="alert alert-success" style="margin-top:12px;">
+                        Cảm ơn! Đơn hàng đã được xác nhận là đã nhận. Trạng thái đã chuyển sang "ĐANG THUÊ".
+                    </div>
+                </c:if>
+                <form method="POST" action="${pageContext.request.contextPath}/rental" enctype="multipart/form-data" style="margin-top:12px;">
+                    <input type="hidden" name="action" value="confirmReceipt">
+                    <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}">
+                    <div class="form-group">
+                        <label for="receivedImage">Tải ảnh chứng minh đã nhận hàng (tối đa 5MB):</label>
+                        <input type="file" id="receivedImage" name="receivedImage" accept="image/*" required style="padding:8px; border:1px solid #ddd; border-radius:4px; width:100%; box-sizing:border-box;">
+                    </div>
+                    <button type="submit" class="btn" style="background-color:#28a745;">Tôi đã nhận hàng</button>
                 </form>
             </c:if>
 
@@ -289,10 +305,34 @@
     </script>
 
     <!-- Payment proof preview for staff/admin -->
-    <c:if test="${not empty payment and not empty payment.paymentProofImage}">
-        <div style="margin-top:24px; padding:16px; border:1px solid #e1e5ee; border-radius:8px; background:#f9fbff;">
-            <h3 style="margin-top:0;">Ảnh chứng minh thanh toán</h3>
-            <img src="${pageContext.request.contextPath}/${payment.paymentProofImage}" alt="Payment proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
+    <!-- Payment proof preview (from Payment record or stored on order) -->
+    <c:choose>
+        <c:when test="${not empty payment and not empty payment.paymentProofImage}">
+            <div style="margin-top:24px; padding:16px; border:1px solid #e1e5ee; border-radius:8px; background:#f9fbff;">
+                <h3 style="margin-top:0;">Ảnh chứng minh thanh toán</h3>
+                <img src="${pageContext.request.contextPath}/${payment.paymentProofImage}" alt="Payment proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
+            </div>
+        </c:when>
+        <c:when test="${not empty order.paymentProofImage}">
+            <div style="margin-top:24px; padding:16px; border:1px solid #e1e5ee; border-radius:8px; background:#f9fbff;">
+                <h3 style="margin-top:0;">Ảnh chứng minh thanh toán</h3>
+                <img src="${pageContext.request.contextPath}/${order.paymentProofImage}" alt="Payment proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
+            </div>
+        </c:when>
+    </c:choose>
+
+    <!-- Received proof preview -->
+    <c:if test="${not empty order.receivedProofImage}">
+        <div style="margin-top:16px; padding:16px; border:1px solid #e1e5ee; border-radius:8px; background:#fff8f0;">
+            <h3 style="margin-top:0;">Ảnh chứng minh đã nhận hàng</h3>
+            <img src="${pageContext.request.contextPath}/${order.receivedProofImage}" alt="Received proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
+        </div>
+    </c:if>
+
+    <!-- Tracking info -->
+    <c:if test="${not empty order.trackingNumber}">
+        <div style="margin-top:12px; padding:12px; border:1px solid #e1e5ee; border-radius:6px; background:#f1f7ff;">
+            <strong>Mã vận đơn:</strong> ${order.trackingNumber}
         </div>
     </c:if>
 </div>

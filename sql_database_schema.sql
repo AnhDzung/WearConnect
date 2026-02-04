@@ -33,7 +33,7 @@ CREATE TABLE RentalOrder (
     TotalPrice DECIMAL(10, 2),
     DepositAmount DECIMAL(10, 2),
     SelectedSize NVARCHAR(50),
-    Status NVARCHAR(50) DEFAULT 'PENDING', -- PENDING, VERIFYING, CONFIRMED, RENTED, RETURNED, CANCELLED
+    Status NVARCHAR(50) DEFAULT 'PENDING_PAYMENT', -- PENDING_PAYMENT, PAYMENT_SUBMITTED, PAYMENT_VERIFIED, SHIPPING, DELIVERED_PENDING_CONFIRMATION, RENTED, RETURNED, CANCELLED
     CreatedAt DATETIME DEFAULT GETDATE(),
     FOREIGN KEY (ClothingID) REFERENCES Clothing(ClothingID),
     FOREIGN KEY (RenterUserID) REFERENCES Accounts(AccountID)
@@ -131,3 +131,13 @@ CREATE INDEX idx_rentalorder_renter ON RentalOrder(RenterUserID);
 CREATE INDEX idx_rentalorder_status ON RentalOrder(Status);
 CREATE INDEX idx_payment_order ON Payment(RentalOrderID);
 CREATE INDEX idx_rating_order ON Rating(RentalOrderID);
+
+-- Add columns to RentalOrder to store proof images and tracking info
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='RentalOrder' AND COLUMN_NAME='PaymentProofImage')
+    ALTER TABLE RentalOrder ADD PaymentProofImage NVARCHAR(MAX) NULL;
+
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='RentalOrder' AND COLUMN_NAME='ReceivedProofImage')
+    ALTER TABLE RentalOrder ADD ReceivedProofImage NVARCHAR(MAX) NULL;
+
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='RentalOrder' AND COLUMN_NAME='TrackingNumber')
+    ALTER TABLE RentalOrder ADD TrackingNumber NVARCHAR(100) NULL;

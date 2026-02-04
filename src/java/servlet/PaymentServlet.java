@@ -187,13 +187,16 @@ public class PaymentServlet extends HttpServlet {
                             // Update payment with proof image
                             boolean updated = PaymentController.updatePaymentProof(paymentID, proofPath);
                             System.out.println("[PaymentServlet] Payment proof updated: " + updated);
+                            // Also store payment proof path directly on the rental order
+                            boolean storedOnOrder = Controller.RentalOrderController.setPaymentProofPath(rentalOrderID, proofPath);
+                            System.out.println("[PaymentServlet] Stored payment proof on RentalOrder: " + storedOnOrder);
                             
-                            // Update order status to VERIFYING
-                            boolean statusUpdated = RentalOrderController.updateOrderStatus(rentalOrderID, "VERIFYING");
-                            System.out.println("[PaymentServlet] Order status updated to VERIFYING: " + statusUpdated);
+                            // Update order status to PAYMENT_SUBMITTED (waiting admin verification)
+                            boolean statusUpdated = RentalOrderController.updateOrderStatus(rentalOrderID, "PAYMENT_SUBMITTED");
+                            System.out.println("[PaymentServlet] Order status updated to PAYMENT_SUBMITTED: " + statusUpdated);
                             
                             // Redirect to order detail page with success message
-                            response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&paymentVerifying=true");
+                            response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&paymentSubmitted=true");
                             return;
                         } else {
                             // File upload failed
