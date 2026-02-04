@@ -141,14 +141,14 @@
     
     <div class="container">
         <div class="page-header">
-            <h1>📜 Lịch Sử Thuê Hàng</h1>
+            <h1>Lịch Sử Thuê Hàng</h1>
             <p>Xem tất cả các đơn thuê của bạn</p>
         </div>
         
         <div class="menu-nav">
-            <a href="${pageContext.request.contextPath}/user">📊 Dashboard</a>
-            <a href="${pageContext.request.contextPath}/user?action=rentalHistory" class="active">📜 Lịch Sử Thuê</a>
-            <a href="${pageContext.request.contextPath}/user?action=favorites">❤️ Sản Phẩm Yêu Thích</a>
+            <a href="${pageContext.request.contextPath}/user">Dashboard</a>
+            <a href="${pageContext.request.contextPath}/user?action=rentalHistory" class="active">Lịch Sử Thuê</a>
+            <a href="${pageContext.request.contextPath}/user?action=favorites">Sản Phẩm Yêu Thích</a>
         </div>
         
         <div class="history-table">

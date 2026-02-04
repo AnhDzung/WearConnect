@@ -43,7 +43,7 @@
     <!-- Error message for unavailability -->
     <c:if test="${not empty error and error == 'notAvailable'}">
         <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 15px; margin-bottom: 20px; color: #856404;">
-            <h3 style="margin-top: 0; color: #d9534f;">⚠️ Không đủ số lượng</h3>
+            <h3 style="margin-top: 0; color: #d9534f;">Không đủ số lượng</h3>
             <p><strong>Tất cả sản phẩm cùng loại này đã được thuê hết trong khoảng thời gian bạn chọn.</strong></p>
             
             <c:if test="${not empty requestedStartDateDate}">
@@ -57,7 +57,7 @@
             <c:if test="${not empty conflictingOrders}">
                 <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 10px; margin: 10px 0;">
                     <p style="margin: 5px 0; color: #721c24; font-weight: bold;">
-                        📋 Tình trạng: <span style="color: #d9534f;">${conflictingOrders.size()} sản phẩm</span> đang được thuê trong thời gian này
+                        Tình trạng: <span style="color: #d9534f;">${conflictingOrders.size()} sản phẩm</span> đang được thuê trong thời gian này
                     </p>
                     <c:if test="${availableQuantity != null}">
                         <p style="margin: 5px 0; color: #721c24;">

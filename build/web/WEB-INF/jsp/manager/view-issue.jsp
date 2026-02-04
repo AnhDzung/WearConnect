@@ -62,10 +62,10 @@
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
 
 <div class="container">
-    <button onclick="history.back()" class="back-btn">← Quay lại</button>
+    <button onclick="history.back()" class="back-btn">Quay lại</button>
     
     <c:if test="${param.success}">
-        <div class="success-message">✓ Cập nhật trạng thái vấn đề thành công!</div>
+        <div class="success-message">Cập nhật trạng thái vấn đề thành công!</div>
     </c:if>
     
     <c:if test="${empty issue}">
@@ -80,9 +80,9 @@
                 <h2 style="margin: 0; flex: 1;">Chi tiết vấn đề</h2>
                 <span class="status-badge status-${issue.status.toLowerCase()}">
                     <c:choose>
-                        <c:when test="${issue.status == 'PENDING'}">⏳ Chờ xử lý</c:when>
-                        <c:when test="${issue.status == 'ACKNOWLEDGED'}">👍 Đã xác nhận</c:when>
-                        <c:when test="${issue.status == 'RESOLVED'}">✓ Đã giải quyết</c:when>
+                        <c:when test="${issue.status == 'PENDING'}">Chờ xử lý</c:when>
+                        <c:when test="${issue.status == 'ACKNOWLEDGED'}">Đã xác nhận</c:when>
+                        <c:when test="${issue.status == 'RESOLVED'}">Đã giải quyết</c:when>
                         <c:when test="${issue.status == 'REJECTED'}">✗ Đã từ chối</c:when>
                         <c:otherwise>${issue.status}</c:otherwise>
                     </c:choose>
@@ -116,10 +116,10 @@
                         <div>
                             <span class="issue-type">
                                 <c:choose>
-                                    <c:when test="${issue.issueType == 'WRONG_ITEM'}">❌ Hàng sai</c:when>
-                                    <c:when test="${issue.issueType == 'DAMAGED'}">💔 Hàng bị hỏng</c:when>
-                                    <c:when test="${issue.issueType == 'WRONG_SIZE'}">📏 Size sai</c:when>
-                                    <c:when test="${issue.issueType == 'COLOR_MISMATCH'}">🎨 Màu sai</c:when>
+                                    <c:when test="${issue.issueType == 'WRONG_ITEM'}">Hàng sai</c:when>
+                                    <c:when test="${issue.issueType == 'DAMAGED'}"> Hàng bị hỏng</c:when>
+                                    <c:when test="${issue.issueType == 'WRONG_SIZE'}">Size sai</c:when>
+                                    <c:when test="${issue.issueType == 'COLOR_MISMATCH'}"> Màu sai</c:when>
                                     <c:when test="${issue.issueType == 'OTHER'}">❓ Khác</c:when>
                                     <c:otherwise>${issue.issueType}</c:otherwise>
                                 </c:choose>
@@ -167,7 +167,7 @@
                     </c:if>
                     <c:if test="${empty issue.imageData}">
                         <div class="no-image">
-                            <div style="font-size: 40px; margin-bottom: 10px;">📷</div>
+                            <div style="font-size: 40px; margin-bottom: 10px;"></div>
                             Không có ảnh
                         </div>
                     </c:if>
@@ -217,8 +217,8 @@
                         </c:if>
                         
                         <div class="btn-group">
-                            <button type="submit" class="btn btn-success">💾 Lưu</button>
-                            <button type="button" onclick="history.back()" class="btn btn-secondary">❌ Hủy</button>
+                            <button type="submit" class="btn btn-success">Lưu</button>
+                            <button type="button" onclick="history.back()" class="btn btn-secondary">Hủy</button>
                         </div>
                     </form>
 
@@ -227,13 +227,13 @@
                             <input type="hidden" name="action" value="updateStatus" />
                             <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
                             <input type="hidden" name="status" value="RENTED" />
-                            <button type="submit" class="btn btn-info">🔄 Đổi hàng (đưa về RENTED)</button>
+                            <button type="submit" class="btn btn-info"> Đổi hàng (đưa về RENTED)</button>
                         </form>
                         <form method="POST" action="${pageContext.request.contextPath}/manager">
                             <input type="hidden" name="action" value="updateStatus" />
                             <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
                             <input type="hidden" name="status" value="RETURNED" />
-                            <button type="submit" class="btn btn-danger">✖ Hủy đơn hàng (yêu cầu trả)</button>
+                            <button type="submit" class="btn btn-danger">Hủy đơn hàng (yêu cầu trả)</button>
                         </form>
                     </div>
                 </div>

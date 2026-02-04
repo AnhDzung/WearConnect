@@ -178,17 +178,17 @@
 
             <!-- Menu cho Manager (Người Cho Thuê Quần Áo) -->
             <% if ("Manager".equals(userRole)) { %>
-                <li><a href="${pageContext.request.contextPath}/manager">📊 Dashboard</a></li>
-                <li><a href="${pageContext.request.contextPath}/clothing?action=myClothing">👕 Quản Lý Sản Phẩm</a></li>
-                <li><a href="${pageContext.request.contextPath}/clothing?action=upload">➕ Đăng Tải Mới</a></li>
-                <li><a href="${pageContext.request.contextPath}/manager?action=orders">📋 Đơn Đặt Thuê</a></li>
-                <li><a href="${pageContext.request.contextPath}/manager?action=ratings">⭐ Đánh Giá</a></li>
+                <li><a href="${pageContext.request.contextPath}/manager">Dashboard</a></li>
+                <li><a href="${pageContext.request.contextPath}/clothing?action=myClothing">Quản Lý Sản Phẩm</a></li>
+                <li><a href="${pageContext.request.contextPath}/clothing?action=upload">Đăng Tải Mới</a></li>
+                <li><a href="${pageContext.request.contextPath}/manager?action=orders">Đơn Đặt Thuê</a></li>
+                <li><a href="${pageContext.request.contextPath}/manager?action=ratings">Đánh Giá</a></li>
             <% } %>
             
             <!-- Menu cho Admin -->
             <% if ("Admin".equals(userRole)) { %>
-                <li><a href="${pageContext.request.contextPath}/">🏠 Trang Chủ</a></li>
-                <li><a href="${pageContext.request.contextPath}/admin"> Người Dùng</a></li>
+                <li><a href="${pageContext.request.contextPath}/">Trang Chủ</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin">Người Dùng</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin?action=orders">Đơn Hàng</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin?action=statistics">Thống Kê</a></li>
             <% } %>

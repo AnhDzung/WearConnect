@@ -153,7 +153,7 @@
         </div>
         
         <div class="button-group">
-            <a href="<%= request.getContextPath() %>/home" class="btn-home">← Quay Về Home</a>
+            <a href="<%= request.getContextPath() %>/home" class="btn-home">Quay Về Home</a>
         </div>
     </div>
 </body>

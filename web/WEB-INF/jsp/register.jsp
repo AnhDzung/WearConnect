@@ -212,7 +212,7 @@
             Đã có tài khoản? <a href="<%= request.getContextPath() %>/login">Đăng nhập ngay</a>
         </div>
         
-        <a href="<%= request.getContextPath() %>/home" class="btn-home">← Quay Về Home</a>
+        <a href="<%= request.getContextPath() %>/home" class="btn-home">Quay Về Home</a>
     </div>
 </body>
 </html>

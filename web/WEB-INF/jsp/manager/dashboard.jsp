@@ -245,13 +245,13 @@
 
 <div class="container">
     <div class="dashboard-header">
-        <h1>📊 Dashboard Quản Lý</h1>
+        <h1>Dashboard Quản Lý</h1>
         <p>Xem tổng quan doanh số, thống kê sản phẩm và hiệu suất kinh doanh của bạn</p>
     </div>
 
     <c:if test="${confirmedOrders > 0}">
         <div class="alert-banner">
-            <div class="text">🔔 Có ${confirmedOrders} đơn hàng mới được admin xác thực. Vui lòng kiểm tra và bàn giao.</div>
+            <div class="text">Có ${confirmedOrders} đơn hàng mới được admin xác thực. Vui lòng kiểm tra và bàn giao.</div>
             <form action="${pageContext.request.contextPath}/manager" method="get" style="margin:0;">
                 <input type="hidden" name="action" value="orders" />
                 <button type="submit" class="action-btn">Xem đơn</button>
@@ -262,25 +262,25 @@
     <!-- Stats Grid -->
     <div class="stats-grid">
         <div class="stat-card revenue">
-            <div class="stat-label">💰 Tổng Doanh Thu</div>
+            <div class="stat-label"> Tổng Doanh Thu</div>
             <div class="stat-value"><fmt:formatNumber value="${totalRevenue}" pattern="0.00" /></div>
             <div class="stat-unit">VNĐ</div>
         </div>
         
         <div class="stat-card completed">
-            <div class="stat-label">✅ Đơn Hàng Hoàn Thành</div>
+            <div class="stat-label">Đơn Hàng Hoàn Thành</div>
             <div class="stat-value">${completedOrders}</div>
             <div class="stat-unit">đơn hàng</div>
         </div>
         
         <div class="stat-card pending">
-            <div class="stat-label">⏳ Đơn Hàng Chờ Xử Lý</div>
+            <div class="stat-label">Đơn Hàng Chờ Xử Lý</div>
             <div class="stat-value">${pendingOrders}</div>
             <div class="stat-unit">đơn hàng</div>
         </div>
         
         <div class="stat-card">
-            <div class="stat-label">📦 Sản Phẩm Hoạt Động</div>
+            <div class="stat-label">Sản Phẩm Hoạt Động</div>
             <div class="stat-value">${activeProducts}</div>
             <div class="stat-unit">sản phẩm</div>
         </div>
@@ -288,7 +288,7 @@
     
     <!-- Charts Section -->
     <div class="charts-section">
-        <h2 class="section-title">📈 Biểu Đồ Doanh Thu (30 ngày gần nhất)</h2>
+        <h2 class="section-title"> Biểu Đồ Doanh Thu (30 ngày gần nhất)</h2>
         <div class="chart-container">
             <canvas id="revenueChart"></canvas>
         </div>
@@ -298,7 +298,7 @@
     <div class="top-products-section">
         <!-- Top Rated Products -->
         <div class="top-products-box">
-            <h3>⭐ Sản Phẩm Đánh Giá Cao Nhất</h3>
+            <h3>Sản Phẩm Đánh Giá Cao Nhất</h3>
             <c:choose>
                 <c:when test="${empty topRatedProducts}">
                     <div class="empty-state">
@@ -311,7 +311,7 @@
                             <span class="product-name">${product.clothingName}</span>
                             <div class="product-stat">
                                 <span class="rating-badge">
-                                    ⭐ <fmt:formatNumber value="${product.avgRating}" pattern="0.0" /> 
+                                    <fmt:formatNumber value="${product.avgRating}" pattern="0.0" /> 
                                     (${product.ratingCount})
                                 </span>
                             </div>
@@ -323,7 +323,7 @@
         
         <!-- Top Revenue Products -->
         <div class="top-products-box">
-            <h3>💰 Sản Phẩm Doanh Thu Cao Nhất</h3>
+            <h3> Sản Phẩm Doanh Thu Cao Nhất</h3>
             <c:choose>
                 <c:when test="${empty topRevenueProducts}">
                     <div class="empty-state">

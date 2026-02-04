@@ -49,52 +49,52 @@
 </head>
 <body>
 <div class="container">
-    <h1>💳 Thanh toán đơn hàng</h1>
+    <h1>Thanh toán đơn hàng</h1>
     
     <!-- Success/Error Messages -->
     <c:if test="${param.proofUploaded == 'true'}">
         <div class="alert alert-success">
-            <strong>✓ Thành công!</strong> Ảnh chứng minh thanh toán đã được gửi. Vui lòng chờ admin xác thực. Trạng thái đơn hàng: <strong>ĐANG XÁC THỰC</strong>
+            <strong>Thành công!</strong> Ảnh chứng minh thanh toán đã được gửi. Vui lòng chờ admin xác thực. Trạng thái đơn hàng: <strong>ĐANG XÁC THỰC</strong>
         </div>
     </c:if>
     
     <c:if test="${param.error == 'nofile'}">
         <div class="alert alert-error">
-            <strong>❌ Lỗi!</strong> Vui lòng chọn file để upload.
+            <strong>Lỗi!</strong> Vui lòng chọn file để upload.
         </div>
     </c:if>
     
     <c:if test="${param.error == 'invalidtype'}">
         <div class="alert alert-error">
-            <strong>❌ Lỗi!</strong> Định dạng file không hợp lệ. Vui lòng chọn JPG, PNG hoặc PDF.
+            <strong>Lỗi!</strong> Định dạng file không hợp lệ. Vui lòng chọn JPG, PNG hoặc PDF.
         </div>
     </c:if>
     
     <c:if test="${param.error == 'toolarge'}">
         <div class="alert alert-error">
-            <strong>❌ Lỗi!</strong> File quá lớn. Kích thước tối đa: 10MB.
+            <strong>Lỗi!</strong> File quá lớn. Kích thước tối đa: 10MB.
         </div>
     </c:if>
     
     <c:if test="${param.bankTransferPending == 'true'}">
         <div class="alert alert-info">
-            <strong>ℹ️ Chờ xác nhận!</strong> Bạn đã gửi yêu cầu thanh toán bằng chuyển khoản. Vui lòng upload ảnh chứng minh bên dưới.
+            <strong>Chờ xác nhận!</strong> Bạn đã gửi yêu cầu thanh toán bằng chuyển khoản. Vui lòng upload ảnh chứng minh bên dưới.
         </div>
     </c:if>
     
     <c:if test="${rentalOrder == null}">
         <div class="alert alert-error">
-            <strong>❌ Lỗi!</strong> Không tìm thấy đơn hàng.
+            <strong>Lỗi!</strong> Không tìm thấy đơn hàng.
         </div>
         <div class="button-group">
-            <button type="button" onclick="window.location.href = '${pageContext.request.contextPath}/rental'">← Quay lại</button>
+            <button type="button" onclick="window.location.href = '${pageContext.request.contextPath}/rental'">Quay lại</button>
         </div>
     </c:if>
     
     <c:if test="${rentalOrder != null}">
         <div class="payment-info">
             <div class="payment-info-row">
-                <strong>📦 Mã đơn hàng:</strong>
+                <strong>Mã đơn hàng:</strong>
                 <span>WRC<fmt:formatNumber value="${rentalOrderID}" pattern="00000"/></span>
             </div>
             <div class="payment-info-row">
@@ -126,7 +126,7 @@
                     
                     <div class="payment-method" onclick="selectPaymentMethod('CREDIT_CARD', this)">
                         <input type="radio" name="paymentMethod" value="CREDIT_CARD" id="creditCard">
-                        <label for="creditCard">💳 <strong>Thẻ Visa/MasterCard</strong>
+                        <label for="creditCard"><strong>Thẻ Visa/MasterCard</strong>
                             <div style="font-size: 12px; color: #999; margin-top: 5px;">Thanh toán trực tuyến</div>
                         </label>
                     </div>
@@ -171,24 +171,24 @@
                     </table>
                     
                     <div class="alert alert-info">
-                        ✓ Vui lòng chuyển khoản CHÍNH XÁC số tiền và nội dung<br>
-                        ✓ Thời gian xác nhận: tối đa 5 phút hoặc lâu hơn tùy ngân hàng
+                        Vui lòng chuyển khoản CHÍNH XÁC số tiền và nội dung<br>
+                        Thời gian xác nhận: tối đa 5 phút hoặc lâu hơn tùy ngân hàng
                     </div>
                     
                     <!-- Upload Payment Proof -->
                     <div style="margin-top: 30px; padding: 20px; background: #f5f5f5; border-radius: 8px; border: 2px solid #4CAF50;">
-                        <h4 style="color: #2e7d32; margin-top: 0;">📸 Cung Cấp Ảnh Chứng Minh Thanh Toán</h4>
+                        <h4 style="color: #2e7d32; margin-top: 0;">Cung Cấp Ảnh Chứng Minh Thanh Toán</h4>
                         <p style="margin: 10px 0; color: #666; font-size: 14px;">
-                            ✓ Chụp ảnh hoặc chụp màn hình biên lai chuyển khoản từ ngân hàng<br>
-                            ✓ Ảnh phải hiển thị rõ: số tiền, nội dung, thời gian, tài khoản nhận<br>
-                            ✓ Sau khi chọn ảnh, nhấn nút <strong>"Thanh toán"</strong> bên dưới
+                            Chụp ảnh hoặc chụp màn hình biên lai chuyển khoản từ ngân hàng<br>
+                            Ảnh phải hiển thị rõ: số tiền, nội dung, thời gian, tài khoản nhận<br>
+                            Sau khi chọn ảnh, nhấn nút <strong>"Thanh toán"</strong> bên dưới
                         </p>
                         <div class="form-group">
                             <label for="paymentProof" style="color: #2e7d32; font-weight: bold;">Chọn ảnh chứng minh:</label>
                             <input type="file" id="paymentProof" name="paymentProof" accept="image/jpeg,image/png,application/pdf" style="padding: 12px; border: 2px dashed #4CAF50; border-radius: 4px; cursor: pointer;">
                             <small style="display: block; margin-top: 8px; color: #999;">
-                                ✓ Định dạng: JPG, PNG, PDF<br>
-                                ✓ Kích thước tối đa: 10MB
+                                Định dạng: JPG, PNG, PDF<br>
+                                Kích thước tối đa: 10MB
                             </small>
                         </div>
                         
@@ -201,7 +201,7 @@
                 </div>
                 
                 <div id="creditCardDetails" class="payment-details">
-                    <h3>💳 Thanh Toán Bằng Thẻ Visa/MasterCard</h3>
+                    <h3>Thanh Toán Bằng Thẻ Visa/MasterCard</h3>
                     <p><strong>Số tiền:</strong> <fmt:formatNumber value="${rentalOrder.totalPrice}" pattern="#,##0"/> VNĐ</p>
                     
                     <div class="form-group">
@@ -227,31 +227,30 @@
                 </div>
                 
                 <div class="button-group">
-                    <button type="submit" onclick="return validatePaymentMethod()">✓ Thanh toán</button>
-                    <button type="button" class="secondary" onclick="history.back()">← Quay lại</button>
+                    <button type="submit" onclick="return validatePaymentMethod()">Thanh toán</button>
+                    <button type="button" class="secondary" onclick="history.back()">Quay lại</button>
                 </div>
             </form>
         </c:if>
         
         <c:if test="${payment != null && payment.paymentStatus == 'COMPLETED'}">
             <div class="success-message">
-                <div class="icon">✅</div>
                 <div class="alert alert-success">
                     <strong>Thanh toán thành công!</strong> Đơn hàng đã được xác nhận.
                 </div>
                 <div class="button-group">
-                    <button type="button" onclick="window.location.href = '${pageContext.request.contextPath}/rental'">← Về danh sách đơn</button>
+                    <button type="button" onclick="window.location.href = '${pageContext.request.contextPath}/rental'">Đế danh sách đơn</button>
                 </div>
             </div>
         </c:if>
         
         <c:if test="${payment != null && payment.paymentStatus == 'FAILED'}">
             <div class="alert alert-error">
-                <strong>❌ Thanh toán thất bại!</strong> Vui lòng thử lại.
+                <strong>Thanh toán thất bại!</strong> Vui lòng thử lại.
             </div>
             <div class="button-group">
-                <button type="button" onclick="location.reload()">🔄 Thử lại</button>
-                <button type="button" class="secondary" onclick="history.back()">← Quay lại</button>
+                <button type="button" onclick="location.reload()">Thử lại</button>
+                <button type="button" class="secondary" onclick="history.back()">Quay lại</button>
             </div>
         </c:if>
     </c:if>

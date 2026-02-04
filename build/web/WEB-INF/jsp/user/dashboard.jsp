@@ -173,37 +173,37 @@
         
         <div class="menu-grid">
             <div class="menu-card" onclick="window.location.href='${pageContext.request.contextPath}/search'">
-                <div class="icon">👗</div>
+                <div class="icon"></div>
                 <h3>Duyệt Sản Phẩm</h3>
                 <p>Khám phá các bộ đồ mới</p>
             </div>
             
             <div class="menu-card" onclick="window.location.href='${pageContext.request.contextPath}/rental?action=myOrders'">
-                <div class="icon">📦</div>
+                <div class="icon"></div>
                 <h3>Đơn Thuê Của Tôi</h3>
                 <p>Quản lý các đơn thuê đang hoạt động</p>
             </div>
             
             <div class="menu-card" onclick="alert('Tính năng yêu thích đang được phát triển')">
-                <div class="icon">❤️</div>
+                <div class="icon"></div>
                 <h3>Yêu Thích</h3>
                 <p>Lưu lại những bộ đồ yêu thích</p>
             </div>
             
             <div class="menu-card" onclick="window.location.href='${pageContext.request.contextPath}/user?action=profile'">
-                <div class="icon">👤</div>
+                <div class="icon"></div>
                 <h3>Hồ Sơ</h3>
                 <p>Cập nhật thông tin cá nhân</p>
             </div>
             
             <div class="menu-card" onclick="alert('Tính năng lịch sử đang được phát triển')">
-                <div class="icon">📜</div>
+                <div class="icon"></div>
                 <h3>Lịch Sử</h3>
                 <p>Xem các đơn thuê trong quá khứ</p>
             </div>
             
             <div class="menu-card" onclick="alert('Tính năng cài đặt đang được phát triển')">
-                <div class="icon">⚙️</div>
+                <div class="icon"></div>
                 <h3>Cài Đặt</h3>
                 <p>Quản lý tài khoản và bảo mật</p>
             </div>

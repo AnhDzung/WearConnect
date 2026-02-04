@@ -49,12 +49,12 @@
 <div class="container">
     <c:if test="${param.success == 'true'}">
         <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;">
-            ✓ Cập nhật thông tin thành công!
+            Cập nhật thông tin thành công!
         </div>
     </c:if>
     <c:if test="${param.pwdSuccess == 'true'}">
         <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;">
-            ✓ Đổi mật khẩu thành công!
+            Đổi mật khẩu thành công!
         </div>
     </c:if>
     <c:if test="${param.error != null}">
@@ -123,7 +123,7 @@
             </div>
         </div>
         <div class="actions">
-            <button class="btn btn-edit" onclick="openEditModal()">✏️ Chỉnh sửa thông tin</button>
+            <button class="btn btn-edit" onclick="openEditModal()">Chỉnh sửa thông tin</button>
             <button class="btn btn-edit" style="background: #10b981;" onclick="openChangePasswordModal()">🔐 Đổi mật khẩu</button>
             <button class="btn btn-back" onclick="history.back()">Quay lại</button>
         </div>

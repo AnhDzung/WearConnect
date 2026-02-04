@@ -124,7 +124,7 @@
                     <td>2026-01-20</td>
                     <td>2026-01-22</td>
                     <td>150.000 VNĐ</td>
-                    <td><span class="status status-confirmed">✓ Đã Xác Nhận</span></td>
+                    <td><span class="status status-confirmed">Đã Xác Nhận</span></td>
                     <td><button class="btn btn-primary">Xem</button></td>
                 </tr>
                 <tr>
@@ -134,7 +134,7 @@
                     <td>2026-01-21</td>
                     <td>2026-01-23</td>
                     <td>200.000 VNĐ</td>
-                    <td><span class="status status-pending">⏳ Chờ Duyệt</span></td>
+                    <td><span class="status status-pending">Chờ Duyệt</span></td>
                     <td><button class="btn btn-primary">Xem</button></td>
                 </tr>
                 <tr>
@@ -144,7 +144,7 @@
                     <td>2026-01-15</td>
                     <td>2026-01-18</td>
                     <td>100.000 VNĐ</td>
-                    <td><span class="status status-returned">✓ Đã Trả</span></td>
+                    <td><span class="status status-returned">Đã Trả</span></td>
                     <td><button class="btn btn-primary">Xem</button></td>
                 </tr>
             </tbody>

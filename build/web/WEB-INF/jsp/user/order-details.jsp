@@ -69,7 +69,7 @@
     <!-- Success message for payment verifying -->
     <c:if test="${param.paymentVerifying == 'true'}">
         <div class="alert alert-success">
-            <strong>✓ Thanh toán thành công!</strong><br>
+            <strong>Thanh toán thành công!</strong><br>
             Cảm ơn bạn đã tải ảnh chứng minh thanh toán.<br>
             Đơn hàng của bạn đang được hệ thống kiểm tra và xác thực.<br>
             Vui lòng đợi admin xác nhận thanh toán.
@@ -79,7 +79,7 @@
     <!-- Bank transfer pending message when no proof uploaded -->
     <c:if test="${param.bankTransferPending == 'true'}">
         <div class="alert alert-info" style="border:1px solid #b8daff; color:#0c5460;">
-            <strong>ℹ️ Yêu cầu thanh toán đã được ghi nhận.</strong><br>
+            <strong>Yêu cầu thanh toán đã được ghi nhận.</strong><br>
             Bạn đã chọn chuyển khoản nhưng chưa tải ảnh chứng minh.<br>
             Vui lòng chuyển khoản theo thông tin đã hiển thị và tải ảnh chứng minh thanh toán để hệ thống xác thực nhanh hơn.
         </div>

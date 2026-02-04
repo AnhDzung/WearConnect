@@ -2,16 +2,6 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group>
-            <file>file:/D:/Fpt/WearConnect/src/java/servlet/RentalOrderServlet.java</file>
-            <file>file:/D:/Fpt/WearConnect/src/java/servlet/ClothingServlet.java</file>
-            <file>file:/D:/Fpt/WearConnect/src/java/servlet/UserServlet.java</file>
-            <file>file:/D:/Fpt/WearConnect/src/java/servlet/ManagerServlet.java</file>
-            <file>file:/D:/Fpt/WearConnect/src/java/DAO/RentalOrderDAO.java</file>
-            <file>file:/D:/Fpt/WearConnect/src/java/Service/RentalOrderService.java</file>
-            <file>file:/D:/Fpt/WearConnect/src/java/Model/OrderIssue.java</file>
-            <file>file:/D:/Fpt/WearConnect/web/WEB-INF/jsp/home.jsp</file>
-            <file>file:/D:/Fpt/WearConnect/src/java/servlet/PaymentServlet.java</file>
-        </group>
+        <group/>
     </open-files>
 </project-private>

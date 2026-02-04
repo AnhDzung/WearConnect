@@ -103,7 +103,7 @@
         </div>
         
         <div class="message">
-            📊 Tính năng thống kê doanh thu đang được phát triển. Những dữ liệu dưới đây là mẫu để minh họa.
+            Tính năng thống kê doanh thu đang được phát triển. Những dữ liệu dưới đây là mẫu để minh họa.
         </div>
         
         <div class="stats-grid">
@@ -113,17 +113,17 @@
             </div>
             
             <div class="stat-box">
-                <h3>📅 Doanh Thu Tháng Này</h3>
+                <h3>Doanh Thu Tháng Này</h3>
                 <div class="value">2.150.000 ₫</div>
             </div>
             
             <div class="stat-box orange">
-                <h3>📊 Đơn Hàng Hoàn Thành</h3>
+                <h3>Đơn Hàng Hoàn Thành</h3>
                 <div class="value">48</div>
             </div>
             
             <div class="stat-box red">
-                <h3>⏳ Đơn Hàng Đang Xử Lý</h3>
+                <h3>Đơn Hàng Đang Xử Lý</h3>
                 <div class="value">5</div>
             </div>
         </div>

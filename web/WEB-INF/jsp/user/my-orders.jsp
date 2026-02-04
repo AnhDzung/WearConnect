@@ -126,13 +126,13 @@
                         <td>
                             <span class="status ${order.status.toLowerCase()}">
                                 <c:choose>
-                                    <c:when test="${order.status == 'PENDING'}">⏳ Chờ duyệt</c:when>
-                                    <c:when test="${order.status == 'VERIFYING'}">🔍 Đang xác minh</c:when>
-                                    <c:when test="${order.status == 'CONFIRMED'}">✓ Đã xác nhận</c:when>
-                                    <c:when test="${order.status == 'RENTED'}">📦 Đang thuê</c:when>
-                                    <c:when test="${order.status == 'RETURNED'}">↩️ Đã trả hàng</c:when>
-                                    <c:when test="${order.status == 'ISSUE'}">⚠️ Có vấn đề</c:when>
-                                    <c:when test="${order.status == 'COMPLETED'}">✓✓ Hoàn thành</c:when>
+                                    <c:when test="${order.status == 'PENDING'}">Chờ duyệt</c:when>
+                                    <c:when test="${order.status == 'VERIFYING'}">Đang xác minh</c:when>
+                                    <c:when test="${order.status == 'CONFIRMED'}">Đã xác nhận</c:when>
+                                    <c:when test="${order.status == 'RENTED'}">Đang thuê</c:when>
+                                    <c:when test="${order.status == 'RETURNED'}">Đã trả hàng</c:when>
+                                    <c:when test="${order.status == 'ISSUE'}">Có vấn đề</c:when>
+                                    <c:when test="${order.status == 'COMPLETED'}">Hoàn thành</c:when>
                                     <c:when test="${order.status == 'CANCELLED'}">✗ Đã hủy</c:when>
                                     <c:otherwise>${order.status}</c:otherwise>
                                 </c:choose>

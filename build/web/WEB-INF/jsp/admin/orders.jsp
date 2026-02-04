@@ -269,14 +269,14 @@
 <body>
     <div class="container">
         <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h1>📦 Quản lý đơn hàng</h1>
-            <a href="${pageContext.request.contextPath}/admin" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; transition: background 0.3s;">← Quay lại Dashboard</a>
+            <h1>Quản lý đơn hàng</h1>
+            <a href="${pageContext.request.contextPath}/admin" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; transition: background 0.3s;">Quay lại Dashboard</a>
         </div>
         
         <!-- Alert messages -->
         <c:if test="${param.verified == 'true'}">
             <div class="alert success">
-                ✓ Đơn hàng đã được xác nhận thành công!
+                Đơn hàng đã được xác nhận thành công!
             </div>
         </c:if>
         
@@ -344,7 +344,7 @@
                                             <c:when test="${order.paymentStatus != null}">
                                                 ${order.paymentStatus}
                                                 <c:if test="${order.paymentProofImage != null}">
-                                                    <br><small style="color: #28a745;">✓ Có ảnh CM</small>
+                                                    <br><small style="color: #28a745;">Có ảnh CM</small>
                                                 </c:if>
                                             </c:when>
                                             <c:otherwise>
@@ -363,7 +363,7 @@
                                                     <input type="hidden" name="orderID" value="${order.rentalOrderID}">
                                                     <button type="submit" class="btn btn-verify" 
                                                             onclick="return confirm('Xác nhận thanh toán cho đơn hàng #${order.rentalOrderID}?')">
-                                                        ✓ Xác nhận
+                                                        Xác nhận
                                                     </button>
                                                 </form>
                                             </c:if>
@@ -371,7 +371,7 @@
                                                 <c:set var="imagePath" value="${order['paymentProofImage']}" />
                                                 <button type="button" class="btn btn-view" 
                                                         onclick="openProofImage('${pageContext.request.contextPath}/image?path=${imagePath}')">
-                                                    📸 Xem ảnh
+                                                    Xem ảnh
                                                 </button>
                                             </c:if>
                                             <a href="${pageContext.request.contextPath}/rental?action=viewOrder&id=${order.rentalOrderID}" 

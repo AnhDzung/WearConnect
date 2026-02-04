@@ -206,9 +206,9 @@
             </div>
         </c:if>
         <div class="control-panel">
-            <button class="btn btn-add" onclick="addAccount()">➕ Thêm Tài Khoản</button>
+            <button class="btn btn-add" onclick="addAccount()">Thêm Tài Khoản</button>
             <form method="GET" action="<%= request.getContextPath() %>/admin" style="display: inline;">
-                <button type="submit" class="btn btn-refresh">🔄 Làm Mới</button>
+                <button type="submit" class="btn btn-refresh">Làm Mới</button>
             </form>
         </div>
         
@@ -243,7 +243,7 @@
                                 <td><%= user.getUserRole() %></td>
                                 <td>
                                     <% if (user.isStatus()) { %>
-                                        <span class="status-active">✓ Hoạt Động</span>
+                                        <span class="status-active">Hoạt Động</span>
                                     <% } else { %>
                                         <span class="status-inactive">✗ Khóa</span>
                                     <% } %>
@@ -265,7 +265,7 @@
                                         <form method="GET" action="<%= request.getContextPath() %>/admin" style="display: inline;" onsubmit="return confirm('Bạn có chắc muốn xóa tài khoản này?');">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="id" value="<%= user.getAccountID() %>">
-                                            <button type="submit" class="btn btn-delete">🗑️ Xóa</button>
+                                            <button type="submit" class="btn btn-delete">Xóa</button>
                                         </form>
                                     </div>
                                 </td>

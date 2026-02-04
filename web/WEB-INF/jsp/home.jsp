@@ -69,7 +69,7 @@
                 <option value="price_desc" ${param.sort == 'price_desc' ? 'selected' : ''}>Giá thuê cao nhất - thấp nhất</option>
                 <option value="price_asc" ${param.sort == 'price_asc' ? 'selected' : ''}>Giá thuê thấp nhất - cao nhất</option>
             </select>
-            <button type="submit">🔍 Tìm Kiếm</button>
+            <button type="submit">Tìm Kiếm</button>
         </form>
     </div>
     

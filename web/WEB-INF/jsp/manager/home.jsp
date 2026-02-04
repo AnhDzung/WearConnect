@@ -199,13 +199,13 @@
 
 <div class="container">
     <div class="page-header">
-        <h1>👕 Sản phẩm của tôi</h1>
+        <h1>Sản phẩm của tôi</h1>
         <a href="${pageContext.request.contextPath}/clothing?action=upload" class="btn-upload">+ Đăng tải sản phẩm mới</a>
     </div>
     
     <c:if test="${param.success}">
         <div class="success-message show">
-            ✓ Thao tác thành công!
+            Thao tác thành công!
         </div>
     </c:if>
     
@@ -231,7 +231,7 @@
                                 <div><strong>Trạng thái:</strong> 
                                     <c:choose>
                                         <c:when test="${clothing.isActive == 1}">
-                                            <span style="color: #48bb78;">✓ Hoạt động</span>
+                                            <span style="color: #48bb78;">Hoạt động</span>
                                         </c:when>
                                         <c:otherwise>
                                             <span style="color: #f56565;">✗ Đã xóa</span>

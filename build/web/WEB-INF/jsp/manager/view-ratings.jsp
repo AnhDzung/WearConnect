@@ -116,7 +116,7 @@
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
 
 <div class="container">
-    <h1>⭐ Đánh giá về sản phẩm</h1>
+    <h1>Đánh giá về sản phẩm</h1>
     <button onclick="history.back()" class="header-btn">Quay lại</button>
     
     <c:if test="${totalRatings == 0}">

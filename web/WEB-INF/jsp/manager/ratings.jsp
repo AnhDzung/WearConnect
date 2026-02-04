@@ -101,23 +101,23 @@
     
     <div class="container">
         <div class="page-header">
-            <h1>⭐ Đánh Giá Khách Hàng</h1>
+            <h1>Đánh Giá Khách Hàng</h1>
             <p>Xem các đánh giá từ khách hàng về sản phẩm của bạn</p>
         </div>
         
         <div class="ratings-container">
             <div class="rating-item">
                 <div class="rating-header">
-                    <div class="rating-product">👕 Áo sơ mi xanh</div>
-                    <div class="rating-customer">👤 Nguyễn Văn A</div>
-                    <div class="rating-date">📅 20 Tháng 1, 2026</div>
+                    <div class="rating-product">Áo sơ mi xanh</div>
+                    <div class="rating-customer">Nguyễn Văn A</div>
+                    <div class="rating-date">20 Tháng 1, 2026</div>
                 </div>
                 <div class="rating-score">
-                    <span class="star">⭐</span>
-                    <span class="star">⭐</span>
-                    <span class="star">⭐</span>
-                    <span class="star">⭐</span>
-                    <span class="star">⭐</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
                 </div>
             </div>
             <div class="rating-comment">
@@ -126,15 +126,15 @@
             
             <div class="rating-item">
                 <div class="rating-header">
-                    <div class="rating-product">👗 Váy dạo phố</div>
-                    <div class="rating-customer">👤 Trần Thị B</div>
-                    <div class="rating-date">📅 18 Tháng 1, 2026</div>
+                    <div class="rating-product">Váy dao phố</div>
+                    <div class="rating-customer">Trần Thị B</div>
+                    <div class="rating-date">18 Tháng 1, 2026</div>
                 </div>
                 <div class="rating-score">
-                    <span class="star">⭐</span>
-                    <span class="star">⭐</span>
-                    <span class="star">⭐</span>
-                    <span class="star">⭐</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
                 </div>
             </div>
             <div class="rating-comment">
@@ -143,14 +143,14 @@
             
             <div class="rating-item">
                 <div class="rating-header">
-                    <div class="rating-product">👖 Quần jean</div>
-                    <div class="rating-customer">👤 Lê Văn C</div>
-                    <div class="rating-date">📅 15 Tháng 1, 2026</div>
+                    <div class="rating-product">Quần jean</div>
+                    <div class="rating-customer">Lê Văn C</div>
+                    <div class="rating-date">15 Tháng 1, 2026</div>
                 </div>
                 <div class="rating-score">
-                    <span class="star">⭐</span>
-                    <span class="star">⭐</span>
-                    <span class="star">⭐</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
                 </div>
             </div>
             <div class="rating-comment">

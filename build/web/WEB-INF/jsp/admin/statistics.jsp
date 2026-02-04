@@ -233,8 +233,8 @@
 <body>
     <div class="container">
         <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h1>📊 Thống kê hệ thống</h1>
-            <a href="${pageContext.request.contextPath}/admin" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; transition: background 0.3s;">← Quay lại Dashboard</a>
+            <h1>Thống kê hệ thống</h1>
+            <a href="${pageContext.request.contextPath}/admin" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; transition: background 0.3s;">Quay lại Dashboard</a>
         </div>
         
         <!-- Top Managers Section -->
@@ -257,7 +257,7 @@
                                         <div class="stat">
                                             <div class="stat-label">Đánh giá trung bình</div>
                                             <div class="stat-value">
-                                                <fmt:formatNumber value="${manager.avgRating}" maxFractionDigits="1"/> ⭐
+                                                <fmt:formatNumber value="${manager.avgRating}" maxFractionDigits="1"/>
                                             </div>
                                         </div>
                                         <div class="stat">
@@ -293,7 +293,7 @@
                                                 <td>${manager.email}</td>
                                                 <td>
                                                     <span class="rating-stars">
-                                                        <fmt:formatNumber value="${manager.avgRating}" maxFractionDigits="1"/> ⭐
+                                                        <fmt:formatNumber value="${manager.avgRating}" maxFractionDigits="1"/>
                                                     </span>
                                                 </td>
                                                 <td>${manager.ratingCount} đánh giá</td>
