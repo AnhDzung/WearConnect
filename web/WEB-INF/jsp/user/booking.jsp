@@ -216,33 +216,66 @@
         calculatePrice();
     }
     
+    function parseFlexibleDate(value) {
+        if (!value) return null;
+        // Try direct parse (ISO format from datetime-local / date inputs)
+        let d = new Date(value);
+        if (!isNaN(d.getTime())) return d;
+
+        // Try parse common localized format: dd/MM/yyyy HH:mm [AM|PM]
+        // Examples: "02/04/2026 11:43 AM" or "02/04/2026 11:43"
+        const m = value.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?:\s*(AM|PM))?/i);
+        if (m) {
+            let day = parseInt(m[1], 10);
+            let month = parseInt(m[2], 10) - 1;
+            let year = parseInt(m[3], 10);
+            let hour = parseInt(m[4], 10);
+            let minute = parseInt(m[5], 10);
+            let ampm = m[6];
+            if (ampm) {
+                ampm = ampm.toUpperCase();
+                if (ampm === 'PM' && hour < 12) hour += 12;
+                if (ampm === 'AM' && hour === 12) hour = 0;
+            }
+            return new Date(year, month, day, hour, minute);
+        }
+
+        // Fallback: invalid date
+        return null;
+    }
+
     function calculatePrice() {
         const rentalType = document.querySelector('input[name="rentalType"]:checked').value;
         let totalPrice = 0;
-        
+
         if (rentalType === 'hourly') {
-            const startDate = new Date(document.getElementById('hourlyStartDate').value);
-            const endDate = new Date(document.getElementById('hourlyEndDate').value);
-            
-            if (startDate && endDate && startDate < endDate) {
+            const rawStart = document.getElementById('hourlyStartDate').value;
+            const rawEnd = document.getElementById('hourlyEndDate').value;
+            const startDate = parseFlexibleDate(rawStart);
+            const endDate = parseFlexibleDate(rawEnd);
+
+            if (startDate instanceof Date && endDate instanceof Date && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && startDate < endDate) {
                 const hours = (endDate - startDate) / (1000 * 60 * 60);
                 totalPrice = hours * HOURLY_PRICE;
             }
         } else {
-            const startDate = new Date(document.getElementById('dailyStartDate').value);
-            const endDate = new Date(document.getElementById('dailyEndDate').value);
-            
-            if (startDate && endDate && startDate < endDate) {
+            // daily inputs usually provide yyyy-mm-dd which Date() handles
+            const rawStart = document.getElementById('dailyStartDate').value;
+            const rawEnd = document.getElementById('dailyEndDate').value;
+            const startDate = parseFlexibleDate(rawStart) || new Date(rawStart);
+            const endDate = parseFlexibleDate(rawEnd) || new Date(rawEnd);
+
+            if (startDate instanceof Date && endDate instanceof Date && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && startDate < endDate) {
                 const timeDiff = endDate - startDate;
                 const days = timeDiff / (1000 * 60 * 60 * 24);
                 totalPrice = days * DAILY_PRICE;
             }
         }
-        
+
         const paymentAmount = totalPrice; // 100% payment
-        
-        document.getElementById('totalPrice').textContent = Math.round(totalPrice).toLocaleString('vi-VN');
-        document.getElementById('paymentAmount').textContent = Math.round(paymentAmount).toLocaleString('vi-VN');
+
+        document.getElementById('totalPrice').textContent = (isFinite(totalPrice) && totalPrice > 0) ? Math.round(totalPrice).toLocaleString('vi-VN') : '0';
+        document.getElementById('paymentAmount').textContent = (isFinite(paymentAmount) && paymentAmount > 0) ? Math.round(paymentAmount).toLocaleString('vi-VN') : '0';
     }
 </script>
 <jsp:include page="/WEB-INF/jsp/components/footer.jsp" />
