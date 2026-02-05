@@ -58,6 +58,16 @@ public class UserServlet extends HttpServlet {
                 handleChangePassword(request, response, user, userID);
             } else if ("rentalHistory".equals(action)) {
                 request.getRequestDispatcher("/WEB-INF/jsp/user/rental-history.jsp").forward(request, response);
+            } else if ("notifications".equals(action)) {
+                // Show user notifications (both read and unread). Do NOT auto-mark as read here.
+                try {
+                    int uid = (int) session.getAttribute("accountID");
+                    java.util.List<Model.Notification> notes = Controller.NotificationController.getAllNotifications(uid);
+                    request.setAttribute("notifications", notes);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                request.getRequestDispatcher("/WEB-INF/jsp/user/notifications.jsp").forward(request, response);
             } else if ("favorites".equals(action)) {
                 request.getRequestDispatcher("/WEB-INF/jsp/user/favorites.jsp").forward(request, response);
             } else {

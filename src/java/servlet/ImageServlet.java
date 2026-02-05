@@ -107,15 +107,25 @@ public class ImageServlet extends HttpServlet {
         response.getOutputStream().flush();
     }
 
-    // Fallback: load image bytes from /uploads/<relativePath> when DB binary is missing
+    // Fallback: load image bytes from webapp root + relativePath when DB binary is missing
     private byte[] tryLoadFromDisk(String relativePath) {
         if (relativePath == null || relativePath.isEmpty()) return null;
         try {
-            String base = getServletContext().getRealPath("/uploads/");
-            if (base == null) return null;
-            java.nio.file.Path p = java.nio.file.Paths.get(base, relativePath);
+            String webRoot = getServletContext().getRealPath("/");
+            if (webRoot == null) return null;
+
+            // Normalize relativePath: remove leading slash if present
+            String rel = relativePath.startsWith("/") ? relativePath.substring(1) : relativePath;
+
+            // If caller stored path with a leading 'uploads/' (e.g. 'uploads/payment-proof/...'),
+            // combining with webRoot will correctly point to <webroot>/uploads/payment-proof/...
+            java.nio.file.Path p = java.nio.file.Paths.get(webRoot, rel);
+            // Debug logging to help find missing files in deployed environment
+            System.out.println("[ImageServlet] trying to load from disk: webRoot=" + webRoot + " rel=" + rel + " path=" + p.toString());
             if (java.nio.file.Files.exists(p)) {
                 return java.nio.file.Files.readAllBytes(p);
+            } else {
+                System.out.println("[ImageServlet] file not found at: " + p.toString());
             }
         } catch (Exception ignored) {
         }

@@ -368,12 +368,23 @@
                                                         Xác nhận
                                                     </button>
                                                 </form>
-                                                <form method="post" action="${pageContext.request.contextPath}/admin" style="display: inline; margin-left:6px;">
+                                                <form method="post" action="${pageContext.request.contextPath}/admin" style="display: inline; margin-left:6px;" onsubmit="return promptReject(this);">
                                                     <input type="hidden" name="action" value="rejectPayment">
                                                     <input type="hidden" name="orderID" value="${order.rentalOrderID}">
-                                                    <button type="submit" class="btn" style="background:#dc3545;color:white;" 
-                                                            onclick="return confirm('Từ chối thanh toán và hoàn trả về chờ thanh toán?')">
+                                                    <input type="hidden" name="reason" value="">
+                                                    <button type="submit" class="btn" style="background:#dc3545;color:white;">
                                                         Từ chối
+                                                    </button>
+                                                </form>
+                                            </c:if>
+                                            <!-- Allow admin to manually mark pending orders as paid -->
+                                            <c:if test="${order.status == 'PENDING_PAYMENT'}">
+                                                <form method="post" action="${pageContext.request.contextPath}/admin" style="display: inline;">
+                                                    <input type="hidden" name="action" value="verifyPayment">
+                                                    <input type="hidden" name="orderID" value="${order.rentalOrderID}">
+                                                    <button type="submit" class="btn btn-verify" 
+                                                            onclick="return confirm('Đánh dấu đơn #${order.rentalOrderID} là đã thanh toán (thủ công)?')">
+                                                        Xác nhận (thủ công)
                                                     </button>
                                                 </form>
                                             </c:if>
@@ -439,6 +450,23 @@
                 closeProofImage();
             }
         });
+
+        function promptReject(form) {
+            var reason = prompt('Nhập lý do từ chối cho đơn hàng:', 'Ảnh không hợp lệ / Số tiền không chính xác');
+            if (reason === null) {
+                // user cancelled
+                return false;
+            }
+            reason = reason.trim();
+            if (reason.length === 0) {
+                alert('Vui lòng nhập lý do từ chối.');
+                return false;
+            }
+            // set hidden input
+            var input = form.querySelector('input[name="reason"]');
+            if (input) input.value = reason;
+            return confirm('Xác nhận từ chối đơn hàng với lý do:\n' + reason);
+        }
     </script>
 </body>
 </html>

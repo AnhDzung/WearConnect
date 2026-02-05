@@ -97,9 +97,21 @@ public class AdminServlet extends HttpServlet {
             statusFilter = "ALL";
         }
         
-        System.out.println("[AdminServlet] showOrdersPage - Status filter: " + statusFilter);
-        
-        List<Map<String, Object>> orders = DashboardService.getAllOrdersWithDetails(statusFilter);
+        System.out.println("[AdminServlet] showOrdersPage - Status filter (raw): " + statusFilter);
+
+        // Map friendly UI status values to actual DB status codes
+        String dbStatusFilter = statusFilter;
+        if ("PENDING".equalsIgnoreCase(statusFilter)) {
+            dbStatusFilter = "PENDING_PAYMENT";
+        } else if ("VERIFYING".equalsIgnoreCase(statusFilter)) {
+            dbStatusFilter = "PAYMENT_SUBMITTED";
+        } else if (statusFilter == null || statusFilter.isEmpty() || "ALL".equalsIgnoreCase(statusFilter)) {
+            dbStatusFilter = "ALL";
+        }
+
+        System.out.println("[AdminServlet] showOrdersPage - Status filter (db): " + dbStatusFilter);
+
+        List<Map<String, Object>> orders = DashboardService.getAllOrdersWithDetails(dbStatusFilter);
         
         System.out.println("[AdminServlet] Orders retrieved: " + (orders != null ? orders.size() : "null"));
         if (orders != null && !orders.isEmpty()) {
@@ -124,6 +136,21 @@ public class AdminServlet extends HttpServlet {
             RentalOrderService.updateOrderStatus(orderID, "PAYMENT_VERIFIED");
             
             System.out.println("[AdminServlet] Order " + orderID + " verified - Status changed to PAYMENT_VERIFIED");
+
+            // Notify the manager (product owner) that the order was confirmed
+            try {
+                Model.RentalOrder ro = Controller.RentalOrderController.getRentalOrderByID(orderID);
+                if (ro != null) {
+                    int managerUserID = ro.getManagerID();
+                    if (managerUserID > 0) {
+                        String title = "Đơn hàng đã được xác nhận";
+                        String message = "Đơn hàng #" + orderID + " đã được xác nhận bởi quản trị viên.";
+                        Controller.NotificationController.createNotification(managerUserID, title, message, orderID);
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
             
             // Redirect back to ALL to show all orders and newly confirmed one
             // This avoids showing empty page if last VERIFYING order was confirmed
@@ -141,14 +168,30 @@ public class AdminServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             int orderID = Integer.parseInt(request.getParameter("orderID"));
+            // Get rejection reason (if provided)
+            String reason = request.getParameter("reason");
+            if (reason == null) reason = "Lý do không được cung cấp";
             // Optionally clear stored payment proof on RentalOrder
             Controller.RentalOrderController.setPaymentProofPath(orderID, null);
-            // Set order back to PENDING_PAYMENT
-            RentalOrderService.updateOrderStatus(orderID, "PENDING_PAYMENT");
+            // Set order back to PENDING_PAYMENT and save notes
+            Controller.RentalOrderController.updateOrderStatusWithNotes(orderID, "PENDING_PAYMENT", reason);
             // If payment record exists, mark as failed (best-effort)
             Model.Payment payment = PaymentController.getPaymentStatus(orderID);
             if (payment != null) {
                 PaymentController.failPayment(payment.getPaymentID());
+            }
+
+            // Create an in-app notification for renter
+            try {
+                Model.RentalOrder ro = Controller.RentalOrderController.getRentalOrderByID(orderID);
+                if (ro != null) {
+                    int renterUserID = ro.getRenterUserID();
+                    String title = "Đơn hàng bị từ chối";
+                    String message = "Đơn hàng #" + orderID + " của bạn đã bị từ chối. Lý do: " + reason;
+                    Controller.NotificationController.createNotification(renterUserID, title, message, orderID);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
 
             response.sendRedirect(request.getContextPath() + "/admin?action=orders&status=ALL&rejected=true");

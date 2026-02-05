@@ -304,28 +304,29 @@
         }
     </script>
 
-    <!-- Payment proof preview for staff/admin -->
-    <!-- Payment proof preview (from Payment record or stored on order) -->
-    <c:choose>
-        <c:when test="${not empty payment and not empty payment.paymentProofImage}">
-            <div style="margin-top:24px; padding:16px; border:1px solid #e1e5ee; border-radius:8px; background:#f9fbff;">
-                <h3 style="margin-top:0;">Ảnh chứng minh thanh toán</h3>
-                <img src="${pageContext.request.contextPath}/${payment.paymentProofImage}" alt="Payment proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
-            </div>
-        </c:when>
-        <c:when test="${not empty order.paymentProofImage}">
-            <div style="margin-top:24px; padding:16px; border:1px solid #e1e5ee; border-radius:8px; background:#f9fbff;">
-                <h3 style="margin-top:0;">Ảnh chứng minh thanh toán</h3>
-                <img src="${pageContext.request.contextPath}/${order.paymentProofImage}" alt="Payment proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
-            </div>
-        </c:when>
-    </c:choose>
+    <!-- Payment proof preview (visible only to Admin or the renter user) -->
+    <c:if test="${sessionScope.userRole eq 'Admin' || (not empty sessionScope.accountID and not empty order.renterUserID and sessionScope.accountID eq order.renterUserID)}">
+        <c:choose>
+            <c:when test="${not empty payment and not empty payment.paymentProofImage}">
+                <div style="margin-top:24px; padding:16px; border:1px solid #e1e5ee; border-radius:8px; background:#f9fbff;">
+                    <h3 style="margin-top:0;">Ảnh chứng minh thanh toán</h3>
+                    <img src="${pageContext.request.contextPath}/image?path=${payment.paymentProofImage}" alt="Payment proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
+                </div>
+            </c:when>
+            <c:when test="${not empty order.paymentProofImage}">
+                <div style="margin-top:24px; padding:16px; border:1px solid #e1e5ee; border-radius:8px; background:#f9fbff;">
+                    <h3 style="margin-top:0;">Ảnh chứng minh thanh toán</h3>
+                    <img src="${pageContext.request.contextPath}/image?path=${order.paymentProofImage}" alt="Payment proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
+                </div>
+            </c:when>
+        </c:choose>
+    </c:if>
 
     <!-- Received proof preview -->
     <c:if test="${not empty order.receivedProofImage}">
         <div style="margin-top:16px; padding:16px; border:1px solid #e1e5ee; border-radius:8px; background:#fff8f0;">
             <h3 style="margin-top:0;">Ảnh chứng minh đã nhận hàng</h3>
-            <img src="${pageContext.request.contextPath}/${order.receivedProofImage}" alt="Received proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
+            <img src="${pageContext.request.contextPath}/image?path=${order.receivedProofImage}" alt="Received proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
         </div>
     </c:if>
 

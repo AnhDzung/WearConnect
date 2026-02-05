@@ -52,7 +52,7 @@
         margin: 0;
         padding: 0;
         flex-wrap: nowrap; /* keep single row on desktop */
-        overflow-x: auto;  /* allow scroll if too many items */
+        overflow-x: visible;  /* allow dropdown to overflow without adding scrollbar */
         white-space: nowrap;
         -webkit-overflow-scrolling: touch;
     }
@@ -133,6 +133,43 @@
             font-size: 13px;
         }
     }
+    /* Notifications dropdown styles (match provided screenshot) */
+    .notif-wrapper { position: relative; }
+    .notif-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        width: 340px;
+        background: #fff;
+        color: #333;
+        border-radius: 8px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        overflow: hidden;
+        z-index: 3000;
+        font-size: 14px;
+    }
+    .notif-dropdown:before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: 24px;
+        border-width: 6px;
+        border-style: solid;
+        border-color: transparent transparent #fff transparent;
+        filter: drop-shadow(0 2px 2px rgba(0,0,0,0.06));
+    }
+    .notif-header { padding: 12px 14px; background:#fafafa; font-weight:700; color:#666; }
+    .notif-list { max-height: 360px; overflow:auto; }
+    .notif-item { display:flex; gap:10px; padding:12px 12px; border-bottom:1px solid #f0f0f0; }
+    .notif-item:last-child { border-bottom:none; }
+    .notif-thumb { width:48px; height:48px; border-radius:6px; background:#f3f3f3; flex:0 0 48px; display:flex; align-items:center; justify-content:center; color:#999; font-weight:700; }
+    .notif-body { flex:1; }
+    .notif-title { font-weight:700; font-size:13px; color:#222; }
+    .notif-desc { color:#666; font-size:13px; margin-top:6px; line-height:1.25; }
+    .notif-time { font-size:11px; color:#999; margin-top:6px; }
+    .notif-footer { padding:10px; text-align:center; background:#fff; }
+    .notif-footer a { color:#0d6efd; text-decoration:none; font-weight:600; }
 </style>
 
 <header class="wearconnect-header">
@@ -196,8 +233,55 @@
             <!-- User Info -->
             <% if (userRole != null && !userRole.isEmpty()) { %>
                 <li style="margin-left: auto;">
-                    <div class="header-user-info">
-                        <div class="header-user-name">
+                            <div class="header-user-info">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <%-- Unread notifications --%>
+                                    <%
+                                        int currentUserID = -1;
+                                        java.util.List<Model.Notification> unreadNotes = null;
+                                        if (account != null) {
+                                            Model.Account acc2 = (Model.Account) account;
+                                            currentUserID = acc2.getAccountID();
+                                            try {
+                                                unreadNotes = Controller.NotificationController.getUnreadNotifications(currentUserID);
+                                            } catch (Exception e) {
+                                                unreadNotes = null;
+                                            }
+                                        }
+                                        int unreadCount = (unreadNotes == null) ? 0 : unreadNotes.size();
+                                    %>
+                                    <div class="notif-wrapper" style="position:relative; display:inline-block;">
+                                        <a href="${pageContext.request.contextPath}/user?action=notifications" style="color:white; text-decoration:none;">
+                                            Thông báo 🔔
+                                            <% if (unreadCount > 0) { %>
+                                                <span style="position:absolute; top:-6px; right:-8px; background:#ff4757; color:white; border-radius:50%; padding:2px 6px; font-size:12px; font-weight:700;"><%= unreadCount %></span>
+                                            <% } %>
+                                        </a>
+                                        <!-- Dropdown preview -->
+                                        <div id="notifDropdown" class="notif-dropdown">
+                                            <div class="notif-header">Thông Báo Mới Nhận</div>
+                                            <div class="notif-list">
+                                                <% if (unreadNotes != null && !unreadNotes.isEmpty()) {
+                                                    for (Model.Notification nn : unreadNotes) { %>
+                                                        <div class="notif-item">
+                                                            <div class="notif-thumb">TB</div>
+                                                            <div class="notif-body">
+                                                                <div class="notif-title"><%= nn.getTitle() %></div>
+                                                                <div class="notif-desc"><%= nn.getMessage() %></div>
+                                                                <div class="notif-time"><%= nn.getFormattedCreatedAt() %></div>
+                                                            </div>
+                                                        </div>
+                                                    <% }
+                                                } else { %>
+                                                    <div style="padding:18px; text-align:center; color:#666;">Không có thông báo mới</div>
+                                                <% } %>
+                                            </div>
+                                            <div class="notif-footer">
+                                                <a href="${pageContext.request.contextPath}/user?action=notifications">Xem tất cả</a>
+                                            </div>
+                                        </div>
+                                </div>
+                                <div class="header-user-name">
                             <% if ("Manager".equals(userRole)) { %>
                                 <a href="${pageContext.request.contextPath}/manager?action=profile" style="color: white; text-decoration: none;">
                                     <%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %>
@@ -220,3 +304,28 @@
         </ul>
     </div>
 </header>
+<script>
+    // Toggle notifications dropdown on bell click
+    (function(){
+        var bell = document.querySelector('.notif-wrapper > a[href$="action=notifications"]');
+        var dd = document.getElementById('notifDropdown');
+        if (!bell || !dd) return;
+        // position container relative to header
+        bell.addEventListener('click', function(e){
+            e.preventDefault();
+            // toggle using class for smoother styling
+            if (dd.classList.contains('open')) {
+                dd.classList.remove('open'); dd.style.display = 'none';
+            } else {
+                dd.classList.add('open'); dd.style.display = 'block';
+            }
+        });
+        // close when clicking outside
+        document.addEventListener('click', function(ev){
+            if (dd.style.display === 'none') return;
+            if (!dd.contains(ev.target) && !bell.contains(ev.target)) {
+                dd.style.display = 'none';
+            }
+        });
+    })();
+</script>
