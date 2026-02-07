@@ -39,9 +39,37 @@
                             <div class="msg">${n.message}</div>
                         </div>
                         <div style="margin-left:12px; display:flex; align-items:center;">
-                            <c:if test="${not empty n.orderID}">
-                                <a href="${pageContext.request.contextPath}/rental?action=viewOrder&id=${n.orderID}" class="btn">Xem đơn</a>
-                            </c:if>
+                            <%-- Use pure scriptlet to compute order id and render link (avoids JSTL/scriptlet mixing issues) --%>
+                            <%
+                                Integer oid = null;
+                                try {
+                                    Object o = pageContext.findAttribute("n");
+                                    if (o != null) {
+                                        try {
+                                            java.lang.reflect.Method m = o.getClass().getMethod("getOrderID");
+                                            Object val = m.invoke(o);
+                                            if (val != null) oid = (Integer) val;
+                                        } catch (NoSuchMethodException ignore) {}
+
+                                        if (oid == null) {
+                                            try {
+                                                String msg = (String) o.getClass().getMethod("getMessage").invoke(o);
+                                                if (msg != null) {
+                                                    java.util.regex.Matcher mm = java.util.regex.Pattern.compile("#(\\d+)").matcher(msg);
+                                                    if (mm.find()) oid = Integer.parseInt(mm.group(1));
+                                                }
+                                            } catch (NoSuchMethodException ignore) {}
+                                        }
+                                    }
+                                } catch (Exception ex) {
+                                    oid = null;
+                                }
+                                if (oid != null) {
+                            %>
+                                <a href="${pageContext.request.contextPath}/rental?action=viewOrder&id=<%= oid %>" class="btn">Xem đơn</a>
+                            <%
+                                }
+                            %>
                         </div>
                     </div>
                 </c:forEach>
