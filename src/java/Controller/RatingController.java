@@ -33,4 +33,12 @@ public class RatingController {
     public static boolean deleteRating(int ratingID) {
         return RatingService.deleteRating(ratingID);
     }
+
+    public static int getFiveStarCountForUser(int userID) {
+        return RatingService.getFiveStarCountForUser(userID);
+    }
+
+    public static java.util.Map<String, Object> getBadgeForUser(int userID) {
+        return RatingService.getBadgeForUser(userID);
+    }
 }

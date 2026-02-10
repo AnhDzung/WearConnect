@@ -181,6 +181,23 @@
                                 <button type="submit" class="btn btn-success">Đã nhận hàng (hoàn tất)</button>
                             </form>
                         </c:if>
+                        <c:if test="${order.status == 'COMPLETED'}">
+                            <!-- Inline rating form for manager to rate the renter -->
+                            <form method="POST" action="${pageContext.request.contextPath}/rating" style="display:inline-block; margin-left:8px;">
+                                <input type="hidden" name="action" value="submitRating" />
+                                <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
+                                <select name="rating" required style="padding:6px 8px; margin-right:6px;">
+                                    <option value="">☆ Đánh giá</option>
+                                    <option value="5">5 - Xuất sắc</option>
+                                    <option value="4">4 - Tốt</option>
+                                    <option value="3">3 - Trung bình</option>
+                                    <option value="2">2 - Kém</option>
+                                    <option value="1">1 - Rất kém</option>
+                                </select>
+                                <input type="text" name="comment" placeholder="Ghi chú (tuỳ chọn)" style="padding:6px 8px; margin-right:6px;" />
+                                <button type="submit" class="btn btn-info">Đánh giá người thuê</button>
+                            </form>
+                        </c:if>
                         <c:if test="${order.status == 'ISSUE'}">
                             <a href="${pageContext.request.contextPath}/manager?action=viewIssue&id=${order.rentalOrderID}" class="btn btn-info">Xem vấn đề</a>
                             <form method="POST" action="${pageContext.request.contextPath}/manager" style="display:inline-block;">

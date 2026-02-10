@@ -11,7 +11,8 @@ public class PaymentService {
         RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
         if (order == null) return -1;
         
-        Payment payment = new Payment(rentalOrderID, order.getTotalPrice(), paymentMethod);
+        double amount = order.getTotalPrice();
+        Payment payment = new Payment(rentalOrderID, amount, paymentMethod);
         int paymentID = PaymentDAO.addPayment(payment);
         
         if (paymentID > 0) {
@@ -27,9 +28,39 @@ public class PaymentService {
     public static int createPaymentOnly(int rentalOrderID, String paymentMethod) {
         RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
         if (order == null) return -1;
-        
-        Payment payment = new Payment(rentalOrderID, order.getTotalPrice(), paymentMethod);
+        double amount = order.getTotalPrice();
+        Payment payment = new Payment(rentalOrderID, amount, paymentMethod);
         return PaymentDAO.addPayment(payment);
+    }
+
+    // Overloads that accept a custom amount (for discounts)
+    public static int processPayment(int rentalOrderID, String paymentMethod, double amount) {
+        RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+        if (order == null) return -1;
+        Payment payment = new Payment(rentalOrderID, amount, paymentMethod);
+        int paymentID = PaymentDAO.addPayment(payment);
+        if (paymentID > 0) {
+            RentalOrderDAO.updateRentalOrderStatus(rentalOrderID, "PAYMENT_VERIFIED");
+        }
+        return paymentID;
+    }
+
+    public static int createPaymentOnly(int rentalOrderID, String paymentMethod, double amount) {
+        RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+        if (order == null) return -1;
+        Payment payment = new Payment(rentalOrderID, amount, paymentMethod);
+        return PaymentDAO.addPayment(payment);
+    }
+
+    public static int processDepositPayment(int rentalOrderID, String paymentMethod, double amount) {
+        RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+        if (order == null) return -1;
+        Payment payment = new Payment(rentalOrderID, amount, paymentMethod);
+        int paymentID = PaymentDAO.addPayment(payment);
+        if (paymentID > 0) {
+            PaymentDAO.updatePaymentStatus(paymentID, "COMPLETED");
+        }
+        return paymentID;
     }
 
     public static int processDepositPayment(int rentalOrderID, String paymentMethod) {

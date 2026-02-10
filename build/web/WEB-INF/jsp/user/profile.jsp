@@ -97,7 +97,29 @@
             <div class="avatar"><%= displayName.substring(0,1).toUpperCase() %></div>
             <div>
                 <p class="name"><%= displayName %></p>
-                <span class="role"><%= user.getUserRole() %></span>
+                    <span class="role"><%= user.getUserRole() %></span>
+                    <%
+                        // Show badge info on profile
+                        java.util.Map<String,Object> badgeInfo = null;
+                        try {
+                            int uid = user.getAccountID();
+                            badgeInfo = Controller.RatingController.getBadgeForUser(uid);
+                        } catch (Exception ex) { badgeInfo = null; }
+                    %>
+                    <c:if test="${not empty badgeInfo}">
+                        <div style="margin-top:8px;">
+                            <%
+                                if (badgeInfo != null && badgeInfo.get("label") != null) {
+                                    String bl = String.valueOf(badgeInfo.get("label"));
+                                    Object d = badgeInfo.get("discount");
+                                    String disc = (d!=null)? (d.toString()+"%") : "";
+                            %>
+                            <span style="display:inline-block; background:#eef2ff; color:#1e3a8a; padding:6px 10px; border-radius:999px; font-weight:700;"> <%= bl %> <%= disc %></span>
+                            <%
+                                }
+                            %>
+                        </div>
+                    </c:if>
             </div>
         </div>
         <div class="info-grid">

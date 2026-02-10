@@ -300,7 +300,8 @@ public class DashboardService {
                      "JOIN Accounts renter ON ro.RenterUserID = renter.AccountID ";
         
         if (statusFilter != null && !statusFilter.isEmpty() && !statusFilter.equals("ALL")) {
-            sql += "WHERE ro.Status = ? ";
+            // Use normalized comparison to avoid mismatches due to casing/whitespace in DB
+            sql += "WHERE UPPER(LTRIM(RTRIM(ro.Status))) = ? ";
         }
         
         sql += "ORDER BY ro.CreatedAt DESC";
@@ -310,8 +311,9 @@ public class DashboardService {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             if (statusFilter != null && !statusFilter.isEmpty() && !statusFilter.equals("ALL")) {
-                ps.setString(1, statusFilter);
-                System.out.println("[DashboardService] Setting status filter parameter: " + statusFilter);
+                String normalized = statusFilter.trim().toUpperCase();
+                ps.setString(1, normalized);
+                System.out.println("[DashboardService] Setting status filter parameter (normalized): " + normalized);
             }
             try (ResultSet rs = ps.executeQuery()) {
                 int count = 0;

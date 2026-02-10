@@ -82,6 +82,11 @@ public class PaymentServlet extends HttpServlet {
                 return;
             }
             
+            // Compute badge/discount for current user (if any)
+            int currentUserID = (int) session.getAttribute("accountID");
+            java.util.Map<String, Object> badge = Controller.RatingController.getBadgeForUser(currentUserID);
+            request.setAttribute("userBadge", badge);
+
             request.setAttribute("payment", payment);
             request.setAttribute("rentalOrder", rentalOrder);
             request.setAttribute("rentalOrderID", rentalOrderID);
@@ -161,7 +166,14 @@ public class PaymentServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderID + "&error=true");
                 return;
             }
-            
+
+            // Determine discount for current user
+            int currentUserID = (int) session.getAttribute("accountID");
+            java.util.Map<String, Object> badge = Controller.RatingController.getBadgeForUser(currentUserID);
+            Integer discount = null;
+            try { discount = (Integer) badge.get("discount"); } catch (Exception ex) { discount = null; }
+            double discountPercent = discount != null ? discount.doubleValue() : 0.0;
+
             if ("BANK_TRANSFER".equals(paymentMethod)) {
                 // Check if user uploaded payment proof
                 Part filePart = request.getPart("paymentProof");
@@ -173,7 +185,10 @@ public class PaymentServlet extends HttpServlet {
                 
                 if (filePart != null && filePart.getSize() > 0) {
                     // User uploaded payment proof - create payment WITHOUT auto-confirming
-                    int paymentID = PaymentController.createPaymentOnly(rentalOrderID, paymentMethod);
+                    RentalOrder ro = Controller.RentalOrderController.getRentalOrderDetails(rentalOrderID);
+                    double base = ro != null ? ro.getTotalPrice() : 0.0;
+                    double amount = base * (1.0 - discountPercent / 100.0);
+                    int paymentID = PaymentController.createPaymentOnly(rentalOrderID, paymentMethod, amount);
                     
                     System.out.println("[PaymentServlet] Created payment ID: " + paymentID);
                     
@@ -211,7 +226,10 @@ public class PaymentServlet extends HttpServlet {
                     }
                 } else {
                     // No file uploaded - create payment and keep as PENDING
-                    int paymentID = PaymentController.createPaymentOnly(rentalOrderID, paymentMethod);
+                    RentalOrder ro2 = Controller.RentalOrderController.getRentalOrderDetails(rentalOrderID);
+                    double base2 = ro2 != null ? ro2.getTotalPrice() : 0.0;
+                    double amount2 = base2 * (1.0 - discountPercent / 100.0);
+                    int paymentID = PaymentController.createPaymentOnly(rentalOrderID, paymentMethod, amount2);
                     if (paymentID > 0) {
                         response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&bankTransferPending=true");
                     } else {
@@ -221,7 +239,10 @@ public class PaymentServlet extends HttpServlet {
                 }
             } else {
                 // Credit card or other methods - use normal processPayment (auto-confirms)
-                int paymentID = PaymentController.processPayment(rentalOrderID, paymentMethod);
+                RentalOrder ro3 = Controller.RentalOrderController.getRentalOrderDetails(rentalOrderID);
+                double base3 = ro3 != null ? ro3.getTotalPrice() : 0.0;
+                double amount3 = base3 * (1.0 - discountPercent / 100.0);
+                int paymentID = PaymentController.processPayment(rentalOrderID, paymentMethod, amount3);
                 
                 if (paymentID > 0) {
                     PaymentController.completePayment(paymentID);
@@ -241,8 +262,18 @@ public class PaymentServlet extends HttpServlet {
                 return;
             }
             
-            int paymentID = PaymentController.processDepositPayment(rentalOrderID, paymentMethod);
-            
+            // Apply discount to deposit as well
+            RentalOrder roDep = Controller.RentalOrderController.getRentalOrderByID(rentalOrderID);
+            double depBase = roDep != null ? roDep.getDepositAmount() : 0.0;
+            int currentUserID = (int) session.getAttribute("accountID");
+            java.util.Map<String, Object> badgeDep = Controller.RatingController.getBadgeForUser(currentUserID);
+            Integer discountDep = null;
+            try { discountDep = (Integer) badgeDep.get("discount"); } catch (Exception ex) { discountDep = null; }
+            double discountPercentDep = discountDep != null ? discountDep.doubleValue() : 0.0;
+            double depAmount = depBase * (1.0 - discountPercentDep / 100.0);
+
+            int paymentID = PaymentController.processDepositPayment(rentalOrderID, paymentMethod, depAmount);
+
             if (paymentID > 0) {
                 if ("BANK_TRANSFER".equals(paymentMethod)) {
                     response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderID + "&bankTransferPending=true");

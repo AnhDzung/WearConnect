@@ -103,6 +103,18 @@
                     <fmt:formatNumber value="${rentalOrder.totalPrice}" pattern="#,##0"/> VNĐ
                 </span>
             </div>
+            <c:if test="${not empty userBadge and userBadge.discount != null}">
+                <div class="payment-info-row">
+                    <strong>🏅 Huy hiệu:</strong>
+                    <span style="color:#333">${userBadge.badge} — Giảm ${userBadge.discount}%</span>
+                </div>
+                <div class="payment-info-row">
+                    <strong>💸 Tiền sau giảm:</strong>
+                    <span style="color: #28a745; font-weight: bold; font-size: 18px;">
+                        <fmt:formatNumber value="${rentalOrder.totalPrice * (1 - (userBadge.discount/100))}" pattern="#,##0"/> VNĐ
+                    </span>
+                </div>
+            </c:if>
             <div class="payment-info-row">
                 <strong>🔐 Tiền cọc:</strong>
                 <span><fmt:formatNumber value="${rentalOrder.depositAmount}" pattern="#,##0"/> VNĐ</span>
@@ -161,7 +173,14 @@
                         <tr>
                             <td style="border: 1px solid #ffe0b2;">Số tiền:</td>
                             <td style="border: 1px solid #ffe0b2; color: #ff6f00; font-weight: bold; font-size: 16px;">
-                                <fmt:formatNumber value="${rentalOrder.totalPrice}" pattern="#,##0"/> VNĐ
+                                <c:choose>
+                                    <c:when test="${not empty userBadge and userBadge.discount != null}">
+                                        <fmt:formatNumber value="${rentalOrder.totalPrice * (1 - (userBadge.discount/100))}" pattern="#,##0"/> VNĐ
+                                    </c:when>
+                                    <c:otherwise>
+                                        <fmt:formatNumber value="${rentalOrder.totalPrice}" pattern="#,##0"/> VNĐ
+                                    </c:otherwise>
+                                </c:choose>
                             </td>
                         </tr>
                         <tr>

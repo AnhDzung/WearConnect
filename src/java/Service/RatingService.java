@@ -25,12 +25,19 @@ public class RatingService {
         if (!"COMPLETED".equals(status)) {
             return -4; // Not allowed until COMPLETED
         }
-        
-        // If ratingFromUserID equals the product manager/owner, deny the rating
-        if (ratingFromUserID == order.getManagerID()) {
-            return -3; // Manager cannot rate their own product
+        // Only participants of the order may rate: renter or manager (product owner)
+        int managerID = order.getManagerID();
+        int renterID = order.getRenterUserID();
+        if (ratingFromUserID != managerID && ratingFromUserID != renterID) {
+            return -6; // Not authorized to rate this order
         }
-        
+
+        // Prevent duplicate rating by the same user for the same order
+        Rating existing = RatingDAO.getRatingByRentalOrderAndUser(rentalOrderID, ratingFromUserID);
+        if (existing != null) {
+            return -5; // Already rated by this user for this order
+        }
+
         Rating ratingModel = new Rating(rentalOrderID, ratingFromUserID, rating, comment);
         return RatingDAO.addRating(ratingModel);
     }
@@ -53,6 +60,43 @@ public class RatingService {
 
     public static int getTotalRatings(int clothingID) {
         return RatingDAO.getRatingsByClothing(clothingID).size();
+    }
+
+    public static int getFiveStarCountForUser(int userID) {
+        return RatingDAO.getFiveStarCountForUser(userID);
+    }
+
+    public static java.util.Map<String, Object> getBadgeForUser(int userID) {
+        int count = getFiveStarCountForUser(userID);
+        java.util.Map<String,Object> result = new java.util.HashMap<>();
+        result.put("count", count);
+
+        // Define thresholds and labels
+        int[] thresholds = new int[] {800,700,600,500,400,300,200,50};
+        String[] labels = new String[] {
+            "Khách Hàng Uy tín Vĩnh VIễn",
+            "Khách Hàng Uy tín Lục Bảo",
+            "Khách Hàng Uy tín Kim Cương",
+            "Khách Hàng Uy tín Bạch Kim",
+            "Khách Hàng Uy tín Vàng",
+            "Khách Hàng Uy tín Bạc",
+            "Khách Hàng Uy tín đồng",
+            "Khách Hàng Uy tín"
+        };
+        int[] discounts = new int[] {40,35,30,25,20,15,10,5};
+
+        String badge = null;
+        Integer discount = null;
+        for (int i = 0; i < thresholds.length; i++) {
+            if (count >= thresholds[i]) {
+                badge = labels[i];
+                discount = discounts[i];
+                break;
+            }
+        }
+        result.put("badge", badge);
+        result.put("discount", discount);
+        return result;
     }
 
     public static boolean deleteRating(int ratingID) {

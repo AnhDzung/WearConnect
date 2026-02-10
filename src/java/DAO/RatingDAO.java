@@ -57,6 +57,40 @@ public class RatingDAO {
         return null;
     }
 
+    public static Rating getRatingByRentalOrderAndUser(int rentalOrderID, int userID) {
+        String sql = "SELECT * FROM Rating WHERE RentalOrderID = ? AND RatingFromUserID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, rentalOrderID);
+            ps.setInt(2, userID);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapRowToRating(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static int getFiveStarCountForUser(int userID) {
+        String sql = "SELECT COUNT(*) AS FiveCount FROM Rating r " +
+                     "JOIN RentalOrder ro ON r.RentalOrderID = ro.RentalOrderID " +
+                     "JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
+                     "WHERE r.Rating = 5 AND ( (r.RatingFromUserID = ro.RenterUserID AND c.RenterID = ?) " +
+                     "OR (r.RatingFromUserID <> ro.RenterUserID AND ro.RenterUserID = ?) )";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userID);
+            ps.setInt(2, userID);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt("FiveCount");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     public static List<Rating> getRatingsByRenter(int renterID) {
         List<Rating> list = new ArrayList<>();
         String sql = "SELECT r.* FROM Rating r " +

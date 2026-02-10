@@ -68,6 +68,9 @@ public class UserServlet extends HttpServlet {
                     e.printStackTrace();
                 }
                 request.getRequestDispatcher("/WEB-INF/jsp/user/notifications.jsp").forward(request, response);
+            } else if ("markNotificationRead".equals(action)) {
+                // AJAX endpoint: mark a specific notification as read
+                handleMarkNotificationRead(request, response, session);
             } else if ("favorites".equals(action)) {
                 request.getRequestDispatcher("/WEB-INF/jsp/user/favorites.jsp").forward(request, response);
             } else {
@@ -84,6 +87,31 @@ public class UserServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         doGet(request, response);
+    }
+
+    private void handleMarkNotificationRead(HttpServletRequest request, HttpServletResponse response, HttpSession session) 
+            throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        java.io.PrintWriter out = response.getWriter();
+        try {
+            if (session == null || session.getAttribute("account") == null) {
+                out.print("{\"success\":false,\"error\":\"Not authenticated\"}");
+                return;
+            }
+            String nid = request.getParameter("notificationID");
+            if (nid == null) {
+                out.print("{\"success\":false,\"error\":\"Missing notificationID\"}");
+                return;
+            }
+            int notificationID = Integer.parseInt(nid);
+            boolean ok = Controller.NotificationController.markAsRead(notificationID);
+            out.print("{\"success\":" + ok + "}");
+        } catch (Exception e) {
+            e.printStackTrace();
+            out.print("{\"success\":false,\"error\":\"" + e.getMessage() + "\"}");
+        } finally {
+            out.flush();
+        }
     }
     
     /**

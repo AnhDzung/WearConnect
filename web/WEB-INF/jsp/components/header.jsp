@@ -282,13 +282,44 @@
                                         </div>
                                 </div>
                                 <div class="header-user-name">
+                            <% 
+                                // Show badge next to username if available
+                                java.util.Map<String,Object> badge = null;
+                                try {
+                                    if (currentUserID > 0) {
+                                        badge = Controller.RatingController.getBadgeForUser(currentUserID);
+                                    }
+                                } catch (Exception ex) {
+                                    badge = null;
+                                }
+                            %>
                             <% if ("Manager".equals(userRole)) { %>
-                                <a href="${pageContext.request.contextPath}/manager?action=profile" style="color: white; text-decoration: none;">
-                                    <%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %>
+                                <a href="${pageContext.request.contextPath}/manager?action=profile" style="color: white; text-decoration: none; display:inline-flex; align-items:center; gap:8px;">
+                                    <span><%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %></span>
+                                    <%
+                                        if (badge != null && badge.get("label") != null) {
+                                            String bl = String.valueOf(badge.get("label"));
+                                            Object d = badge.get("discount");
+                                            String disc = (d!=null) ? (d.toString()+"%") : "";
+                                    %>
+                                        <span style="background:rgba(255,255,255,0.15); padding:4px 8px; border-radius:12px; font-size:12px; font-weight:700;"> <%= bl %> <%= disc %> </span>
+                                    <%
+                                        }
+                                    %>
                                 </a>
                             <% } else { %>
-                                <a href="${pageContext.request.contextPath}/user?action=profile" style="color: white; text-decoration: none;">
-                                    <%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %>
+                                <a href="${pageContext.request.contextPath}/user?action=profile" style="color: white; text-decoration: none; display:inline-flex; align-items:center; gap:8px;">
+                                    <span><%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %></span>
+                                    <%
+                                        if (badge != null && badge.get("label") != null) {
+                                            String bl = String.valueOf(badge.get("label"));
+                                            Object d = badge.get("discount");
+                                            String disc = (d!=null) ? (d.toString()+"%") : "";
+                                    %>
+                                        <span style="background:rgba(255,255,255,0.15); padding:4px 8px; border-radius:12px; font-size:12px; font-weight:700;"> <%= bl %> <%= disc %> </span>
+                                    <%
+                                        }
+                                    %>
                                 </a>
                             <% } %>
                         </div>
