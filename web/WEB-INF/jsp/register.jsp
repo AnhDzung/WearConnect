@@ -75,6 +75,20 @@
             gap: 10px;
             margin-top: 20px;
         }
+
+        /* Form inputs styling for consistent layout */
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display:block; margin-bottom:6px; font-weight:600; color:#333; }
+        .form-group input[type="text"], .form-group input[type="email"], .form-group input[type="password"], .form-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #dcdcdc;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .radio-group { display:flex; gap:12px; align-items:center; }
+        .radio-group label { font-weight:600; color:#333; }
         
         .btn-register {
             flex: 1;
@@ -184,12 +198,11 @@
             </div>
             
             <div class="form-group">
-                <label for="userRole">Loại tài khoản:</label>
-                <select id="userRole" name="userRole" required>
-                    <option value="">-- Chọn loại tài khoản --</option>
-                    <option value="User">Người Thuê Đồ</option>
-                    <option value="Manager">Người Cho Thuê Đồ</option>
-                </select>
+                <label>Loại tài khoản:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="userRole" value="User" checked> Người Thuê Đồ</label>
+                    <label><input type="radio" name="userRole" value="Manager"> Người Cho Thuê Đồ</label>
+                </div>
             </div>
             
             <div class="form-group">
@@ -204,7 +217,6 @@
             
             <div class="button-group">
                 <button type="submit" class="btn-register">Đăng Ký</button>
-                <a href="<%= request.getContextPath() %>/login" class="btn-back" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Quay Lại Đăng Nhập</a>
             </div>
         </form>
         
