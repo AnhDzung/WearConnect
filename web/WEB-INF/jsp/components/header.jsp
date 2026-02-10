@@ -217,7 +217,7 @@
             <% if ("Manager".equals(userRole)) { %>
                 <li><a href="${pageContext.request.contextPath}/manager">Dashboard</a></li>
                 <li><a href="${pageContext.request.contextPath}/clothing?action=myClothing">Quản Lý Sản Phẩm</a></li>
-                <li><a href="${pageContext.request.contextPath}/clothing?action=upload">Đăng Tải Mới</a></li>
+                <!--<li><a href="${pageContext.request.contextPath}/clothing?action=upload">Đăng Tải Mới</a></li>-->
                 <li><a href="${pageContext.request.contextPath}/manager?action=orders">Đơn Đặt Thuê</a></li>
                 <li><a href="${pageContext.request.contextPath}/manager?action=ratings">Đánh Giá</a></li>
             <% } %>
@@ -328,8 +328,10 @@
                 </li>
             <% } else { %>
                 <li style="margin-left: auto;">
-                    <a href="${pageContext.request.contextPath}/login">Đăng Nhập</a>
-                    <a href="${pageContext.request.contextPath}/register">Đăng Ký</a>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <a href="${pageContext.request.contextPath}/login" style="display:inline-block; padding:8px 12px; background:transparent; border:1px solid rgba(255,255,255,0.15); color:white; text-decoration:none; border-radius:6px;">Đăng Nhập</a>
+                        <a href="${pageContext.request.contextPath}/register" style="display:inline-block; padding:8px 12px; background:rgba(255,255,255,0.15); color:white; text-decoration:none; border-radius:6px;">Đăng Ký</a>
+                    </div>
                 </li>
             <% } %>
         </ul>
