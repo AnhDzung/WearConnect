@@ -11,6 +11,9 @@ public class RatingDAO {
     public static int addRating(Rating rating) {
         String sql = "INSERT INTO Rating (RentalOrderID, RatingFromUserID, Rating, Comment) " +
                      "VALUES (?, ?, ?, ?)";
+        System.out.println("[RatingDAO] Inserting rating - RentalOrderID: " + rating.getRentalOrderID() + 
+                         ", RatingFromUserID: " + rating.getRatingFromUserID() + 
+                         ", Rating: " + rating.getRating());
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, rating.getRentalOrderID());
@@ -19,13 +22,20 @@ public class RatingDAO {
             ps.setString(4, rating.getComment());
             
             int row = ps.executeUpdate();
+            System.out.println("[RatingDAO] Insert result rows affected: " + row);
             if (row > 0) {
                 ResultSet rs = ps.getGeneratedKeys();
-                if (rs.next()) return rs.getInt(1);
+                if (rs.next()) {
+                    int ratingID = rs.getInt(1);
+                    System.out.println("[RatingDAO] Rating inserted successfully with ID: " + ratingID);
+                    return ratingID;
+                }
             }
         } catch (SQLException e) {
+            System.err.println("[RatingDAO] Error inserting rating: " + e.getMessage());
             e.printStackTrace();
         }
+        System.out.println("[RatingDAO] Rating insert failed, returning -1");
         return -1;
     }
 
@@ -113,7 +123,7 @@ public class RatingDAO {
 
     public static List<Rating> getRatingsByClothing(int clothingID) {
         List<Rating> list = new ArrayList<>();
-        String sql = "SELECT r.*, a.Username AS RatingFromUsername, c.ClothingName, ro.RenterUserID AS RenterUserID, ro.ManagerID AS ManagerUserID " +
+        String sql = "SELECT r.*, a.Username AS RatingFromUsername, c.ClothingName, ro.RenterUserID AS RenterUserID, c.RenterID AS ManagerUserID " +
                  "FROM Rating r " +
                  "JOIN RentalOrder ro ON r.RentalOrderID = ro.RentalOrderID " +
                  "JOIN Accounts a ON r.RatingFromUserID = a.AccountID " +

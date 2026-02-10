@@ -146,8 +146,8 @@
                 <div class="muted">Chưa có đánh giá nào cho sản phẩm này.</div>
             </c:when>
             <c:otherwise>
+                <%-- Admin (and Manager) can see both renter->product and owner->renter ratings separately --%>
                 <c:choose>
-                    <!-- Admin (and Manager) can see both renter->product and owner->renter ratings separately -->
                     <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Manager'}">
                         <h4>Đánh giá của người thuê về sản phẩm</h4>
                         <c:forEach var="r" items="${ratings}">

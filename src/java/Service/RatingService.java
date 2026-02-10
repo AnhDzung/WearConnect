@@ -9,37 +9,53 @@ import java.util.List;
 public class RatingService {
     
     public static int submitRating(int rentalOrderID, int ratingFromUserID, int rating, String comment) {
+        System.out.println("[RatingService] submitRating called - rentalOrderID: " + rentalOrderID + 
+                         ", ratingFromUserID: " + ratingFromUserID + ", rating: " + rating);
+        
         if (rating < 1 || rating > 5) {
+            System.out.println("[RatingService] Invalid rating value: " + rating);
             return -1; // Invalid rating
         }
         
         // Verify that ratingFromUserID is not the product manager (owner)
         RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
         if (order == null) {
+            System.out.println("[RatingService] Order not found for ID: " + rentalOrderID);
             return -2; // Order not found
         }
+        
+        System.out.println("[RatingService] Order found - Status: " + order.getStatus() + 
+                         ", ManagerID: " + order.getManagerID() + ", RenterUserID: " + order.getRenterUserID());
         
         // Only allow rating when the order is COMPLETED; block all other states
         String status = order.getStatus();
         if (status != null) status = status.trim().toUpperCase();
         if (!"COMPLETED".equals(status)) {
+            System.out.println("[RatingService] Order status is not COMPLETED: " + status);
             return -4; // Not allowed until COMPLETED
         }
         // Only participants of the order may rate: renter or manager (product owner)
         int managerID = order.getManagerID();
         int renterID = order.getRenterUserID();
+        System.out.println("[RatingService] Checking authorization - ratingFromUserID: " + ratingFromUserID + 
+                         ", managerID: " + managerID + ", renterID: " + renterID);
+        
         if (ratingFromUserID != managerID && ratingFromUserID != renterID) {
+            System.out.println("[RatingService] User not authorized to rate this order");
             return -6; // Not authorized to rate this order
         }
 
         // Prevent duplicate rating by the same user for the same order
         Rating existing = RatingDAO.getRatingByRentalOrderAndUser(rentalOrderID, ratingFromUserID);
         if (existing != null) {
+            System.out.println("[RatingService] User already rated this order");
             return -5; // Already rated by this user for this order
         }
 
         Rating ratingModel = new Rating(rentalOrderID, ratingFromUserID, rating, comment);
-        return RatingDAO.addRating(ratingModel);
+        int ratingID = RatingDAO.addRating(ratingModel);
+        System.out.println("[RatingService] Rating saved successfully with ID: " + ratingID);
+        return ratingID;
     }
 
     public static Rating getRatingByOrder(int rentalOrderID) {

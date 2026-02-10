@@ -27,8 +27,10 @@ public class ClothingServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+        System.out.println("[ClothingServlet] doGet called - URI: " + request.getRequestURI() + " - Query: " + request.getQueryString());
         HttpSession session = request.getSession(false);
         String action = request.getParameter("action");
+        System.out.println("[ClothingServlet] action=" + action + ", id=" + request.getParameter("id"));
         
         // API endpoint to get product details as JSON
         if (action == null && request.getParameter("id") != null) {
@@ -61,18 +63,41 @@ public class ClothingServlet extends HttpServlet {
         
         // Allow viewing product details without login
         if ("view".equals(action)) {
+            System.out.println("[ClothingServlet] Handling view action");
             try {
-                int clothingID = Integer.parseInt(request.getParameter("id"));
+                String idParam = request.getParameter("id");
+                System.out.println("[ClothingServlet] idParam: " + idParam);
+                if (idParam == null || idParam.isEmpty()) {
+                    System.err.println("[ClothingServlet] ID parameter is missing or empty");
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing ID parameter");
+                    return;
+                }
+                
+                int clothingID = Integer.parseInt(idParam);
+                System.out.println("[ClothingServlet] Getting details for clothingID: " + clothingID);
                 Clothing clothing = ClothingController.getClothingDetails(clothingID);
+                System.out.println("[ClothingServlet] Got clothing: " + (clothing != null ? "YES" : "NULL"));
+                if (clothing == null) {
+                    System.out.println("[ClothingServlet] Clothing is null, sending 404");
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND, "Product not found");
+                    return;
+                }
                 request.setAttribute("clothing", clothing);
                 request.setAttribute("images", ClothingController.getClothingImages(clothingID));
                 request.setAttribute("avgRating", RatingDAO.getAverageRatingForClothing(clothingID));
                 request.setAttribute("ratings", RatingDAO.getRatingsByClothing(clothingID));
+                System.out.println("[ClothingServlet] Forwarding to clothing-details.jsp");
                 request.getRequestDispatcher("/WEB-INF/jsp/user/clothing-details.jsp").forward(request, response);
                 return;
+            } catch (NumberFormatException nfe) {
+                System.err.println("[ClothingServlet] NumberFormatException: " + nfe.getMessage());
+                nfe.printStackTrace();
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid ID format");
+                return;
             } catch (Exception e) {
+                System.err.println("[ClothingServlet] Exception in view action: " + e.getMessage());
                 e.printStackTrace();
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getMessage());
                 return;
             }
         }

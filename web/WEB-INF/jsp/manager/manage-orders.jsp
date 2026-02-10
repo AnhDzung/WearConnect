@@ -77,12 +77,125 @@
         .btn-success { background-color: #198754; }
         .btn-secondary { background-color: #6c757d; }
         /* Rating widget styles (match user-side `order-details.jsp`) */
-        .star-rating { display: inline-flex; flex-direction: row-reverse; gap: 6px; font-size: 26px; cursor: pointer; }
+        .star-rating { display: inline-flex; gap: 6px; font-size: 26px; cursor: pointer; }
         .star-rating input { display: none; }
         .star-rating label { color: #ccc; transition: color 0.2s ease; font-size: 26px; }
         .star-rating input:checked ~ label { color: #f5b301; }
         .star-rating label:hover,
         .star-rating label:hover ~ label { color: #f5d16b; }
+        
+        /* Rating Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        .modal-header {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 22px;
+        }
+        
+        .modal-close {
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+        
+        .modal-close:hover {
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .rating-stars {
+            display: flex;
+            flex-direction: row-reverse;
+            gap: 10px;
+            font-size: 32px;
+        }
+        
+        .rating-stars input {
+            display: none;
+        }
+        
+        .rating-stars label {
+            cursor: pointer;
+            color: #ddd;
+            margin: 0;
+            transition: color 0.2s;
+        }
+        
+        .rating-stars input:checked ~ label,
+        .rating-stars label:hover,
+        .rating-stars label:hover ~ label {
+            color: #ffc107;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+        
+        .btn-cancel {
+            background-color: #6c757d;
+        }
     </style>
 </head>
 <body>
@@ -215,6 +328,120 @@
     </c:if>
 </div>
 <jsp:include page="/WEB-INF/jsp/components/footer.jsp" />
+
+<!-- Rating Modal -->
+<div id="ratingModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Đánh giá người thuê</h2>
+            <button type="button" class="modal-close" onclick="closeRatingModal()">&times;</button>
+        </div>
+        <form id="ratingForm">
+            <input type="hidden" id="rentalOrderID" />
+            
+            <div class="form-group">
+                <label>Đánh giá:</label>
+                <div class="rating-stars">
+                    <input type="radio" id="star5" name="rating" value="5" />
+                    <label for="star5">★</label>
+                    <input type="radio" id="star4" name="rating" value="4" />
+                    <label for="star4">★</label>
+                    <input type="radio" id="star3" name="rating" value="3" />
+                    <label for="star3">★</label>
+                    <input type="radio" id="star2" name="rating" value="2" />
+                    <label for="star2">★</label>
+                    <input type="radio" id="star1" name="rating" value="1" />
+                    <label for="star1">★</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="managerNotes">Ghi chú:</label>
+                <textarea id="managerNotes" name="managerNotes" placeholder="Nhập ghi chú của bạn về người thuê..."></textarea>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeRatingModal()">Hủy</button>
+                <button type="button" class="btn btn-success" onclick="submitRating()">Gửi đánh giá</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function submitRating() {
+        const rentalOrderID = document.getElementById('rentalOrderID').value;
+        const ratingValue = document.querySelector('input[name="rating"]:checked');
+        const managerNotes = document.getElementById('managerNotes').value;
+        
+        if (!ratingValue) {
+            alert('Vui lòng chọn số sao!');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('action', 'saveManagerRating');
+        formData.append('rentalOrderID', rentalOrderID);
+        formData.append('rating', ratingValue.value);
+        formData.append('managerNotes', managerNotes);
+        
+        fetch('<%= request.getContextPath() %>/manager', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Đánh giá được lưu thành công!');
+                closeRatingModal();
+                
+                // Update UI: find and replace rating button with disabled button
+                const ratingBtn = document.querySelector(`.rating-btn[data-toggle-row="${rentalOrderID}"]`);
+                if (ratingBtn) {
+                    const disabledBtn = document.createElement('button');
+                    disabledBtn.type = 'button';
+                    disabledBtn.className = 'btn btn-secondary';
+                    disabledBtn.disabled = true;
+                    disabledBtn.style.marginLeft = '8px';
+                    disabledBtn.style.opacity = '0.6';
+                    disabledBtn.textContent = 'Đã đánh giá';
+                    ratingBtn.replaceWith(disabledBtn);
+                }
+            } else {
+                alert('Có lỗi xảy ra. Vui lòng thử lại!');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra. Vui lòng thử lại!');
+        });
+    }
+    
+    function openRatingModal(rentalOrderID) {
+        document.getElementById('rentalOrderID').value = rentalOrderID;
+        document.getElementById('ratingForm').reset();
+        document.getElementById('ratingModal').classList.add('show');
+    }
+    
+    function closeRatingModal() {
+        document.getElementById('ratingModal').classList.remove('show');
+    }
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('ratingModal');
+        if (event.target === modal) {
+            closeRatingModal();
+        }
+    }
+    
+    // Update rating button click handlers
+    document.querySelectorAll('.rating-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const rentalOrderID = this.getAttribute('data-toggle-row');
+            openRatingModal(rentalOrderID);
+        });
+    });
+</script>
 </body>
 </html>
 <!-- Manager rating UI removed: manager cannot rate renters from this page. -->

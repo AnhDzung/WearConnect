@@ -62,6 +62,36 @@ public class ManagerServlet extends HttpServlet {
             String action = request.getParameter("action");
             System.out.println("[ManagerServlet] Processing action: " + action + " for manager ID: " + managerId);
 
+            // Manager saves a rating for the renter
+            if ("saveManagerRating".equals(action)) {
+                try {
+                    int rentalOrderID = Integer.parseInt(request.getParameter("rentalOrderID"));
+                    int ratingValue = Integer.parseInt(request.getParameter("rating"));
+                    String managerNotes = request.getParameter("managerNotes");
+                    
+                    System.out.println("[ManagerServlet] saveManagerRating - rentalOrderID: " + rentalOrderID + 
+                                     ", managerId: " + managerId + ", rating: " + ratingValue + 
+                                     ", notes: " + managerNotes);
+                    
+                    // Save manager's rating for the renter using RatingController
+                    int ratingID = Controller.RatingController.submitRating(rentalOrderID, managerId, ratingValue, managerNotes);
+                    System.out.println("[ManagerServlet] Manager rating saved with ID: " + ratingID);
+                    
+                    if (ratingID > 0) {
+                        System.out.println("[ManagerServlet] Rating successfully saved to database");
+                        response.setStatus(HttpServletResponse.SC_OK);
+                    } else {
+                        System.out.println("[ManagerServlet] Rating save failed, error code: " + ratingID);
+                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    }
+                } catch (Exception e) {
+                    System.err.println("[ManagerServlet] Exception in saveManagerRating: " + e.getMessage());
+                    e.printStackTrace();
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                }
+                return;
+            }
+
             // Manager updates order status (e.g., mark as RENTED/RETURNED)
             if ("updateStatus".equals(action)) {
                 try {
