@@ -76,6 +76,13 @@
         .btn-info { background-color: #0dcaf0; }
         .btn-success { background-color: #198754; }
         .btn-secondary { background-color: #6c757d; }
+        /* Rating widget styles (match user-side `order-details.jsp`) */
+        .star-rating { display: inline-flex; flex-direction: row-reverse; gap: 6px; font-size: 26px; cursor: pointer; }
+        .star-rating input { display: none; }
+        .star-rating label { color: #ccc; transition: color 0.2s ease; font-size: 26px; }
+        .star-rating input:checked ~ label { color: #f5b301; }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label { color: #f5d16b; }
     </style>
 </head>
 <body>
@@ -182,21 +189,14 @@
                             </form>
                         </c:if>
                         <c:if test="${order.status == 'COMPLETED'}">
-                            <!-- Inline rating form for manager to rate the renter -->
-                            <form method="POST" action="${pageContext.request.contextPath}/rating" style="display:inline-block; margin-left:8px;">
-                                <input type="hidden" name="action" value="submitRating" />
-                                <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
-                                <select name="rating" required style="padding:6px 8px; margin-right:6px;">
-                                    <option value="">☆ Đánh giá</option>
-                                    <option value="5">5 - Xuất sắc</option>
-                                    <option value="4">4 - Tốt</option>
-                                    <option value="3">3 - Trung bình</option>
-                                    <option value="2">2 - Kém</option>
-                                    <option value="1">1 - Rất kém</option>
-                                </select>
-                                <input type="text" name="comment" placeholder="Ghi chú (tuỳ chọn)" style="padding:6px 8px; margin-right:6px;" />
-                                <button type="submit" class="btn btn-info">Đánh giá người thuê</button>
-                            </form>
+                            <c:choose>
+                                <c:when test="${ratedMap[order.rentalOrderID]}">
+                                    <button type="button" class="btn btn-secondary" disabled style="margin-left:8px;opacity:0.6">Đã đánh giá</button>
+                                </c:when>
+                                <c:otherwise>
+                                    <button type="button" class="btn btn-info rating-btn" data-toggle-row="${order.rentalOrderID}" style="margin-left:8px;">Đánh giá người thuê</button>
+                                </c:otherwise>
+                            </c:choose>
                         </c:if>
                         <c:if test="${order.status == 'ISSUE'}">
                             <a href="${pageContext.request.contextPath}/manager?action=viewIssue&id=${order.rentalOrderID}" class="btn btn-info">Xem vấn đề</a>
@@ -217,3 +217,4 @@
 <jsp:include page="/WEB-INF/jsp/components/footer.jsp" />
 </body>
 </html>
+<!-- Manager rating UI removed: manager cannot rate renters from this page. -->

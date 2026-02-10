@@ -146,23 +146,74 @@
                 <div class="muted">Chưa có đánh giá nào cho sản phẩm này.</div>
             </c:when>
             <c:otherwise>
-                <c:forEach var="r" items="${ratings}">
-                    <div class="rating-item">
-                        <div class="rating-meta">
-                            <span class="rating-stars">
-                                <c:forEach var="i" begin="1" end="5">
-                                    <span class="star${i <= r.rating ? ' filled' : ''}">★</span>
-                                </c:forEach>
-                            </span>
-                            <span>${r.ratingFromUsername}</span>
-                            <span class="muted">•</span>
-                            <span class="muted"><fmt:formatNumber value="${r.rating}" type="number" maxFractionDigits="0"/>/5</span>
-                        </div>
-                        <c:if test="${not empty r.comment}">
-                            <div class="rating-comment">${r.comment}</div>
-                        </c:if>
-                    </div>
-                </c:forEach>
+                <c:choose>
+                    <!-- Admin (and Manager) can see both renter->product and owner->renter ratings separately -->
+                    <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Manager'}">
+                        <h4>Đánh giá của người thuê về sản phẩm</h4>
+                        <c:forEach var="r" items="${ratings}">
+                            <c:if test="${r.ratingFromUserID == r.rentalRenterUserID}">
+                                <div class="rating-item">
+                                    <div class="rating-meta">
+                                        <span class="rating-stars">
+                                            <c:forEach var="i" begin="1" end="5">
+                                                <span class="star${i <= r.rating ? ' filled' : ''}">★</span>
+                                            </c:forEach>
+                                        </span>
+                                        <span>${r.ratingFromUsername}</span>
+                                        <span class="muted">•</span>
+                                        <span class="muted"><fmt:formatNumber value="${r.rating}" type="number" maxFractionDigits="0"/>/5</span>
+                                    </div>
+                                    <c:if test="${not empty r.comment}">
+                                        <div class="rating-comment">${r.comment}</div>
+                                    </c:if>
+                                </div>
+                            </c:if>
+                        </c:forEach>
+
+                        <h4 style="margin-top:18px">Đánh giá của người cho thuê về khách thuê</h4>
+                        <c:forEach var="r" items="${ratings}">
+                            <c:if test="${r.ratingFromUserID == r.rentalManagerUserID}">
+                                <div class="rating-item">
+                                    <div class="rating-meta">
+                                        <span class="rating-stars">
+                                            <c:forEach var="i" begin="1" end="5">
+                                                <span class="star${i <= r.rating ? ' filled' : ''}">★</span>
+                                            </c:forEach>
+                                        </span>
+                                        <span>${r.ratingFromUsername}</span>
+                                        <span class="muted">•</span>
+                                        <span class="muted"><fmt:formatNumber value="${r.rating}" type="number" maxFractionDigits="0"/>/5</span>
+                                    </div>
+                                    <c:if test="${not empty r.comment}">
+                                        <div class="rating-comment">${r.comment}</div>
+                                    </c:if>
+                                </div>
+                            </c:if>
+                        </c:forEach>
+                    </c:when>
+                    <c:otherwise>
+                        <!-- Regular users see only renter->product ratings -->
+                        <c:forEach var="r" items="${ratings}">
+                            <c:if test="${r.ratingFromUserID == r.rentalRenterUserID}">
+                                <div class="rating-item">
+                                    <div class="rating-meta">
+                                        <span class="rating-stars">
+                                            <c:forEach var="i" begin="1" end="5">
+                                                <span class="star${i <= r.rating ? ' filled' : ''}">★</span>
+                                            </c:forEach>
+                                        </span>
+                                        <span>${r.ratingFromUsername}</span>
+                                        <span class="muted">•</span>
+                                        <span class="muted"><fmt:formatNumber value="${r.rating}" type="number" maxFractionDigits="0"/>/5</span>
+                                    </div>
+                                    <c:if test="${not empty r.comment}">
+                                        <div class="rating-comment">${r.comment}</div>
+                                    </c:if>
+                                </div>
+                            </c:if>
+                        </c:forEach>
+                    </c:otherwise>
+                </c:choose>
             </c:otherwise>
         </c:choose>
     </div>

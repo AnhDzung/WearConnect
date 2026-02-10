@@ -188,8 +188,23 @@ public class ManagerServlet extends HttpServlet {
                         }
                     }
                 }
+                // Build a map of rentalOrderID -> true for orders that already have ratings
+                java.util.Map<Integer, Boolean> ratedMap = new java.util.HashMap<>();
+                if (rentalOrders != null) {
+                    for (RentalOrder ro : rentalOrders) {
+                        try {
+                            Rating existing = Controller.RatingController.getRatingByOrder(ro.getRentalOrderID());
+                            if (existing != null) {
+                                ratedMap.put(ro.getRentalOrderID(), true);
+                            }
+                        } catch (Exception e) {
+                            // ignore
+                        }
+                    }
+                }
                 request.setAttribute("newConfirmedCount", newConfirmedCount);
                 request.setAttribute("rentalOrders", rentalOrders);
+                request.setAttribute("ratedMap", ratedMap);
                 request.getRequestDispatcher("/WEB-INF/jsp/manager/manage-orders.jsp").forward(request, response);
             } else {
                 // Default: Dashboard với thống kê

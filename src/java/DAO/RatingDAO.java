@@ -113,12 +113,12 @@ public class RatingDAO {
 
     public static List<Rating> getRatingsByClothing(int clothingID) {
         List<Rating> list = new ArrayList<>();
-        String sql = "SELECT r.*, a.Username AS RatingFromUsername, c.ClothingName " +
-                     "FROM Rating r " +
-                     "JOIN RentalOrder ro ON r.RentalOrderID = ro.RentalOrderID " +
-                     "JOIN Accounts a ON r.RatingFromUserID = a.AccountID " +
-                     "JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
-                     "WHERE ro.ClothingID = ? ORDER BY r.CreatedAt DESC";
+        String sql = "SELECT r.*, a.Username AS RatingFromUsername, c.ClothingName, ro.RenterUserID AS RenterUserID, ro.ManagerID AS ManagerUserID " +
+                 "FROM Rating r " +
+                 "JOIN RentalOrder ro ON r.RentalOrderID = ro.RentalOrderID " +
+                 "JOIN Accounts a ON r.RatingFromUserID = a.AccountID " +
+                 "JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
+                 "WHERE ro.ClothingID = ? ORDER BY r.CreatedAt DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, clothingID);
@@ -196,6 +196,8 @@ public class RatingDAO {
         // Optional joined columns
         try { rating.setRatingFromUsername(rs.getString("RatingFromUsername")); } catch (SQLException ignore) {}
         try { rating.setClothingName(rs.getString("ClothingName")); } catch (SQLException ignore) {}
+        try { rating.setRentalRenterUserID(rs.getInt("RenterUserID")); } catch (SQLException ignore) {}
+        try { rating.setRentalManagerUserID(rs.getInt("ManagerUserID")); } catch (SQLException ignore) {}
         return rating;
     }
 }

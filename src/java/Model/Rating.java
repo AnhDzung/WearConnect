@@ -14,6 +14,9 @@ public class Rating {
     // Display helpers
     private String ratingFromUsername;
     private String clothingName;
+    // rental participants (populated when joining RentalOrder)
+    private Integer rentalRenterUserID;
+    private Integer rentalManagerUserID;
 
     public Rating() {}
 
@@ -53,4 +56,10 @@ public class Rating {
 
     public String getClothingName() { return clothingName; }
     public void setClothingName(String clothingName) { this.clothingName = clothingName; }
+
+    public Integer getRentalRenterUserID() { return rentalRenterUserID; }
+    public void setRentalRenterUserID(Integer rentalRenterUserID) { this.rentalRenterUserID = rentalRenterUserID; }
+
+    public Integer getRentalManagerUserID() { return rentalManagerUserID; }
+    public void setRentalManagerUserID(Integer rentalManagerUserID) { this.rentalManagerUserID = rentalManagerUserID; }
 }
