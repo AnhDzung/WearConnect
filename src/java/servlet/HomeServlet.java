@@ -31,6 +31,8 @@ public class HomeServlet extends HttpServlet {
                 products = ClothingController.searchByCategory(query);
             } else if ("style".equals(type)) {
                 products = ClothingController.searchByStyle(query);
+            } else if ("occasion".equals(type)) {
+                products = ClothingController.searchByOccasion(query);
             } else {
                 // Search by name (default when type is empty)
                 products = ClothingController.searchClothing(query);

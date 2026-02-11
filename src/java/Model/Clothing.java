@@ -9,6 +9,7 @@ public class Clothing {
     private String clothingName;
     private String category;
     private String style;
+    private String occasion;
     private String size;
     private String description;
     private BigDecimal hourlyPrice;
@@ -56,6 +57,9 @@ public class Clothing {
 
     public String getStyle() { return style; }
     public void setStyle(String style) { this.style = style; }
+
+    public String getOccasion() { return occasion; }
+    public void setOccasion(String occasion) { this.occasion = occasion; }
 
     public String getSize() { return size; }
     public void setSize(String size) { this.size = size; }

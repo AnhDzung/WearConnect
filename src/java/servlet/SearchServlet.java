@@ -22,6 +22,8 @@ public class SearchServlet extends HttpServlet {
             results = ClothingController.searchByCategory(query);
         } else if ("style".equals(searchType)) {
             results = ClothingController.searchByStyle(query);
+        } else if ("occasion".equals(searchType)) {
+            results = ClothingController.searchByOccasion(query);
         } else {
             results = ClothingController.getAllClothing();
         }

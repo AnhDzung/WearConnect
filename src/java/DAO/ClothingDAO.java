@@ -11,24 +11,25 @@ import java.math.BigDecimal;
 public class ClothingDAO {
     
     public static int addClothing(Clothing clothing) {
-        String sql = "INSERT INTO Clothing (RenterID, ClothingName, Category, Style, Size, Description, HourlyPrice, DailyPrice, ImagePath, ImageData, AvailableFrom, AvailableTo, Quantity, DepositAmount) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Clothing (RenterID, ClothingName, Category, Style, Occasion, Size, Description, HourlyPrice, DailyPrice, ImagePath, ImageData, AvailableFrom, AvailableTo, Quantity, DepositAmount) " +
+                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, clothing.getRenterID());
             ps.setString(2, clothing.getClothingName());
             ps.setString(3, clothing.getCategory());
             ps.setString(4, clothing.getStyle());
-            ps.setString(5, clothing.getSize());
-            ps.setString(6, clothing.getDescription());
-            ps.setBigDecimal(7, clothing.getHourlyPriceBigDecimal());
-            ps.setBigDecimal(8, clothing.getDailyPriceBigDecimal());
-            ps.setString(9, clothing.getImagePath());
-            ps.setBytes(10, clothing.getImageData());
-            ps.setTimestamp(11, Timestamp.valueOf(clothing.getAvailableFrom()));
-            ps.setTimestamp(12, Timestamp.valueOf(clothing.getAvailableTo()));
-            ps.setInt(13, clothing.getQuantity() > 0 ? clothing.getQuantity() : 1);
-            ps.setBigDecimal(14, clothing.getDepositAmountBigDecimal());
+            ps.setString(5, clothing.getOccasion());
+            ps.setString(6, clothing.getSize());
+            ps.setString(7, clothing.getDescription());
+            ps.setBigDecimal(8, clothing.getHourlyPriceBigDecimal());
+            ps.setBigDecimal(9, clothing.getDailyPriceBigDecimal());
+            ps.setString(10, clothing.getImagePath());
+            ps.setBytes(11, clothing.getImageData());
+            ps.setTimestamp(12, Timestamp.valueOf(clothing.getAvailableFrom()));
+            ps.setTimestamp(13, Timestamp.valueOf(clothing.getAvailableTo()));
+            ps.setInt(14, clothing.getQuantity() > 0 ? clothing.getQuantity() : 1);
+            ps.setBigDecimal(15, clothing.getDepositAmountBigDecimal());
             
             int row = ps.executeUpdate();
             if (row > 0) {
@@ -104,6 +105,23 @@ public class ClothingDAO {
         return list;
     }
 
+    public static List<Clothing> searchByOccasion(String occasion) {
+        List<Clothing> list = new ArrayList<>();
+        String sql = "SELECT * FROM Clothing WHERE Occasion LIKE ? AND IsActive = 1";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, "%" + occasion + "%");
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRowToClothing(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public static List<Clothing> searchByName(String name) {
         List<Clothing> list = new ArrayList<>();
         String sql = "SELECT * FROM Clothing WHERE ClothingName LIKE ? AND IsActive = 1";
@@ -139,23 +157,24 @@ public class ClothingDAO {
     }
 
     public static boolean updateClothing(Clothing clothing) {
-        String sql = "UPDATE Clothing SET ClothingName = ?, Category = ?, Style = ?, Size = ?, Description = ?, HourlyPrice = ?, DailyPrice = ?, ImagePath = ?, AvailableFrom = ?, AvailableTo = ?, Quantity = ?, DepositAmount = ? WHERE ClothingID = ?";
+        String sql = "UPDATE Clothing SET ClothingName = ?, Category = ?, Style = ?, Occasion = ?, Size = ?, Description = ?, HourlyPrice = ?, DailyPrice = ?, ImagePath = ?, ImageData = ?, AvailableFrom = ?, AvailableTo = ?, Quantity = ?, DepositAmount = ? WHERE ClothingID = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, clothing.getClothingName());
             ps.setString(2, clothing.getCategory());
             ps.setString(3, clothing.getStyle());
-            ps.setString(4, clothing.getSize());
-            ps.setString(5, clothing.getDescription());
-            ps.setBigDecimal(6, clothing.getHourlyPriceBigDecimal());
-            ps.setBigDecimal(7, clothing.getDailyPriceBigDecimal());
-            ps.setString(8, clothing.getImagePath());
-            ps.setBytes(9, clothing.getImageData());
-            ps.setTimestamp(10, Timestamp.valueOf(clothing.getAvailableFrom()));
-            ps.setTimestamp(11, Timestamp.valueOf(clothing.getAvailableTo()));
-            ps.setInt(12, clothing.getQuantity());
-            ps.setBigDecimal(13, clothing.getDepositAmountBigDecimal());
-            ps.setInt(14, clothing.getClothingID());
+            ps.setString(4, clothing.getOccasion());
+            ps.setString(5, clothing.getSize());
+            ps.setString(6, clothing.getDescription());
+            ps.setBigDecimal(7, clothing.getHourlyPriceBigDecimal());
+            ps.setBigDecimal(8, clothing.getDailyPriceBigDecimal());
+            ps.setString(9, clothing.getImagePath());
+            ps.setBytes(10, clothing.getImageData());
+            ps.setTimestamp(11, Timestamp.valueOf(clothing.getAvailableFrom()));
+            ps.setTimestamp(12, Timestamp.valueOf(clothing.getAvailableTo()));
+            ps.setInt(13, clothing.getQuantity());
+            ps.setBigDecimal(14, clothing.getDepositAmountBigDecimal());
+            ps.setInt(15, clothing.getClothingID());
             
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -183,6 +202,7 @@ public class ClothingDAO {
         clothing.setClothingName(rs.getString("ClothingName"));
         clothing.setCategory(rs.getString("Category"));
         clothing.setStyle(rs.getString("Style"));
+        clothing.setOccasion(rs.getString("Occasion"));
         clothing.setSize(rs.getString("Size"));
         clothing.setDescription(rs.getString("Description"));
         clothing.setHourlyPrice(rs.getBigDecimal("HourlyPrice"));

@@ -45,7 +45,9 @@ public class ClothingServlet extends HttpServlet {
                         "\"clothingName\":\"" + escapeJson(clothing.getClothingName()) + "\"," +
                         "\"hourlyPrice\":" + clothing.getHourlyPrice() + "," +
                         "\"dailyPrice\":" + clothing.getDailyPrice() + "," +
-                        "\"category\":\"" + escapeJson(clothing.getCategory()) + "\"" +
+                        "\"category\":\"" + escapeJson(clothing.getCategory()) + "\"," +
+                        "\"style\":\"" + escapeJson(clothing.getStyle()) + "\"," +
+                        "\"occasion\":\"" + escapeJson(clothing.getOccasion()) + "\"" +
                     "}";
                     
                     response.setContentType("application/json;charset=UTF-8");
@@ -148,6 +150,7 @@ public class ClothingServlet extends HttpServlet {
             String category = request.getParameter("category");
             String style = request.getParameter("style");
             String size = request.getParameter("size");
+            String occasion = request.getParameter("occasion");
             String description = request.getParameter("description");
             String hourlyPriceStr = request.getParameter("hourlyPrice");
             String dailyPriceStr = request.getParameter("dailyPrice");
@@ -235,6 +238,7 @@ public class ClothingServlet extends HttpServlet {
                 clothing.setClothingName(clothingName);
                 clothing.setCategory(category);
                 clothing.setStyle(style);
+                clothing.setOccasion(occasion);
                 clothing.setSize(size);
                 clothing.setDescription(description);
                 clothing.setHourlyPrice(hourlyPrice);
@@ -303,6 +307,7 @@ public class ClothingServlet extends HttpServlet {
                 String category = request.getParameter("category");
                 String style = request.getParameter("style");
                 String size = request.getParameter("size");
+                String occasion = request.getParameter("occasion");
                 String description = request.getParameter("description");
                 String hourlyPriceStr = request.getParameter("hourlyPrice");
                 String dailyPriceStr = request.getParameter("dailyPrice");
@@ -385,6 +390,7 @@ public class ClothingServlet extends HttpServlet {
                 clothing.setClothingName(clothingName);
                 clothing.setCategory(category);
                 clothing.setStyle(style);
+                clothing.setOccasion(occasion);
                 clothing.setSize(size);
                 clothing.setDescription(description);
                 clothing.setHourlyPrice(hourlyPrice);

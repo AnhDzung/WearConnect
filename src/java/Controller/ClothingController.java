@@ -29,6 +29,10 @@ public class ClothingController {
         return ClothingService.searchByStyle(style);
     }
 
+    public static List<Clothing> searchByOccasion(String occasion) {
+        return ClothingService.searchByOccasion(occasion);
+    }
+
     public static List<Clothing> searchClothing(String keyword) {
         return ClothingService.searchClothing(keyword);
     }

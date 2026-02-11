@@ -41,10 +41,12 @@
             display: grid;
             gap: 14px;
         }
-        .detail-image img {
+        .main-image {
             width: 100%;
+            aspect-ratio: 4 / 5;
             border-radius: 16px;
             object-fit: cover;
+            object-position: center;
             display: block;
             box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
         }
@@ -186,7 +188,7 @@
             <c:choose>
                 <c:when test="${not empty images}">
                     <div class="gallery">
-                        <img id="mainImage" src="${pageContext.request.contextPath}/image?imageId=${images[0].imageID}" alt="${clothing.clothingName}">
+                        <img id="mainImage" class="main-image" src="${pageContext.request.contextPath}/image?imageId=${images[0].imageID}" alt="${clothing.clothingName}">
                         <div class="thumbs" id="thumbs">
                             <c:forEach items="${images}" var="img" varStatus="loop">
                                 <button class="${loop.index == 0 ? 'active' : ''}" data-index="${loop.index}" onclick="showImage(${loop.index}); return false;">
@@ -197,7 +199,7 @@
                     </div>
                 </c:when>
                 <c:otherwise>
-                    <img src="${pageContext.request.contextPath}/image?id=${clothing.clothingID}" alt="${clothing.clothingName}">
+                    <img class="main-image" src="${pageContext.request.contextPath}/image?id=${clothing.clothingID}" alt="${clothing.clothingName}">
                 </c:otherwise>
             </c:choose>
         </div>
@@ -221,6 +223,9 @@
             </div>
             <div class="info-row">
                 <strong>Phong cách:</strong> ${clothing.style}
+            </div>
+            <div class="info-row">
+                <strong>Mục đích:</strong> ${clothing.occasion}
             </div>
             <div class="info-row">
                 <strong>Size:</strong> ${clothing.size}

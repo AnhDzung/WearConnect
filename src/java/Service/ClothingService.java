@@ -31,6 +31,10 @@ public class ClothingService {
         return ClothingDAO.searchByStyle(style);
     }
 
+    public static List<Clothing> searchByOccasion(String occasion) {
+        return ClothingDAO.searchByOccasion(occasion);
+    }
+
     public static List<Clothing> searchClothing(String keyword) {
         return ClothingDAO.searchByName(keyword);
     }
@@ -59,7 +63,7 @@ public class ClothingService {
         return ClothingDAO.deleteClothing(clothingID);
     }
 
-    public static List<Clothing> searchClothing(String keyword, String category, String style) {
+    public static List<Clothing> searchClothing(String keyword, String category, String style, String occasion) {
         List<Clothing> results = ClothingDAO.getAllActiveClothing();
         
         if (category != null && !category.isEmpty()) {
@@ -68,6 +72,10 @@ public class ClothingService {
         
         if (style != null && !style.isEmpty()) {
             results.retainAll(ClothingDAO.searchByStyle(style));
+        }
+
+        if (occasion != null && !occasion.isEmpty()) {
+            results.retainAll(ClothingDAO.searchByOccasion(occasion));
         }
         
         return results;

@@ -9,6 +9,7 @@ CREATE TABLE Clothing (
     ClothingName NVARCHAR(255) NOT NULL,
     Category NVARCHAR(100),
     Style NVARCHAR(100),
+    Occasion NVARCHAR(100),
     Size NVARCHAR(50),
     Description NVARCHAR(MAX),
     HourlyPrice DECIMAL(10, 2),
@@ -18,6 +19,7 @@ CREATE TABLE Clothing (
     AvailableFrom DATETIME,
     AvailableTo DATETIME,
     IsActive BIT DEFAULT 1,
+    ClothingStatus NVARCHAR(50) DEFAULT 'ACTIVE', -- ACTIVE, PENDING_COSPLAY_REVIEW, APPROVED_COSPLAY, INACTIVE
     CreatedAt DATETIME DEFAULT GETDATE(),
     UpdatedAt DATETIME DEFAULT GETDATE(),
     FOREIGN KEY (RenterID) REFERENCES Accounts(AccountID)
@@ -141,3 +143,19 @@ IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Rental
 
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='RentalOrder' AND COLUMN_NAME='TrackingNumber')
     ALTER TABLE RentalOrder ADD TrackingNumber NVARCHAR(100) NULL;
+
+-- Table: CosplayDetail (Chi tiết cosplay)
+-- Extended metadata for clothing items with Category='Cosplay'
+CREATE TABLE CosplayDetail (
+    DetailID INT PRIMARY KEY IDENTITY(1,1),
+    ClothingID INT NOT NULL,
+    CharacterName NVARCHAR(200) NOT NULL,
+    Series NVARCHAR(200) NOT NULL,
+    CosplayType NVARCHAR(50) NOT NULL, -- 'Anime', 'Game', 'Movie'
+    AccuracyLevel NVARCHAR(50) NOT NULL, -- 'Cao', 'Trung bình', 'Cơ bản'
+    AccessoryList NVARCHAR(MAX) NULL, -- Comma-separated list
+    CreatedAt DATETIME DEFAULT GETDATE(),
+    UpdatedAt DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (ClothingID) REFERENCES Clothing(ClothingID) ON DELETE CASCADE
+);
+

@@ -30,6 +30,7 @@
                 <option value="">Tất cả</option>
                 <option value="category">Danh mục</option>
                 <option value="style">Phong cách</option>
+                <option value="occasion">Mục đích sử dụng</option>
             </select>
             <input type="text" name="query" placeholder="Nhập từ khóa tìm kiếm">
             <button type="submit">Tìm kiếm</button>
@@ -43,6 +44,7 @@
                 <h4>${clothing.clothingName}</h4>
                 <p><strong>Danh mục:</strong> ${clothing.category}</p>
                 <p><strong>Phong cách:</strong> ${clothing.style}</p>
+                <p><strong>Mục đích:</strong> ${clothing.occasion}</p>
                 <p><strong>Size:</strong> ${clothing.size}</p>
                 <p><strong>Giá:</strong> ${clothing.hourlyPrice} VNĐ/giờ</p>
                 <a href="${pageContext.request.contextPath}/clothing?action=view&id=${clothing.clothingID}" class="btn-browse">Xem chi tiết</a>

@@ -48,11 +48,14 @@
             <label for="category">Danh mục:</label>
             <select id="category" name="category" required>
                 <option value="">-- Chọn danh mục --</option>
-                <option value="Dress">Váy</option>
-                <option value="Shirt">Áo sơ mi</option>
-                <option value="Pants">Quần</option>
-                <option value="Jacket">Áo khoác</option>
-                <option value="Accessories">Phụ kiện</option>
+                <option value="Váy">Váy</option>
+                <option value="Áo dài">Áo dài</option>
+                <option value="Áo">Áo</option>
+                <option value="Quần">Quần</option>
+                <option value="Áo khoác">Áo khoác</option>
+                <option value="Set">Set cả quần và áo</option>
+                <option value="Cosplay">Cosplay</option>
+                <option value="Phụ kiện">Phụ kiện</option>
             </select>
         </div>
         
@@ -60,11 +63,29 @@
             <label for="style">Phong cách:</label>
             <select id="style" name="style" required>
                 <option value="">-- Chọn phong cách --</option>
-                <option value="Casual">Thường ngày</option>
-                <option value="Formal">Trang trọng</option>
-                <option value="Party">Dự tiệc</option>
-                <option value="Sport">Thể thao</option>
-                <option value="Vintage">Cổ điển</option>
+                <option value="Thường ngày">Thường ngày</option>
+                <option value="Trang trọng">Trang trọng</option>
+                <option value="Dự tiệc">Dự tiệc</option>
+                <option value="Thể thao">Thể thao</option>
+                <option value="Cổ điển">Cổ điển</option>
+                <option value="Vintage">Vintage</option>
+                <option value="Streetwear">Streetwear</option>
+                <option value="Sexy">Sexy</option>
+                <option value="Minimalist">Minimalist</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="occasion">Mục đích sử dụng:</label>
+            <select id="occasion" name="occasion" required>
+                <option value="">-- Chọn mục đích --</option>
+                <option value="Tiệc cưới">Dự Tiệc</option>
+                <option value="Tốt nghiệp">Tốt nghiệp</option>
+                <option value="Fes / Cosplay">Fes / Cosplay</option>
+                <option value="Chụp ảnh">Chụp ảnh</option>
+                <option value="Biểu diễn">Biểu diễn</option>
+                <option value="Hẹn hò">Hẹn hò</option>
+                <option value="Du lịch">Du lịch</option>
             </select>
         </div>
         

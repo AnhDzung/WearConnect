@@ -68,11 +68,14 @@
             <label for="category">Danh mục:</label>
             <select id="category" name="category" required>
                 <option value="">-- Chọn danh mục --</option>
-                <option value="Dress" <c:if test="${clothing.category == 'Dress'}">selected</c:if>>Váy</option>
-                <option value="Shirt" <c:if test="${clothing.category == 'Shirt'}">selected</c:if>>Áo sơ mi</option>
-                <option value="Pants" <c:if test="${clothing.category == 'Pants'}">selected</c:if>>Quần</option>
-                <option value="Jacket" <c:if test="${clothing.category == 'Jacket'}">selected</c:if>>Áo khoác</option>
-                <option value="Accessories" <c:if test="${clothing.category == 'Accessories'}">selected</c:if>>Phụ kiện</option>
+                <option value="Váy" <c:if test="${clothing.category == 'Váy'}">selected</c:if>>Váy</option>
+                <option value="Áo dài" <c:if test="${clothing.category == 'Áo dài'}">selected</c:if>>Áo dài</option>
+                <option value="Áo" <c:if test="${clothing.category == 'Áo'}">selected</c:if>>Áo</option>
+                <option value="Quần" <c:if test="${clothing.category == 'Quần'}">selected</c:if>>Quần</option>
+                <option value="Áo khoác" <c:if test="${clothing.category == 'Áo khoác'}">selected</c:if>>Áo khoác</option>
+                <option value="Set" <c:if test="${clothing.category == 'Set'}">selected</c:if>>Set quần áo</option>
+                <option value="Cosplay" <c:if test="${clothing.category == 'Cosplay'}">selected</c:if>>Cosplay</option>
+                <option value="Phụ kiện" <c:if test="${clothing.category == 'Phụ kiện'}">selected</c:if>>Phụ kiện</option>
             </select>
         </div>
         
@@ -80,11 +83,29 @@
             <label for="style">Phong cách:</label>
             <select id="style" name="style" required>
                 <option value="">-- Chọn phong cách --</option>
-                <option value="Casual" <c:if test="${clothing.style == 'Casual'}">selected</c:if>>Thường ngày</option>
-                <option value="Formal" <c:if test="${clothing.style == 'Formal'}">selected</c:if>>Trang trọng</option>
-                <option value="Party" <c:if test="${clothing.style == 'Party'}">selected</c:if>>Dự tiệc</option>
-                <option value="Sport" <c:if test="${clothing.style == 'Sport'}">selected</c:if>>Thể thao</option>
-                <option value="Vintage" <c:if test="${clothing.style == 'Vintage'}">selected</c:if>>Cổ điển</option>
+                <option value="Thường ngày" <c:if test="${clothing.style == 'Thường ngày'}">selected</c:if>>Thường ngày</option>
+                <option value="Trang trọng" <c:if test="${clothing.style == 'Trang trọng'}">selected</c:if>>Trang trọng</option>
+                <option value="Dự tiệc" <c:if test="${clothing.style == 'Dự tiệc'}">selected</c:if>>Dự tiệc</option>
+                <option value="Thể thao" <c:if test="${clothing.style == 'Thể thao'}">selected</c:if>>Thể thao</option>
+                <option value="Cổ điển" <c:if test="${clothing.style == 'Cổ điển'}">selected</c:if>>Cổ điển</option>
+                <option value="Vintage" <c:if test="${clothing.style == 'Vintage'}">selected</c:if>>Vintage</option>
+                <option value="Streetwear" <c:if test="${clothing.style == 'Streetwear'}">selected</c:if>>Streetwear</option>
+                <option value="Sexy" <c:if test="${clothing.style == 'Sexy'}">selected</c:if>>Sexy</option>
+                <option value="Minimalist" <c:if test="${clothing.style == 'Minimalist'}">selected</c:if>>Minimalist</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="occasion">Mục đích sử dụng:</label>
+            <select id="occasion" name="occasion" required>
+                <option value="">-- Chọn mục đích --</option>
+                <option value="Tiệc cưới" <c:if test="${clothing.occasion == 'Tiệc cưới'}">selected</c:if>>Dự tiệc</option>
+                <option value="Tốt nghiệp" <c:if test="${clothing.occasion == 'Tốt nghiệp'}">selected</c:if>>Tốt nghiệp</option>
+                <option value="Fes / Cosplay" <c:if test="${clothing.occasion == 'Fes / Cosplay'}">selected</c:if>>Fes / Cosplay</option>
+                <option value="Chụp ảnh" <c:if test="${clothing.occasion == 'Chụp ảnh'}">selected</c:if>>Chụp ảnh</option>
+                <option value="Biểu diễn" <c:if test="${clothing.occasion == 'Biểu diễn'}">selected</c:if>>Biểu diễn</option>
+                <option value="Hẹn hò" <c:if test="${clothing.occasion == 'Hẹn hò'}">selected</c:if>>Hẹn hò</option>
+                <option value="Du lịch" <c:if test="${clothing.occasion == 'Du lịch'}">selected</c:if>>Du lịch</option>
             </select>
         </div>
         

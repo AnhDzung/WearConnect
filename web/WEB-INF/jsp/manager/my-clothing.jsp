@@ -153,7 +153,7 @@
                 </div>
                 <div>
                     <h3 class="card-title">${clothing.clothingName}</h3>
-                    <div class="meta">${clothing.style} · Size ${clothing.size}</div>
+                    <div class="meta">${clothing.style} · ${clothing.occasion} · Size ${clothing.size}</div>
                 </div>
                 <div class="info-grid">
                     <div><span>Số lượng:</span> ${clothing.quantity > 0 ? clothing.quantity : 1} sản phẩm</div>
