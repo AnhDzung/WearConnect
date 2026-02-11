@@ -15,7 +15,7 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: cursive;
             background: #f5f5f5;
             padding: 20px;
         }

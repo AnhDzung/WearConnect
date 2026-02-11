@@ -8,7 +8,7 @@
     <title>Thanh toán - WearConnect</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { margin: 0; background-color: #f5f5f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; background-color: #f5f5f5; font-family: cursive; }
         .container { max-width: 900px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         h1 { color: #333; margin-bottom: 30px; border-bottom: 3px solid #cc3399; padding-bottom: 10px; }
         h3 { color: #555; margin: 25px 0 15px 0; }
@@ -160,7 +160,7 @@
                         </tr>
                         <tr>
                             <td style="border: 1px solid #ffe0b2;">Số tài khoản:</td>
-                            <td style="border: 1px solid #ffe0b2; color: #ff6f00; font-family: monospace;"><%= BankTransferConfig.BANK_ACCOUNT_NUMBER %></td>
+                            <td style="border: 1px solid #ffe0b2; color: #ff6f00; font-family: cursive;"><%= BankTransferConfig.BANK_ACCOUNT_NUMBER %></td>
                         </tr>
                         <tr>
                             <td style="border: 1px solid #ffe0b2;">Chủ tài khoản:</td>
@@ -185,7 +185,7 @@
                         </tr>
                         <tr>
                             <td style="border: 1px solid #ffe0b2;">Nội dung:</td>
-                            <td style="border: 1px solid #ffe0b2; color: #ff6f00; font-family: monospace;">WRC<fmt:formatNumber value="${rentalOrderID}" pattern="00000"/></td>
+                            <td style="border: 1px solid #ffe0b2; color: #ff6f00; font-family: cursive;">WRC<fmt:formatNumber value="${rentalOrderID}" pattern="00000"/></td>
                         </tr>
                     </table>
                     

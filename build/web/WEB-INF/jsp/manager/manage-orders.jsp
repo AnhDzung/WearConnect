@@ -7,7 +7,7 @@
     <title>Quản lý đơn thuê - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
-        body { margin: 0; background-color: #f5f5f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; background-color: #f5f5f5; font-family: cursive; }
         .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
         h1 { color: #333; margin-bottom: 20px; }
         

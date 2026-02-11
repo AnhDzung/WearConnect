@@ -5,7 +5,7 @@
     <title>Lỗi Server - WearConnect</title>
     <style>
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: cursive;
             margin: 0; 
             padding: 20px;
             background-color: #f5f5f5;

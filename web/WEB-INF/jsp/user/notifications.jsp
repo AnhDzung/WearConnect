@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thông báo của tôi</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f5f5f5; padding:20px; }
+        body { font-family: cursive; background:#f5f5f5; padding:20px; }
         .box { max-width:800px; margin:0 auto; background:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.08); padding:16px; }
         .title { font-size:20px; margin-bottom:12px; }
         .note { display:flex; gap:12px; padding:12px; border-bottom:1px solid #eee; align-items:flex-start; }

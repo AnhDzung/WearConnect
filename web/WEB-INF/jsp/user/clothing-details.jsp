@@ -7,58 +7,162 @@
     <title>Chi tiết quần áo - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
-        body { margin: 0; background-color: #f5f5f5; }
-        .container { max-width: 1000px; margin: 20px auto; padding: 20px; }
-        .detail-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-        .detail-image { position: relative; }
-        .detail-image img { width: 100%; border-radius: 5px; }
-        .gallery { display: flex; flex-direction: column; gap: 12px; }
-        .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
-        .thumbs button { border: 2px solid transparent; padding: 0; background: none; cursor: pointer; border-radius: 4px; overflow: hidden; }
-        .thumbs button.active { border-color: #007bff; }
+        :root {
+            --ink: #15110f;
+            --muted: #6f6a64;
+            --paper: #f7f3ee;
+            --card: #ffffff;
+            --accent: #1f8e74;
+            --accent-strong: #156c57;
+            --berry: #c02b7f;
+            --shadow: 0 16px 34px rgba(20, 16, 11, 0.12);
+            --radius: 18px;
+        }
+        body {
+            margin: 0;
+            background: radial-gradient(circle at 10% 10%, #efe2d0, transparent 40%),
+                        radial-gradient(circle at 90% 20%, #dff1ea, transparent 45%),
+                        var(--paper);
+            color: var(--ink);
+        }
+        .container { max-width: 1100px; margin: 28px auto 60px; padding: 0 20px; }
+        .detail-wrapper {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+            gap: 28px;
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .detail-image {
+            position: relative;
+            display: grid;
+            gap: 14px;
+        }
+        .detail-image img {
+            width: 100%;
+            border-radius: 16px;
+            object-fit: cover;
+            display: block;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+        }
+        .gallery { display: grid; gap: 12px; }
+        .thumbs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+            gap: 8px;
+        }
+        .thumbs button {
+            border: 2px solid transparent;
+            padding: 0;
+            background: none;
+            cursor: pointer;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+        .thumbs button:hover { transform: translateY(-2px); }
+        .thumbs button.active { border-color: var(--accent); }
         .thumbs img { width: 100%; height: 70px; object-fit: cover; display: block; }
         .favorite-btn {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            background-color: rgba(255, 255, 255, 0.95);
+            top: 16px;
+            left: 16px;
+            background: rgba(255, 255, 255, 0.95);
             border: none;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 52px;
+            height: 52px;
             font-size: 24px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
         }
-        .favorite-btn:hover {
-            background-color: white;
-            transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        .favorite-btn:hover { transform: scale(1.05); box-shadow: 0 14px 24px rgba(0, 0, 0, 0.22); }
+        .favorite-btn.active { color: var(--berry); }
+        .detail-info {
+            display: grid;
+            gap: 16px;
+            align-content: start;
         }
-        .favorite-btn.active {
-            color: #FF1493;
+        .detail-info h1 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: clamp(24px, 3vw, 34px);
         }
-        .detail-info h1 { margin-top: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .info-row { margin: 15px 0; }
-        .info-row strong { display: inline-block; width: 120px; }
-        .avg-rating { display: inline-flex; align-items: center; gap: 6px; background: #fff6e6; color: #d97706; padding: 6px 10px; border-radius: 999px; font-weight: 600; font-size: 14px; }
+        .avg-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff3df;
+            color: #b65d06;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 13px;
+        }
         .avg-rating .star { color: #f59e0b; font-size: 16px; }
-        .rating-section { margin: 24px 0; }
-        .btn { padding: 10px 20px; background-color: #007bff; color: white; border: none; cursor: pointer; margin-right: 10px; }
-        .btn-book { background-color: #28a745; }
-        .btn-back { background-color: #6c757d; }
-        .ratings-block { margin-top: 30px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .ratings-block h3 { margin-top: 0; margin-bottom: 15px; }
-        .rating-item { border-top: 1px solid #eee; padding: 12px 0; }
+        .info-row {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 12px;
+            padding: 10px 12px;
+            background: #faf8f4;
+            border-radius: 12px;
+        }
+        .info-row strong {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .detail-info .info-row:last-of-type { align-items: start; }
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            cursor: pointer;
+            border-radius: 999px;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.12); }
+        .btn-book { background: var(--accent); color: #fff; }
+        .btn-book:hover { background: var(--accent-strong); }
+        .btn-back { background: #ece6dd; color: var(--ink); }
+        .ratings-block {
+            margin-top: 28px;
+            background: var(--card);
+            padding: 22px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .ratings-block h3 { margin: 0 0 12px; font-size: 20px; }
+        .rating-item { border-top: 1px solid #eee2d6; padding: 14px 0; }
         .rating-item:first-of-type { border-top: none; }
-        .rating-meta { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .rating-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
         .rating-stars { color: #f59e0b; }
+        .rating-stars .star { color: #e4d7c8; }
+        .rating-stars .filled { color: #f59e0b; }
         .rating-comment { margin: 6px 0 0; color: #444; white-space: pre-wrap; }
-        .muted { color: #888; }
+        .muted { color: var(--muted); }
+        @media (max-width: 900px) {
+            .detail-wrapper { grid-template-columns: 1fr; }
+            .info-row { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>

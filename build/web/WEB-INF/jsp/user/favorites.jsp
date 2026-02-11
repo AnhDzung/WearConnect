@@ -14,7 +14,7 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: cursive;
             background-color: #f5f5f5;
             min-height: 100vh;
         }
@@ -346,7 +346,7 @@
             productCard.id = 'card-' + clothingID;
             productCard.innerHTML = `
                 <div class="product-image">
-                    <img src="${pageContext.request.contextPath}/image?id=` + clothingID + `" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2214%22 fill=%22%23999%22%3E[IMG]%3C/text%3E%3C/svg%3E'">
+                    <img src="${pageContext.request.contextPath}/image?id=` + clothingID + `" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22cursive%22 font-size=%2214%22 fill=%22%23999%22%3E[IMG]%3C/text%3E%3C/svg%3E'">
                 </div>
                 <div class="product-info">
                     <h3>` + name.substring(0, 30) + `</h3>

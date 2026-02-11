@@ -7,7 +7,7 @@
     <title>Cửa Hàng - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; margin: 0; }
+        body { font-family: cursive; background-color: #f5f5f5; margin: 0; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         
         .page-title { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 20px; text-align: center; margin-bottom: 30px; border-radius: 10px; }

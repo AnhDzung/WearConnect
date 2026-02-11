@@ -3,6 +3,10 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/ClothingServlet.java</file>
+            <file>file:/D:/Fpt/sm7/WearConnect/src/java/DAO/RatingDAO.java</file>
+            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/ImageServlet.java</file>
+            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/RatingServlet.java</file>
             <file>file:/D:/Fpt/sm7/WearConnect/web/WEB-INF/jsp/home.jsp</file>
         </group>
     </open-files>

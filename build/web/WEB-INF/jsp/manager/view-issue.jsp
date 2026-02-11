@@ -7,7 +7,7 @@
     <title>Chi tiết vấn đề - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
-        body { margin: 0; background-color: #f5f5f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; background-color: #f5f5f5; font-family: cursive; }
         .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
         .back-btn { padding: 10px 20px; background-color: #6c757d; color: white; border: none; cursor: pointer; margin-bottom: 20px; border-radius: 4px; }
         .back-btn:hover { background-color: #5a6268; }
