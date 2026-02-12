@@ -13,12 +13,20 @@
     
     int clothingID = 0;
     CosplayDetail cosplayDetail = null;
+    String availableFromValue = "";
+    String availableToValue = "";
     try {
-        Object clothing = pageContext.getAttribute("clothing", PageContext.PAGE_SCOPE);
+        Object clothing = pageContext.getAttribute("clothing", PageContext.REQUEST_SCOPE);
         if (clothing != null && clothing instanceof Model.Clothing) {
             clothingID = ((Model.Clothing) clothing).getClothingID();
             // Fetch existing cosplay detail if it exists
             cosplayDetail = CosplayDetailDAO.getCosplayDetailByClothingID(clothingID);
+
+            java.time.LocalDateTime from = ((Model.Clothing) clothing).getAvailableFrom();
+            java.time.LocalDateTime to = ((Model.Clothing) clothing).getAvailableTo();
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+            if (from != null) availableFromValue = from.format(formatter);
+            if (to != null) availableToValue = to.format(formatter);
         }
     } catch (Exception e) {}
     
@@ -191,8 +199,8 @@
             <label for="dailyPrice">Giá thuê/ngày (VNĐ):</label>
             <c:set var="dailyPriceValue">
                 <c:choose>
-                    <c:when test="${clothing.dailyPrice > 0}"><fmt:formatNumber value="${clothing.dailyPrice}" pattern="#,##0"/></c:when>
-                    <c:otherwise><fmt:formatNumber value="${clothing.hourlyPrice * 24}" pattern="#,##0"/></c:otherwise>
+                    <c:when test="${clothing.dailyPrice > 0}">${clothing.dailyPrice}</c:when>
+                    <c:otherwise>${clothing.hourlyPrice * 24}</c:otherwise>
                 </c:choose>
             </c:set>
             <input type="number" id="dailyPrice" name="dailyPrice" step="0.01" min="10000" max="99999999.99" value="${dailyPriceValue}" required>
@@ -201,8 +209,8 @@
         
         <div class="form-group">
             <label for="depositAmount">Tiền đặt cọc (VNĐ):</label>
-            <input type="number" id="depositAmount" name="depositAmount" step="0.01" min="0" max="99999999.99" 
-                   value="<fmt:formatNumber value='${clothing.depositAmount > 0 ? clothing.depositAmount : clothing.hourlyPrice * 24 * 0.2}' pattern='#,##0'/>" required>
+                 <input type="number" id="depositAmount" name="depositAmount" step="0.01" min="0" max="99999999.99" 
+                     value="${clothing.depositAmount > 0 ? clothing.depositAmount : clothing.hourlyPrice * 24 * 0.2}" required>
             <small style="color: #666; display: block; margin-top: 5px;">Đặt cọc tối thiểu người dùng phải trả khi đặt thuê. Người dùng sẽ thanh toán 100% tổng tiền.</small>
         </div>
 
@@ -286,12 +294,12 @@
         
         <div class="form-group">
             <label for="availableFrom">Có sẵn từ:</label>
-            <input type="datetime-local" id="availableFrom" name="availableFrom" value="${clothing.availableFrom}" required>
+            <input type="datetime-local" id="availableFrom" name="availableFrom" value="<%= availableFromValue %>" required>
         </div>
         
         <div class="form-group">
             <label for="availableTo">Đến:</label>
-            <input type="datetime-local" id="availableTo" name="availableTo" value="${clothing.availableTo}" required>
+            <input type="datetime-local" id="availableTo" name="availableTo" value="<%= availableToValue %>" required>
         </div>
         
         <div class="form-group">

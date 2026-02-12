@@ -274,7 +274,7 @@
 
 <!-- Hero Section -->
 <div class="hero">
-    <h1>🎭 Cosplay & Fes</h1>
+    <h1> Cosplay & Fes</h1>
     <p>Cho thuê trang phục cosplay chất lượng cao từ Anime, Game, và Movie. Biến hóa thành nhân vật yêu thích của bạn!</p>
 </div>
 

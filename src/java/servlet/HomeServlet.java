@@ -56,8 +56,10 @@ public class HomeServlet extends HttpServlet {
             products = ClothingController.getAllClothing();
         }
         
-        // Remove cosplay items from home listing
-        products.removeIf(p -> p.getCategory() != null && "Cosplay".equalsIgnoreCase(p.getCategory().trim()));
+        // Remove cosplay items and inactive items from home listing
+        products.removeIf(p -> (p.getCategory() != null && "Cosplay".equalsIgnoreCase(p.getCategory().trim()))
+            || !p.isActive()
+            || (p.getClothingStatus() != null && !"ACTIVE".equalsIgnoreCase(p.getClothingStatus().trim())));
 
         // Calculate average ratings
         Map<Integer, Double> avgRatings = new HashMap<>();

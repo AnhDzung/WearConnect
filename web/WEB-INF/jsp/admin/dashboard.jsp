@@ -50,30 +50,8 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             display: flex;
             gap: 10px;
-        }
-        
-        .nav-links {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .nav-links a {
-            padding: 10px 20px;
-            background: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background 0.3s;
-        }
-        
-        .nav-links a:hover {
-            background: #0056b3;
-        }
-        
-        .controls {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
         }
         
         .btn {
@@ -108,7 +86,7 @@
             background-color: #dc3545;
             color: white;
             font-size: 12px;
-            padding: 5px 10px;
+            padding: 6px 10px;
         }
         
         .btn-delete:hover {
@@ -162,6 +140,42 @@
             color: #dc3545;
             font-weight: 600;
         }
+
+        .status-pending {
+            color: #ff9800;
+            font-weight: 600;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 520px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+        .reason-list { display: grid; gap: 8px; margin-top: 8px; }
+        .reason-note { width: 100%; min-height: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
         
         .action-buttons {
             display: flex;
@@ -205,68 +219,64 @@
                 </c:choose>
             </div>
         </c:if>
+
         <div class="control-panel">
-            <button class="btn btn-add" onclick="addAccount()">Thêm Tài Khoản</button>
+            <div><strong>Danh sách sản phẩm của tất cả manager</strong></div>
             <form method="GET" action="<%= request.getContextPath() %>/admin" style="display: inline;">
                 <button type="submit" class="btn btn-refresh">Làm Mới</button>
             </form>
         </div>
-        
+
         <div class="table-container">
             <%
                 @SuppressWarnings("unchecked")
-                List<Account> users = (List<Account>) request.getAttribute("users");
-                
-                if (users != null && !users.isEmpty()) {
+                List<Model.Clothing> products = (List<Model.Clothing>) request.getAttribute("products");
+                @SuppressWarnings("unchecked")
+                java.util.Map<Integer, Model.Account> managerMap = (java.util.Map<Integer, Model.Account>) request.getAttribute("managerMap");
+
+                if (products != null && !products.isEmpty()) {
             %>
                 <table>
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Tên Đăng Nhập</th>
-                            <th>Email</th>
-                            <th>Tên Đầy Đủ</th>
-                            <th>Loại Tài Khoản</th>
-                            <th>Trạng Thái</th>
-                            <th>Hành Động</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Danh mục</th>
+                            <th>Manager</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
                         <%
-                            for (Account user : users) {
+                            for (Model.Clothing p : products) {
+                                Model.Account m = managerMap != null ? managerMap.get(p.getRenterID()) : null;
+                                String status = p.getClothingStatus();
                         %>
                             <tr>
-                                <td><%= user.getAccountID() %></td>
-                                <td><%= user.getUsername() %></td>
-                                <td><%= user.getEmail() %></td>
-                                <td><%= user.getFullName() %></td>
-                                <td><%= user.getUserRole() %></td>
+                                <td><%= p.getClothingID() %></td>
+                                <td><%= p.getClothingName() %></td>
+                                <td><%= p.getCategory() %></td>
+                                <td><%= m != null ? m.getFullName() : ("ID " + p.getRenterID()) %></td>
                                 <td>
-                                    <% if (user.isStatus()) { %>
-                                        <span class="status-active">Hoạt Động</span>
+                                    <% if ("ACTIVE".equals(status) || "APPROVED_COSPLAY".equals(status)) { %>
+                                        <span class="status-active">Hoạt động</span>
+                                    <% } else if ("INACTIVE".equals(status)) { %>
+                                        <span class="status-inactive">Không hoạt động</span>
                                     <% } else { %>
-                                        <span class="status-inactive">✗ Khóa</span>
+                                        <span class="status-pending">Chờ duyệt</span>
                                     <% } %>
                                 </td>
                                 <td>
                                     <div class="action-buttons">
-                                        <form method="GET" action="<%= request.getContextPath() %>/admin" style="display: inline;">
-                                            <input type="hidden" name="action" value="toggleStatus">
-                                            <input type="hidden" name="id" value="<%= user.getAccountID() %>">
-                                            <input type="hidden" name="status" value="<%= user.isStatus() ? "active" : "inactive" %>">
-                                            <button type="submit" class="btn btn-toggle">
-                                                <% if (user.isStatus()) { %>
-                                                    🔒 Khóa
-                                                <% } else { %>
-                                                    🔓 Mở Khóa
-                                                <% } %>
-                                            </button>
-                                        </form>
-                                        <form method="GET" action="<%= request.getContextPath() %>/admin" style="display: inline;" onsubmit="return confirm('Bạn có chắc muốn xóa tài khoản này?');">
-                                            <input type="hidden" name="action" value="delete">
-                                            <input type="hidden" name="id" value="<%= user.getAccountID() %>">
-                                            <button type="submit" class="btn btn-delete">Xóa</button>
-                                        </form>
+                                        <button type="button" class="btn btn-delete" onclick="openDeactivateModal(<%= p.getClothingID() %>)">Xóa</button>
+                                        <% if ("PENDING_REVIEW".equals(status) || "PENDING_COSPLAY_REVIEW".equals(status)) { %>
+                                            <form method="GET" action="<%= request.getContextPath() %>/admin" style="display: inline;">
+                                                <input type="hidden" name="action" value="approveProduct">
+                                                <input type="hidden" name="clothingID" value="<%= p.getClothingID() %>">
+                                                <button type="submit" class="btn btn-add">Duyệt lại</button>
+                                            </form>
+                                        <% } %>
                                     </div>
                                 </td>
                             </tr>
@@ -278,18 +288,45 @@
             <%
                 } else {
             %>
-                <div class="empty-message">
-                    Không có tài khoản nào để hiển thị.
-                </div>
+                <div class="empty-message">Không có sản phẩm nào để hiển thị.</div>
             <%
                 }
             %>
         </div>
     </div>
-    
+
+    <div id="deactivateModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nhập lý do xóa sản phẩm</h3>
+                <button type="button" class="btn btn-toggle" onclick="closeDeactivateModal()">Đóng</button>
+            </div>
+            <form method="GET" action="<%= request.getContextPath() %>/admin">
+                <input type="hidden" name="action" value="deactivateProduct">
+                <input type="hidden" name="clothingID" id="deactivateClothingID">
+                <div class="reason-list">
+                    <label><input type="radio" name="reason" value="San pham sai so voi ten" required> Sản phẩm sai so với tên</label>
+                    <label><input type="radio" name="reason" value="Anh sai so voi san pham" required> Ảnh sai so với sản phẩm</label>
+                </div>
+                <div style="margin-top:10px;">
+                    <label for="note">Ghi chú thêm (nếu có)</label>
+                    <textarea id="note" name="note" class="reason-note" placeholder="Nhập ghi chú..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-toggle" onclick="closeDeactivateModal()">Hủy</button>
+                    <button type="submit" class="btn btn-delete">Xác nhận</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        function addAccount() {
-            alert('Chức năng sẽ được phát triển!');
+        function openDeactivateModal(id) {
+            document.getElementById('deactivateClothingID').value = id;
+            document.getElementById('deactivateModal').classList.add('show');
+        }
+        function closeDeactivateModal() {
+            document.getElementById('deactivateModal').classList.remove('show');
         }
     </script>
 </body>

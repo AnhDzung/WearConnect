@@ -1,15 +1,16 @@
 package servlet;
 
 import Controller.ClothingController;
+import DAO.AccountDAO;
 import DAO.ColorDAO;
 import DAO.CosplayDetailDAO;
 import DAO.RatingDAO;
 import Service.NotificationService;
+import Model.Account;
 import Model.Clothing;
 import Model.ClothingImage;
 import Model.Color;
 import Model.CosplayDetail;
-import Model.Notification;
 import Model.Rating;
 import java.io.IOException;
 import java.io.InputStream;
@@ -245,6 +246,7 @@ public class ClothingServlet extends HttpServlet {
                 // Set style to "Cosplay" if category is Cosplay (style field is hidden)
                 if ("Cosplay".equals(category)) {
                     clothing.setStyle("Cosplay");
+                    clothing.setClothingStatus("PENDING_COSPLAY_REVIEW");
                 } else {
                     clothing.setStyle(style);
                 }
@@ -330,7 +332,7 @@ public class ClothingServlet extends HttpServlet {
                         NotificationService.createNotification(
                             renterID,
                             "Sản phẩm Cosplay đang được xét duyệt",
-                            "Sản phẩm '" + clothingName + "' đã được đăng tải thành công và đang chờ Admin xác thực. Bạn sẽ nhận được thông báo khi sản phẩm được duyệt."
+                            "Sản phẩm '" + clothingName + "' (SP#" + clothingID + ") đã được đăng tải thành công và đang chờ Admin xác thực. Bạn sẽ nhận được thông báo khi sản phẩm được duyệt."
                         );
                     }
                     
@@ -351,6 +353,10 @@ public class ClothingServlet extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/clothing?action=myClothing&error=notfound");
                     return;
                 }
+
+                // Track previous status to detect if product was deactivated
+                String prevStatus = clothing.getClothingStatus();
+                boolean wasInactive = "INACTIVE".equals(prevStatus) || "PENDING_REVIEW".equals(prevStatus);
 
                 String clothingName = request.getParameter("clothingName");
                 String category = request.getParameter("category");
@@ -442,8 +448,18 @@ public class ClothingServlet extends HttpServlet {
                 // Set style to "Cosplay" if category is Cosplay (style field is hidden)
                 if ("Cosplay".equals(category)) {
                     clothing.setStyle("Cosplay");
+                    clothing.setClothingStatus("PENDING_COSPLAY_REVIEW");
+                    clothing.setActive(false);
                 } else {
                     clothing.setStyle(style);
+                    // Handle status for non-cosplay items
+                    if (wasInactive) {
+                        clothing.setClothingStatus("PENDING_REVIEW");
+                        clothing.setActive(false);
+                    } else {
+                        clothing.setClothingStatus("ACTIVE");
+                        clothing.setActive(true);
+                    }
                 }
                 
                 clothing.setOccasion(occasion);
@@ -487,6 +503,33 @@ public class ClothingServlet extends HttpServlet {
                             cosplayDetail.setAccuracyLevel(accuracyLevel);
                             cosplayDetail.setAccessoryList(accessoryList);
                             CosplayDetailDAO.addCosplayDetail(cosplayDetail);
+                        }
+
+                        try {
+                            List<Account> admins = AccountDAO.findByRole("Admin");
+                            for (Account admin : admins) {
+                                NotificationService.createNotification(
+                                        admin.getAccountID(),
+                                        "Cosplay can duoc duyet lai",
+                                    "San pham cosplay '" + clothingName + "' (SP#" + clothingID + ") vua duoc cap nhat boi manager va dang cho duyet lai."
+                                );
+                            }
+                        } catch (Exception e) {
+                            System.out.println("Notify admin error: " + e.getMessage());
+                        }
+                    } else if (wasInactive) {
+                        // Non-cosplay item that was deactivated, now being re-submitted for review
+                        try {
+                            List<Account> admins = AccountDAO.findByRole("Admin");
+                            for (Account admin : admins) {
+                                NotificationService.createNotification(
+                                        admin.getAccountID(),
+                                        "San pham can duyet lai",
+                                        "San pham '" + clothingName + "' (SP#" + clothingID + ") vua duoc cap nhat boi manager sau khi bi tam ngung va dang cho duyet lai."
+                                );
+                            }
+                        } catch (Exception e) {
+                            System.out.println("Notify admin error: " + e.getMessage());
                         }
                     }
                     

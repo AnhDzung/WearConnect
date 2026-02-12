@@ -7,10 +7,13 @@ import Model.RentalOrder;
 import Controller.UserController;
 import Controller.PaymentController;
 import Controller.ClothingController;
+import DAO.AccountDAO;
 import DAO.ClothingDAO;
 import DAO.CosplayDetailDAO;
+import Service.NotificationService;
 import Service.DashboardService;
 import Service.RentalOrderService;
+import java.util.HashMap;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +82,12 @@ public class AdminServlet extends HttpServlet {
         } else if ("reviewCosplay".equals(action)) {
             showCosplayReviewPage(request, response);
             return;
+        } else if ("deactivateProduct".equals(action)) {
+            deactivateProduct(request, response);
+            return;
+        } else if ("approveProduct".equals(action)) {
+            approveProduct(request, response);
+            return;
         } else if ("approveCosplay".equals(action)) {
             approveCosplay(request, response);
             return;
@@ -86,10 +95,19 @@ public class AdminServlet extends HttpServlet {
             rejectCosplay(request, response);
             return;
         }
-        
-        // Lấy danh sách người dùng (dashboard mặc định)
-        List<Account> users = UserController.getAllUsers();
-        request.setAttribute("users", users);
+
+        // Admin home: danh sach san pham
+        List<Clothing> products = ClothingDAO.getAllClothingAdmin();
+        Map<Integer, Account> managerMap = new HashMap<>();
+        for (Clothing clothing : products) {
+            int renterID = clothing.getRenterID();
+            if (!managerMap.containsKey(renterID)) {
+                Account acc = AccountDAO.findById(renterID);
+                managerMap.put(renterID, acc);
+            }
+        }
+        request.setAttribute("products", products);
+        request.setAttribute("managerMap", managerMap);
 
         // Thông báo đơn cần xác nhận (PENDING_PAYMENT hoặc PAYMENT_SUBMITTED)
         int pendingCount = RentalOrderService.countOrdersByStatus("PENDING_PAYMENT");
@@ -99,6 +117,70 @@ public class AdminServlet extends HttpServlet {
         request.setAttribute("newOrdersCount", pendingCount + verifyingCount);
         
         request.getRequestDispatcher("/WEB-INF/jsp/admin/dashboard.jsp").forward(request, response);
+    }
+
+    private void deactivateProduct(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int clothingID = Integer.parseInt(request.getParameter("clothingID"));
+            String reason = request.getParameter("reason");
+            String note = request.getParameter("note");
+
+            Clothing clothing = ClothingDAO.getClothingByID(clothingID);
+            boolean statusOk = ClothingDAO.updateClothingStatus(clothingID, "INACTIVE");
+            boolean activeOk = ClothingDAO.setClothingActive(clothingID, false);
+
+            if (statusOk && activeOk && clothing != null) {
+                StringBuilder msg = new StringBuilder();
+                msg.append("San pham '").append(clothing.getClothingName()).append("' da bi tam ngung hoat dong. Ly do: ");
+                msg.append(reason != null ? reason : "Khac");
+                if (note != null && !note.trim().isEmpty()) {
+                    msg.append(". Ghi chu: ").append(note.trim());
+                }
+                NotificationService.createNotification(
+                        clothing.getRenterID(),
+                        "San pham bi tam ngung",
+                        msg.toString()
+                );
+            }
+            response.sendRedirect(request.getContextPath() + "/admin");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?error=true");
+        }
+    }
+
+    private void approveProduct(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int clothingID = Integer.parseInt(request.getParameter("clothingID"));
+            Clothing clothing = ClothingDAO.getClothingByID(clothingID);
+            if (clothing == null) {
+                response.sendRedirect(request.getContextPath() + "/admin?error=true");
+                return;
+            }
+
+            String status = clothing.getClothingStatus();
+            boolean statusOk;
+            if ("Cosplay".equals(clothing.getCategory())) {
+                statusOk = ClothingDAO.updateClothingStatus(clothingID, "APPROVED_COSPLAY");
+            } else {
+                statusOk = ClothingDAO.updateClothingStatus(clothingID, "ACTIVE");
+            }
+            boolean activeOk = ClothingDAO.setClothingActive(clothingID, true);
+
+            if (statusOk && activeOk) {
+                NotificationService.createNotification(
+                        clothing.getRenterID(),
+                        "San pham da duoc duyet",
+                        "San pham '" + clothing.getClothingName() + "' da duoc admin duyet va hoat dong lai."
+                );
+            }
+            response.sendRedirect(request.getContextPath() + "/admin");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?error=true");
+        }
     }
     
     /**
@@ -267,7 +349,7 @@ public class AdminServlet extends HttpServlet {
                 Service.NotificationService.createNotification(
                     clothing.getRenterID(),
                     "Sản phẩm Cosplay đã được xác thực",
-                    "Sản phẩm '" + clothing.getClothingName() + "' đã được Admin duyệt và hiện đang hiển thị trên trang Cosplay."
+                    "Sản phẩm '" + clothing.getClothingName() + "' (SP#" + clothing.getClothingID() + ") đã được Admin duyệt và hiện đang hiển thị trên trang Cosplay."
                 );
                 
                 response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&success=approved");
@@ -301,7 +383,7 @@ public class AdminServlet extends HttpServlet {
                     Service.NotificationService.createNotification(
                         clothing.getRenterID(),
                         "Sản phẩm Cosplay không được duyệt",
-                        "Sản phẩm '" + clothing.getClothingName() + "' đã bị từ chối bởi Admin. Vui lòng kiểm tra lại thông tin và chất lượng sản phẩm."
+                        "Sản phẩm '" + clothing.getClothingName() + "' (SP#" + clothing.getClothingID() + ") đã bị từ chối bởi Admin. Vui lòng kiểm tra lại thông tin và chất lượng sản phẩm."
                     );
                 }
             }

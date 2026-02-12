@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ page import="DAO.ColorDAO" %>
 <%@ page import="Model.Color" %>
 <!DOCTYPE html>
@@ -23,7 +24,7 @@
         .status.confirmed { background-color: #28a745; color: white; }
         .status.rented { background-color: #28a745; color: white; }
         .status.returned { background-color: #6c757d; color: white; }
-        .btn { padding: 10px 20px; margin-top: 20px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        .btn { padding: 10px 20px; margin-top: 20px; background-color: #007bff; color: white; border: none; cursor: pointer; text-decoration: none; display: inline-block; border-radius: 4px; }
         .btn-danger { background-color: #dc3545; }
         .alert { padding: 15px; margin-bottom: 20px; border-radius: 5px; }
         .alert-success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
@@ -214,7 +215,7 @@
             </c:if>
 
             <c:if test="${order.status == 'COMPLETED'}">
-                <c:if test="${sessionScope.accountID != order.managerID}">
+                <c:if test="${sessionScope.userRole == 'User' && sessionScope.accountID != order.managerID}">
                     <div style="margin-top: 25px; padding: 16px; border: 1px solid #e1e5ee; border-radius: 6px; background: #f8fafc;">
                         <h3 style="margin-top: 0;">Đánh giá sản phẩm</h3>
                         <form method="POST" action="${pageContext.request.contextPath}/rating">
@@ -306,17 +307,26 @@
 
     <!-- Payment proof preview (visible only to Admin or the renter user) -->
     <c:if test="${sessionScope.userRole eq 'Admin' || (not empty sessionScope.accountID and not empty order.renterUserID and sessionScope.accountID eq order.renterUserID)}">
+        <c:set var="proofPath" value="" />
+        <c:if test="${not empty payment and not empty payment.paymentProofImage}">
+            <c:set var="proofPath" value="${payment.paymentProofImage}" />
+        </c:if>
+        <c:if test="${empty proofPath and not empty order.paymentProofImage}">
+            <c:set var="proofPath" value="${order.paymentProofImage}" />
+        </c:if>
         <c:choose>
-            <c:when test="${not empty payment and not empty payment.paymentProofImage}">
+            <c:when test="${not empty proofPath}">
+                <c:set var="proofLower" value="${fn:toLowerCase(proofPath)}" />
                 <div style="margin-top:24px; padding:16px; border:1px solid #e1e5ee; border-radius:8px; background:#f9fbff;">
                     <h3 style="margin-top:0;">Ảnh chứng minh thanh toán</h3>
-                    <img src="${pageContext.request.contextPath}/image?path=${payment.paymentProofImage}" alt="Payment proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
-                </div>
-            </c:when>
-            <c:when test="${not empty order.paymentProofImage}">
-                <div style="margin-top:24px; padding:16px; border:1px solid #e1e5ee; border-radius:8px; background:#f9fbff;">
-                    <h3 style="margin-top:0;">Ảnh chứng minh thanh toán</h3>
-                    <img src="${pageContext.request.contextPath}/image?path=${order.paymentProofImage}" alt="Payment proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
+                    <c:choose>
+                        <c:when test="${fn:endsWith(proofLower, '.pdf')}">
+                            <a href="${pageContext.request.contextPath}/image?path=${proofPath}" target="_blank" class="btn">Xem file chứng minh</a>
+                        </c:when>
+                        <c:otherwise>
+                            <img src="${pageContext.request.contextPath}/image?path=${proofPath}" alt="Payment proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
+                        </c:otherwise>
+                    </c:choose>
                 </div>
             </c:when>
         </c:choose>
@@ -324,9 +334,17 @@
 
     <!-- Received proof preview -->
     <c:if test="${not empty order.receivedProofImage}">
+        <c:set var="receivedLower" value="${fn:toLowerCase(order.receivedProofImage)}" />
         <div style="margin-top:16px; padding:16px; border:1px solid #e1e5ee; border-radius:8px; background:#fff8f0;">
             <h3 style="margin-top:0;">Ảnh chứng minh đã nhận hàng</h3>
-            <img src="${pageContext.request.contextPath}/image?path=${order.receivedProofImage}" alt="Received proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
+            <c:choose>
+                <c:when test="${fn:endsWith(receivedLower, '.pdf')}">
+                    <a href="${pageContext.request.contextPath}/image?path=${order.receivedProofImage}" target="_blank" class="btn">Xem file chứng minh</a>
+                </c:when>
+                <c:otherwise>
+                    <img src="${pageContext.request.contextPath}/image?path=${order.receivedProofImage}" alt="Received proof" style="max-width:100%; border-radius:6px; border:1px solid #dce3f0;">
+                </c:otherwise>
+            </c:choose>
         </div>
     </c:if>
 

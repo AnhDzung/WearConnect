@@ -58,6 +58,21 @@ public class ClothingDAO {
         return list;
     }
 
+    public static List<Clothing> getAllClothingAdmin() {
+        List<Clothing> list = new ArrayList<>();
+        String sql = "SELECT * FROM Clothing ORDER BY CreatedAt DESC";
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                list.add(mapRowToClothing(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public static Clothing getClothingByID(int clothingID) {
         String sql = "SELECT * FROM Clothing WHERE ClothingID = ?";
         try (Connection conn = DatabaseConnection.getConnection();

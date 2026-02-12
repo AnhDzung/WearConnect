@@ -58,6 +58,7 @@
                                 <%
                                     Integer oid = null;
                                     Integer nid = null;
+                                    Integer pid = null;
                                     try {
                                         Object o = pageContext.findAttribute("n");
                                         if (o != null) {
@@ -81,23 +82,36 @@
                                                     }
                                                 } catch (NoSuchMethodException ignore) {}
                                             }
+
+                                            if (pid == null) {
+                                                try {
+                                                    String msg = (String) o.getClass().getMethod("getMessage").invoke(o);
+                                                    if (msg != null) {
+                                                        java.util.regex.Matcher pm = java.util.regex.Pattern.compile("SP#(\\d+)").matcher(msg);
+                                                        if (pm.find()) pid = Integer.parseInt(pm.group(1));
+                                                    }
+                                                } catch (NoSuchMethodException ignore) {}
+                                            }
                                         }
                                     } catch (Exception ex) {
                                         oid = null;
                                         nid = null;
+                                        pid = null;
                                     }
                                     if (oid != null) {
                                 %>
                                     <a href="#" onclick="markAndOpen(<%= (nid!=null?nid:-1) %>, <%= oid %>); return false;" class="btn">Xem đơn</a>
                                 <%
                                     }
+                                    if (pid != null) {
+                                %>
+                                    <a href="${pageContext.request.contextPath}/clothing?action=view&id=<%= pid %>" class="btn">Xem san pham</a>
+                                <%
+                                    }
                                 %>
                         </div>
                     </div>
                 </c:forEach>
-                <div class="actions">
-                    <a href="${pageContext.request.contextPath}/rental?action=myOrders" class="btn">Xem tất cả đơn</a>
-                </div>
             </c:when>
             <c:otherwise>
                 <div class="empty">

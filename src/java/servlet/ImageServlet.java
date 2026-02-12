@@ -99,6 +99,8 @@ public class ImageServlet extends HttpServlet {
             response.setContentType("image/gif");
         } else if (lower.endsWith(".webp")) {
             response.setContentType("image/webp");
+        } else if (lower.endsWith(".pdf")) {
+            response.setContentType("application/pdf");
         } else {
             response.setContentType("image/jpeg");
         }

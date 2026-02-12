@@ -199,6 +199,12 @@
                         <span>Đợi Xác Thực</span>
                     </div>
                 </c:if>
+
+                <c:if test="${clothing.clothingStatus == 'INACTIVE' || clothing.clothingStatus == 'PENDING_REVIEW'}">
+                    <div class="badge-pending" style="background: linear-gradient(135deg, #6c757d 0%, #343a40 100%);">
+                        <span>Đang không hoạt động</span>
+                    </div>
+                </c:if>
                 
                 <div class="actions">
                     <a href="${pageContext.request.contextPath}/clothing?action=view&id=${clothing.clothingID}" class="btn btn-outline">Xem chi tiết</a>
