@@ -53,10 +53,10 @@ public class CosplayDetailDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setInt(1, clothingID);
-            ResultSet rs = ps.executeQuery();
-            
-            if (rs.next()) {
-                return mapRowToCosplayDetail(rs);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowToCosplayDetail(rs);
+                }
             }
             
         } catch (SQLException e) {
@@ -78,10 +78,10 @@ public class CosplayDetailDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setInt(1, detailID);
-            ResultSet rs = ps.executeQuery();
-            
-            if (rs.next()) {
-                return mapRowToCosplayDetail(rs);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowToCosplayDetail(rs);
+                }
             }
             
         } catch (SQLException e) {

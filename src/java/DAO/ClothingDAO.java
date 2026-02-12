@@ -247,9 +247,10 @@ public class ClothingDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(mapRowToClothing(rs));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRowToClothing(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();

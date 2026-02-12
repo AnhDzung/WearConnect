@@ -256,9 +256,20 @@ public class AdminServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             int clothingID = Integer.parseInt(request.getParameter("id"));
+            
+            // Lấy thông tin sản phẩm để gửi thông báo
+            Clothing clothing = ClothingDAO.getClothingByID(clothingID);
+            
             boolean success = ClothingDAO.updateClothingStatus(clothingID, "APPROVED_COSPLAY");
             
-            if (success) {
+            if (success && clothing != null) {
+                // Gửi thông báo cho manager
+                Service.NotificationService.createNotification(
+                    clothing.getRenterID(),
+                    "Sản phẩm Cosplay đã được xác thực",
+                    "Sản phẩm '" + clothing.getClothingName() + "' đã được Admin duyệt và hiện đang hiển thị trên trang Cosplay."
+                );
+                
                 response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&success=approved");
             } else {
                 response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&error=true");
@@ -276,10 +287,23 @@ public class AdminServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             int clothingID = Integer.parseInt(request.getParameter("id"));
+            
+            // Lấy thông tin sản phẩm để gửi thông báo
+            Clothing clothing = ClothingDAO.getClothingByID(clothingID);
+            
             // Set to INACTIVE and mark as not active
             boolean success = ClothingDAO.updateClothingStatus(clothingID, "INACTIVE");
             if (success) {
                 ClothingDAO.setClothingActive(clothingID, false);
+                
+                // Gửi thông báo cho manager
+                if (clothing != null) {
+                    Service.NotificationService.createNotification(
+                        clothing.getRenterID(),
+                        "Sản phẩm Cosplay không được duyệt",
+                        "Sản phẩm '" + clothing.getClothingName() + "' đã bị từ chối bởi Admin. Vui lòng kiểm tra lại thông tin và chất lượng sản phẩm."
+                    );
+                }
             }
             
             if (success) {

@@ -4,10 +4,12 @@ import Controller.ClothingController;
 import DAO.ColorDAO;
 import DAO.CosplayDetailDAO;
 import DAO.RatingDAO;
+import Service.NotificationService;
 import Model.Clothing;
 import Model.ClothingImage;
 import Model.Color;
 import Model.CosplayDetail;
+import Model.Notification;
 import Model.Rating;
 import java.io.IOException;
 import java.io.InputStream;
@@ -322,6 +324,16 @@ public class ClothingServlet extends HttpServlet {
                             ClothingController.addClothingImage(ci);
                         }
                     }
+                    
+                    // Tạo thông báo cho manager nếu là sản phẩm cosplay
+                    if ("Cosplay".equals(category)) {
+                        NotificationService.createNotification(
+                            renterID,
+                            "Sản phẩm Cosplay đang được xét duyệt",
+                            "Sản phẩm '" + clothingName + "' đã được đăng tải thành công và đang chờ Admin xác thực. Bạn sẽ nhận được thông báo khi sản phẩm được duyệt."
+                        );
+                    }
+                    
                     response.sendRedirect(request.getContextPath() + "/clothing?action=myClothing&success=true");
                 } else {
                     response.sendRedirect(request.getContextPath() + "/clothing?action=upload&error=true");

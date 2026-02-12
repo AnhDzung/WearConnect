@@ -9,7 +9,9 @@
     <style>
         body { font-family: cursive; background:#f5f5f5; padding:20px; }
         .box { max-width:800px; margin:0 auto; background:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.08); padding:16px; }
-        .title { font-size:20px; margin-bottom:12px; }
+        .title-row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+        .title { font-size:20px; margin:0; }
+        .btn-home { padding:8px 12px; background:#6c757d; color:white; border-radius:6px; text-decoration:none; }
         .note { display:flex; gap:12px; padding:12px; border-bottom:1px solid #eee; align-items:flex-start; }
         .note:last-child{ border-bottom:none; }
         .note .avatar { width:48px; height:48px; border-radius:8px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; color:#666; font-weight:700; }
@@ -25,7 +27,20 @@
 </head>
 <body>
     <div class="box">
-        <div class="title">Thông Báo Mới Nhận</div>
+        <div class="title-row">
+            <div class="title">Thông Báo Mới Nhận</div>
+            <c:choose>
+                <c:when test="${sessionScope.userRole == 'Admin'}">
+                    <a class="btn-home" href="${pageContext.request.contextPath}/admin">Quay lại trang chủ</a>
+                </c:when>
+                <c:when test="${sessionScope.userRole == 'Manager'}">
+                    <a class="btn-home" href="${pageContext.request.contextPath}/manager">Quay lại trang chủ</a>
+                </c:when>
+                <c:otherwise>
+                    <a class="btn-home" href="${pageContext.request.contextPath}/home">Quay lại trang chủ</a>
+                </c:otherwise>
+            </c:choose>
+        </div>
         <c:choose>
             <c:when test="${not empty notifications}">
                 <c:forEach var="n" items="${notifications}">

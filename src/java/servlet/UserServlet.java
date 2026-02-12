@@ -24,12 +24,12 @@ public class UserServlet extends HttpServlet {
                 return;
             }
             
-            // Kiểm tra role - chỉ User
+            // Kiểm tra role - cho phép User và Manager
             String userRole = (String) session.getAttribute("userRole");
             if (userRole != null) {
                 userRole = userRole.trim();
             }
-            if (!("User".equals(userRole))) {
+            if (!("User".equals(userRole) || "Manager".equals(userRole)|| "Admin".equals(userRole))) {
                 response.sendRedirect(request.getContextPath() + "/login");
                 return;
             }

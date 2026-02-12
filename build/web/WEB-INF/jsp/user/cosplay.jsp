@@ -121,8 +121,8 @@
         }
         .product-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 16px;
         }
 
         /* Cosplay Product Card */
@@ -147,10 +147,10 @@
             background-color: #f0f0f0;
         }
         .cosplay-card-body {
-            padding: 20px;
+            padding: 14px;
         }
         .character-name {
-            font-size: 20px;
+            font-size: 16px;
             font-weight: bold;
             color: var(--ink);
             margin-bottom: 5px;
@@ -179,7 +179,7 @@
             border-top: 1px solid var(--border);
         }
         .hourly-price {
-            font-size: 22px;
+            font-size: 16px;
             font-weight: bold;
             color: var(--accent);
         }
@@ -226,14 +226,46 @@
             color: var(--ink);
         }
 
+        .pagination {
+            margin: 26px 0 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .page-link {
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: var(--paper);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: var(--ink);
+            text-decoration: none;
+            font-weight: 600;
+            min-width: 36px;
+            text-align: center;
+        }
+        .page-link:hover { background: #f0f0f0; }
+        .page-link.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
         @media (max-width: 768px) {
             .hero h1 { font-size: 32px; }
             .search-form {
                 grid-template-columns: 1fr;
             }
-            .product-grid {
-                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            }
+            .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 1200px) {
+            .product-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+        @media (max-width: 980px) {
+            .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (max-width: 520px) {
+            .product-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -283,10 +315,11 @@
 
 <!-- Sort Bar -->
 <div class="sort-bar">
-    <p>Tìm thấy ${clothingList != null ? clothingList.size() : 0} trang phục cosplay</p>
+    <p>Tìm thấy ${totalItems != null ? totalItems : 0} trang phục cosplay</p>
     <form method="GET" action="${pageContext.request.contextPath}/cosplay" style="display: inline;">
         <input type="hidden" name="searchType" value="${searchType}">
         <input type="hidden" name="searchValue" value="${searchValue}">
+        <input type="hidden" name="page" value="1">
         <select name="sortBy" onchange="this.form.submit()">
             <option value="">Sắp xếp theo</option>
             <option value="rating" ${sortBy == 'rating' ? 'selected' : ''}>Đánh giá cao nhất</option>
@@ -356,6 +389,39 @@
                     </a>
                 </c:forEach>
             </div>
+            <c:if test="${totalPages > 1}">
+                <div class="pagination">
+                    <c:if test="${currentPage > 1}">
+                        <c:url var="prevLink" value="/cosplay">
+                            <c:param name="searchType" value="${searchType}" />
+                            <c:param name="searchValue" value="${searchValue}" />
+                            <c:param name="sortBy" value="${sortBy}" />
+                            <c:param name="page" value="${currentPage - 1}" />
+                        </c:url>
+                        <a class="page-link" href="${prevLink}">Truoc</a>
+                    </c:if>
+
+                    <c:forEach var="i" begin="1" end="${totalPages}">
+                        <c:url var="pageLink" value="/cosplay">
+                            <c:param name="searchType" value="${searchType}" />
+                            <c:param name="searchValue" value="${searchValue}" />
+                            <c:param name="sortBy" value="${sortBy}" />
+                            <c:param name="page" value="${i}" />
+                        </c:url>
+                        <a class="page-link ${i == currentPage ? 'active' : ''}" href="${pageLink}">${i}</a>
+                    </c:forEach>
+
+                    <c:if test="${currentPage < totalPages}">
+                        <c:url var="nextLink" value="/cosplay">
+                            <c:param name="searchType" value="${searchType}" />
+                            <c:param name="searchValue" value="${searchValue}" />
+                            <c:param name="sortBy" value="${sortBy}" />
+                            <c:param name="page" value="${currentPage + 1}" />
+                        </c:url>
+                        <a class="page-link" href="${nextLink}">Sau</a>
+                    </c:if>
+                </div>
+            </c:if>
         </c:when>
         <c:otherwise>
             <div class="empty-state">

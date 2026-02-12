@@ -27,6 +27,20 @@ public class CosplayServlet extends HttpServlet {
         String searchType = request.getParameter("searchType");
         String searchValue = request.getParameter("searchValue");
         String sortBy = request.getParameter("sortBy");
+        String pageParam = request.getParameter("page");
+
+        int pageSize = 20;
+        int currentPage = 1;
+        if (pageParam != null && !pageParam.isEmpty()) {
+            try {
+                currentPage = Integer.parseInt(pageParam);
+            } catch (NumberFormatException ignore) {
+                currentPage = 1;
+            }
+        }
+        if (currentPage < 1) {
+            currentPage = 1;
+        }
         
         List<Clothing> clothingList;
         
@@ -71,17 +85,37 @@ public class CosplayServlet extends HttpServlet {
             }
         }
         
-        // Attach cosplay details to each clothing item
+        // Pagination
+        int totalItems = clothingList.size();
+        int totalPages = (int) Math.ceil(totalItems / (double) pageSize);
+        if (totalPages == 0) {
+            totalPages = 1;
+        }
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+        int fromIndex = (currentPage - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalItems);
+        if (fromIndex > toIndex) {
+            fromIndex = 0;
+            toIndex = Math.min(pageSize, totalItems);
+        }
+        List<Clothing> pagedList = clothingList.subList(fromIndex, toIndex);
+
+        // Attach cosplay details to each clothing item in the current page
         List<CosplayDetail> cosplayDetails = new ArrayList<>();
-        for (Clothing clothing : clothingList) {
+        for (Clothing clothing : pagedList) {
             CosplayDetail detail = CosplayDetailDAO.getCosplayDetailByClothingID(clothing.getClothingID());
             if (detail != null) {
                 cosplayDetails.add(detail);
             }
         }
         
-        request.setAttribute("clothingList", clothingList);
+        request.setAttribute("clothingList", pagedList);
         request.setAttribute("cosplayDetails", cosplayDetails);
+        request.setAttribute("currentPage", currentPage);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalItems", totalItems);
         request.setAttribute("searchType", searchType);
         request.setAttribute("searchValue", searchValue);
         request.setAttribute("sortBy", sortBy);

@@ -107,6 +107,37 @@
             font-size: 12px;
             letter-spacing: 0.3px;
         }
+        .badge-pending {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        .badge-pending::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
         .card-title { margin: 0; font-size: 18px; font-weight: 700; }
         .price { font-weight: 700; color: var(--accent-strong); }
         .meta { color: var(--muted); font-size: 14px; }
@@ -162,6 +193,13 @@
                     <div><span>Đến:</span> ${clothing.availableTo}</div>
                 </div>
                 <div class="description">${clothing.description}</div>
+                
+                <c:if test="${clothing.clothingStatus == 'PENDING_COSPLAY_REVIEW'}">
+                    <div class="badge-pending">
+                        <span>Đợi Xác Thực</span>
+                    </div>
+                </c:if>
+                
                 <div class="actions">
                     <a href="${pageContext.request.contextPath}/clothing?action=view&id=${clothing.clothingID}" class="btn btn-outline">Xem chi tiết</a>
                     <a href="${pageContext.request.contextPath}/clothing?action=edit&id=${clothing.clothingID}" class="btn btn-primary">Chỉnh sửa</a>

@@ -23,6 +23,20 @@ public class HomeServlet extends HttpServlet {
         String type = request.getParameter("type");
         String query = request.getParameter("query");
         String sort = request.getParameter("sort");
+        String pageParam = request.getParameter("page");
+
+        int pageSize = 20;
+        int currentPage = 1;
+        if (pageParam != null && !pageParam.isEmpty()) {
+            try {
+                currentPage = Integer.parseInt(pageParam);
+            } catch (NumberFormatException ignore) {
+                currentPage = 1;
+            }
+        }
+        if (currentPage < 1) {
+            currentPage = 1;
+        }
         
         List<Clothing> products;
         
@@ -42,6 +56,9 @@ public class HomeServlet extends HttpServlet {
             products = ClothingController.getAllClothing();
         }
         
+        // Remove cosplay items from home listing
+        products.removeIf(p -> p.getCategory() != null && "Cosplay".equalsIgnoreCase(p.getCategory().trim()));
+
         // Calculate average ratings
         Map<Integer, Double> avgRatings = new HashMap<>();
         for (Clothing c : products) {
@@ -67,8 +84,27 @@ public class HomeServlet extends HttpServlet {
             }
         }
         
-        request.setAttribute("products", products);
+        // Pagination
+        int totalItems = products.size();
+        int totalPages = (int) Math.ceil(totalItems / (double) pageSize);
+        if (totalPages == 0) {
+            totalPages = 1;
+        }
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+        int fromIndex = (currentPage - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalItems);
+        if (fromIndex > toIndex) {
+            fromIndex = 0;
+            toIndex = Math.min(pageSize, totalItems);
+        }
+        List<Clothing> pagedProducts = products.subList(fromIndex, toIndex);
+
+        request.setAttribute("products", pagedProducts);
         request.setAttribute("avgRatings", avgRatings);
+        request.setAttribute("currentPage", currentPage);
+        request.setAttribute("totalPages", totalPages);
         request.getRequestDispatcher("/WEB-INF/jsp/home.jsp").forward(request, response);
     }
 }

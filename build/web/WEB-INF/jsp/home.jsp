@@ -104,13 +104,13 @@
         
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 22px;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 16px;
         }
         .product-card {
             display: block;
             background: var(--card);
-            border-radius: 18px;
+            border-radius: 14px;
             overflow: hidden;
             box-shadow: var(--shadow);
             border: 1px solid rgba(0, 0, 0, 0.05);
@@ -142,10 +142,10 @@
             color: #fff;
             font-size: 12px;
         }
-        .product-info { padding: 16px; display: grid; gap: 8px; }
-        .product-name { font-size: 16px; font-weight: bold; color: var(--ink); }
-        .product-category { font-size: 13px; color: var(--muted); }
-        .product-price { font-size: 18px; font-weight: bold; color: var(--accent-strong); }
+        .product-info { padding: 12px; display: grid; gap: 6px; }
+        .product-name { font-size: 15px; font-weight: bold; color: var(--ink); }
+        .product-category { font-size: 12px; color: var(--muted); }
+        .product-price { font-size: 16px; font-weight: bold; color: var(--accent-strong); }
         .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
         .card-rating {
             display: inline-flex;
@@ -172,10 +172,45 @@
         
         .breadcrumb { margin-bottom: 18px; color: var(--muted); }
         .breadcrumb a { color: var(--accent-strong); text-decoration: none; margin-right: 10px; }
+
+        .pagination {
+            margin: 26px 0 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .page-link {
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: var(--card);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: var(--ink);
+            text-decoration: none;
+            font-weight: 600;
+            min-width: 36px;
+            text-align: center;
+        }
+        .page-link:hover { background: #efe9e1; }
+        .page-link.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
         
         @media (max-width: 900px) {
             .search-bar form { grid-template-columns: 1fr; }
             .page-title { text-align: left; }
+            .products-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (max-width: 1200px) {
+            .products-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+        @media (max-width: 720px) {
+            .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 520px) {
+            .products-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -246,6 +281,39 @@
                 </a>
             </c:forEach>
         </div>
+        <c:if test="${totalPages > 1}">
+            <div class="pagination">
+                <c:if test="${currentPage > 1}">
+                    <c:url var="prevLink" value="/home">
+                        <c:param name="type" value="${param.type}" />
+                        <c:param name="query" value="${param.query}" />
+                        <c:param name="sort" value="${param.sort}" />
+                        <c:param name="page" value="${currentPage - 1}" />
+                    </c:url>
+                    <a class="page-link" href="${prevLink}">Truoc</a>
+                </c:if>
+
+                <c:forEach var="i" begin="1" end="${totalPages}">
+                    <c:url var="pageLink" value="/home">
+                        <c:param name="type" value="${param.type}" />
+                        <c:param name="query" value="${param.query}" />
+                        <c:param name="sort" value="${param.sort}" />
+                        <c:param name="page" value="${i}" />
+                    </c:url>
+                    <a class="page-link ${i == currentPage ? 'active' : ''}" href="${pageLink}">${i}</a>
+                </c:forEach>
+
+                <c:if test="${currentPage < totalPages}">
+                    <c:url var="nextLink" value="/home">
+                        <c:param name="type" value="${param.type}" />
+                        <c:param name="query" value="${param.query}" />
+                        <c:param name="sort" value="${param.sort}" />
+                        <c:param name="page" value="${currentPage + 1}" />
+                    </c:url>
+                    <a class="page-link" href="${nextLink}">Sau</a>
+                </c:if>
+            </div>
+        </c:if>
     </c:if>
 </div>
 <jsp:include page="/WEB-INF/jsp/components/footer.jsp" />
