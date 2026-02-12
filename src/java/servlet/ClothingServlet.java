@@ -2,10 +2,12 @@ package servlet;
 
 import Controller.ClothingController;
 import DAO.ColorDAO;
+import DAO.CosplayDetailDAO;
 import DAO.RatingDAO;
 import Model.Clothing;
 import Model.ClothingImage;
 import Model.Color;
+import Model.CosplayDetail;
 import Model.Rating;
 import java.io.IOException;
 import java.io.InputStream;
@@ -237,7 +239,14 @@ public class ClothingServlet extends HttpServlet {
                 clothing.setRenterID(renterID);
                 clothing.setClothingName(clothingName);
                 clothing.setCategory(category);
-                clothing.setStyle(style);
+                
+                // Set style to "Cosplay" if category is Cosplay (style field is hidden)
+                if ("Cosplay".equals(category)) {
+                    clothing.setStyle("Cosplay");
+                } else {
+                    clothing.setStyle(style);
+                }
+                
                 clothing.setOccasion(occasion);
                 clothing.setSize(size);
                 clothing.setDescription(description);
@@ -249,32 +258,60 @@ public class ClothingServlet extends HttpServlet {
                 clothing.setAvailableTo(availableTo);
                 clothing.setQuantity(quantity);
                 clothing.setDepositAmount(depositAmount);
+                
+                // Set status based on category
+                if ("Cosplay".equals(category)) {
+                    clothing.setClothingStatus("PENDING_COSPLAY_REVIEW");
+                } else {
+                    clothing.setClothingStatus("ACTIVE");
+                }
 
                 int clothingID = ClothingController.uploadClothing(clothing);
                 if (clothingID > 0) {
-                    // Handle colors
-                    String[] selectedColors = request.getParameterValues("colors");
-                    if (selectedColors != null) {
-                        for (String colorIDStr : selectedColors) {
-                            try {
-                                int colorID = Integer.parseInt(colorIDStr);
-                                ColorDAO.addColorToClothing(clothingID, colorID);
-                            } catch (Exception e) {
-                                e.printStackTrace();
+                    // Handle cosplay-specific fields
+                    if ("Cosplay".equals(category)) {
+                        String characterName = request.getParameter("characterName");
+                        String series = request.getParameter("series");
+                        String cosplayType = request.getParameter("cosplayType");
+                        String accuracyLevel = request.getParameter("accuracyLevel");
+                        String accessoryList = request.getParameter("accessoryList");
+                        
+                        CosplayDetail cosplayDetail = new CosplayDetail();
+                        cosplayDetail.setClothingID(clothingID);
+                        cosplayDetail.setCharacterName(characterName);
+                        cosplayDetail.setSeries(series);
+                        cosplayDetail.setCosplayType(cosplayType);
+                        cosplayDetail.setAccuracyLevel(accuracyLevel);
+                        cosplayDetail.setAccessoryList(accessoryList);
+                        
+                        CosplayDetailDAO.addCosplayDetail(cosplayDetail);
+                    }
+                    
+                    // Handle colors (skip for Cosplay category)
+                    if (!"Cosplay".equals(category)) {
+                        String[] selectedColors = request.getParameterValues("colors");
+                        if (selectedColors != null) {
+                            for (String colorIDStr : selectedColors) {
+                                try {
+                                    int colorID = Integer.parseInt(colorIDStr);
+                                    ColorDAO.addColorToClothing(clothingID, colorID);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             }
                         }
-                    }
 
-                    // Handle custom color
-                    String hasOtherColor = request.getParameter("hasOtherColor");
-                    if ("on".equals(hasOtherColor)) {
-                        String customColorName = request.getParameter("customColorName");
-                        String customColorHex = request.getParameter("customColorHex");
-                        
-                        if (customColorName != null && !customColorName.trim().isEmpty()) {
-                            int customColorID = ColorDAO.upsertColor(customColorName, customColorHex, renterID);
-                            if (customColorID > 0) {
-                                ColorDAO.addColorToClothing(clothingID, customColorID);
+                        // Handle custom color
+                        String hasOtherColor = request.getParameter("hasOtherColor");
+                        if ("on".equals(hasOtherColor)) {
+                            String customColorName = request.getParameter("customColorName");
+                            String customColorHex = request.getParameter("customColorHex");
+                            
+                            if (customColorName != null && !customColorName.trim().isEmpty()) {
+                                int customColorID = ColorDAO.upsertColor(customColorName, customColorHex, renterID);
+                                if (customColorID > 0) {
+                                    ColorDAO.addColorToClothing(clothingID, customColorID);
+                                }
                             }
                         }
                     }
@@ -389,7 +426,14 @@ public class ClothingServlet extends HttpServlet {
 
                 clothing.setClothingName(clothingName);
                 clothing.setCategory(category);
-                clothing.setStyle(style);
+                
+                // Set style to "Cosplay" if category is Cosplay (style field is hidden)
+                if ("Cosplay".equals(category)) {
+                    clothing.setStyle("Cosplay");
+                } else {
+                    clothing.setStyle(style);
+                }
+                
                 clothing.setOccasion(occasion);
                 clothing.setSize(size);
                 clothing.setDescription(description);
@@ -403,32 +447,66 @@ public class ClothingServlet extends HttpServlet {
                 clothing.setImageData(imageData);
 
                 if (ClothingController.updateClothing(clothing)) {
-                    // Handle colors - remove old colors and add new ones
-                    String[] selectedColors = request.getParameterValues("colors");
-                    ColorDAO.removeAllColorsFromClothing(clothingID);
-                    
-                    // Add selected colors
-                    if (selectedColors != null) {
-                        for (String colorIDStr : selectedColors) {
-                            try {
-                                int colorID = Integer.parseInt(colorIDStr);
-                                ColorDAO.addColorToClothing(clothingID, colorID);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+                    // Handle cosplay-specific fields
+                    if ("Cosplay".equals(category)) {
+                        String characterName = request.getParameter("characterName");
+                        String series = request.getParameter("series");
+                        String cosplayType = request.getParameter("cosplayType");
+                        String accuracyLevel = request.getParameter("accuracyLevel");
+                        String accessoryList = request.getParameter("accessoryList");
+                        
+                        // Check if cosplay detail already exists
+                        CosplayDetail existingDetail = CosplayDetailDAO.getCosplayDetailByClothingID(clothingID);
+                        if (existingDetail != null) {
+                            // Update existing cosplay detail
+                            existingDetail.setCharacterName(characterName);
+                            existingDetail.setSeries(series);
+                            existingDetail.setCosplayType(cosplayType);
+                            existingDetail.setAccuracyLevel(accuracyLevel);
+                            existingDetail.setAccessoryList(accessoryList);
+                            CosplayDetailDAO.updateCosplayDetail(existingDetail);
+                        } else {
+                            // Add new cosplay detail
+                            CosplayDetail cosplayDetail = new CosplayDetail();
+                            cosplayDetail.setClothingID(clothingID);
+                            cosplayDetail.setCharacterName(characterName);
+                            cosplayDetail.setSeries(series);
+                            cosplayDetail.setCosplayType(cosplayType);
+                            cosplayDetail.setAccuracyLevel(accuracyLevel);
+                            cosplayDetail.setAccessoryList(accessoryList);
+                            CosplayDetailDAO.addCosplayDetail(cosplayDetail);
                         }
                     }
-
-                    // Handle custom color
-                    String hasOtherColor = request.getParameter("hasOtherColor");
-                    if ("on".equals(hasOtherColor)) {
-                        String customColorName = request.getParameter("customColorName");
-                        String customColorHex = request.getParameter("customColorHex");
+                    
+                    // Handle colors (skip for Cosplay category)
+                    if (!"Cosplay".equals(category)) {
+                        // Handle colors - remove old colors and add new ones
+                        String[] selectedColors = request.getParameterValues("colors");
+                        ColorDAO.removeAllColorsFromClothing(clothingID);
                         
-                        if (customColorName != null && !customColorName.trim().isEmpty()) {
-                            int customColorID = ColorDAO.upsertColor(customColorName, customColorHex, renterID);
-                            if (customColorID > 0) {
-                                ColorDAO.addColorToClothing(clothingID, customColorID);
+                        // Add selected colors
+                        if (selectedColors != null) {
+                            for (String colorIDStr : selectedColors) {
+                                try {
+                                    int colorID = Integer.parseInt(colorIDStr);
+                                    ColorDAO.addColorToClothing(clothingID, colorID);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+
+                        // Handle custom color
+                        String hasOtherColor = request.getParameter("hasOtherColor");
+                        if ("on".equals(hasOtherColor)) {
+                            String customColorName = request.getParameter("customColorName");
+                            String customColorHex = request.getParameter("customColorHex");
+                            
+                            if (customColorName != null && !customColorName.trim().isEmpty()) {
+                                int customColorID = ColorDAO.upsertColor(customColorName, customColorHex, renterID);
+                                if (customColorID > 0) {
+                                    ColorDAO.addColorToClothing(clothingID, customColorID);
+                                }
                             }
                         }
                     }

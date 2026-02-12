@@ -96,6 +96,16 @@
         <url-pattern>/clothing</url-pattern>
     </servlet-mapping>
     
+    <!-- Servlet Mapping for Cosplay -->
+    <servlet>
+        <servlet-name>CosplayServlet</servlet-name>
+        <servlet-class>servlet.CosplayServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CosplayServlet</servlet-name>
+        <url-pattern>/cosplay</url-pattern>
+    </servlet-mapping>
+    
     <!-- Servlet Mapping for Search -->
     <servlet>
         <servlet-name>SearchServlet</servlet-name>

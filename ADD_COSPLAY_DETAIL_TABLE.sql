@@ -31,10 +31,16 @@ GO
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS 
                WHERE TABLE_NAME = 'Clothing' AND COLUMN_NAME = 'ClothingStatus')
 BEGIN
-    ALTER TABLE Clothing ADD ClothingStatus NVARCHAR(50) DEFAULT 'ACTIVE';
+    ALTER TABLE Clothing ADD ClothingStatus NVARCHAR(50) NULL;
     
     -- Update existing records to ACTIVE
-    UPDATE Clothing SET ClothingStatus = 'ACTIVE' WHERE ClothingStatus IS NULL;
+    UPDATE Clothing SET ClothingStatus = 'ACTIVE';
+    
+    -- Make it NOT NULL with default after update
+    ALTER TABLE Clothing ALTER COLUMN ClothingStatus NVARCHAR(50) NOT NULL;
+    
+    -- Add default constraint
+    ALTER TABLE Clothing ADD CONSTRAINT DF_Clothing_ClothingStatus DEFAULT 'ACTIVE' FOR ClothingStatus;
     
     PRINT 'ClothingStatus column added to Clothing table';
 END

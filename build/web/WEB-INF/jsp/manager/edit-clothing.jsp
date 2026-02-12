@@ -3,17 +3,22 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page import="java.util.List" %>
 <%@ page import="Model.Color" %>
+<%@ page import="Model.CosplayDetail" %>
 <%@ page import="DAO.ColorDAO" %>
+<%@ page import="DAO.CosplayDetailDAO" %>
 <%
     int managerID = (session != null && session.getAttribute("accountID") != null) 
         ? (int) session.getAttribute("accountID") 
         : -1;
     
     int clothingID = 0;
+    CosplayDetail cosplayDetail = null;
     try {
         Object clothing = pageContext.getAttribute("clothing", PageContext.PAGE_SCOPE);
         if (clothing != null && clothing instanceof Model.Clothing) {
             clothingID = ((Model.Clothing) clothing).getClothingID();
+            // Fetch existing cosplay detail if it exists
+            cosplayDetail = CosplayDetailDAO.getCosplayDetailByClothingID(clothingID);
         }
     } catch (Exception e) {}
     
@@ -66,7 +71,7 @@
         
         <div class="form-group">
             <label for="category">Danh mục:</label>
-            <select id="category" name="category" required>
+            <select id="category" name="category" required onchange="toggleCosplayFields()">
                 <option value="">-- Chọn danh mục --</option>
                 <option value="Váy" <c:if test="${clothing.category == 'Váy'}">selected</c:if>>Váy</option>
                 <option value="Áo dài" <c:if test="${clothing.category == 'Áo dài'}">selected</c:if>>Áo dài</option>
@@ -79,7 +84,7 @@
             </select>
         </div>
         
-        <div class="form-group">
+        <div class="form-group" id="styleSection">
             <label for="style">Phong cách:</label>
             <select id="style" name="style" required>
                 <option value="">-- Chọn phong cách --</option>
@@ -109,6 +114,50 @@
             </select>
         </div>
         
+        <!-- Cosplay-specific fields (hidden by default) -->
+        <div id="cosplayFields" style="display: none;">
+            <div style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                <h3 style="margin-top: 0; color: #856404;">📝 Thông tin Cosplay bổ sung</h3>
+                <p style="margin-bottom: 5px; color: #856404; font-size: 14px;">Cosplay cần được admin xét duyệt trước khi hiển thị.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="characterName">Tên nhân vật: *</label>
+                <input type="text" id="characterName" name="characterName" placeholder="Ví dụ: Gojo Satoru, Luffy, Miku Hatsune" value="<%= cosplayDetail != null ? cosplayDetail.getCharacterName() : "" %>">
+            </div>
+
+            <div class="form-group">
+                <label for="series">Series: *</label>
+                <input type="text" id="series" name="series" placeholder="Ví dụ: Jujutsu Kaisen, One Piece, Vocaloid" value="<%= cosplayDetail != null ? cosplayDetail.getSeries() : "" %>">
+            </div>
+
+            <div class="form-group">
+                <label for="cosplayType">Loại: *</label>
+                <select id="cosplayType" name="cosplayType">
+                    <option value="">-- Chọn loại --</option>
+                    <option value="Anime" <%= cosplayDetail != null && "Anime".equals(cosplayDetail.getCosplayType()) ? "selected" : "" %>>Anime</option>
+                    <option value="Game" <%= cosplayDetail != null && "Game".equals(cosplayDetail.getCosplayType()) ? "selected" : "" %>>Game</option>
+                    <option value="Movie" <%= cosplayDetail != null && "Movie".equals(cosplayDetail.getCosplayType()) ? "selected" : "" %>>Movie</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="accuracyLevel">Mức độ hoàn thiện: *</label>
+                <select id="accuracyLevel" name="accuracyLevel">
+                    <option value="">-- Chọn mức độ --</option>
+                    <option value="Cao" <%= cosplayDetail != null && "Cao".equals(cosplayDetail.getAccuracyLevel()) ? "selected" : "" %>>Cao (99% giống gốc)</option>
+                    <option value="Trung bình" <%= cosplayDetail != null && "Trung bình".equals(cosplayDetail.getAccuracyLevel()) ? "selected" : "" %>>Trung bình (tương đối giống)</option>
+                    <option value="Cơ bản" <%= cosplayDetail != null && "Cơ bản".equals(cosplayDetail.getAccuracyLevel()) ? "selected" : "" %>>Cơ bản (có thể thiếu chi tiết)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="accessoryList">Danh sách phụ kiện đi kèm:</label>
+                <textarea id="accessoryList" name="accessoryList" rows="3" placeholder="Ví dụ: Vương miện, gươm gỗ, găng tay, giày cao cổ, tóc giả xanh dương, kính đen..."><%= cosplayDetail != null && cosplayDetail.getAccessoryList() != null ? cosplayDetail.getAccessoryList() : "" %></textarea>
+                <small style="color: #666; display: block; margin-top: 5px;">Liệt kê các phụ kiện đi kèm với outfit cosplay</small>
+            </div>
+        </div>
+
         <div class="form-group">
             <label for="size">Size:</label>
             <select id="size" name="size" required>
@@ -174,7 +223,7 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="colorSection">
             <label>Cập nhật màu sắc:</label>
             <div class="color-grid">
                 <%
@@ -201,7 +250,7 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="otherColorSection">
             <label>
                 <input type="checkbox" id="hasOtherColor" name="hasOtherColor" onchange="toggleCustomColorInput()">
                 Thêm màu khác (không có trong danh sách)
@@ -289,6 +338,13 @@
     }
 
     function validateColors() {
+        const category = document.getElementById('category').value;
+        
+        // Skip color validation for Cosplay category
+        if (category === 'Cosplay') {
+            return validateCosplayFields();
+        }
+        
         const checkedColors = document.querySelectorAll('input[name="colors"]:checked').length > 0;
         const hasCustomColor = document.getElementById('hasOtherColor').checked;
         const customColorName = document.getElementById('customColorName').value.trim();
@@ -306,9 +362,74 @@
         return true;
     }
 
+    function validateCosplayFields() {
+        const characterName = document.getElementById('characterName').value.trim();
+        const series = document.getElementById('series').value.trim();
+        const cosplayType = document.getElementById('cosplayType').value;
+        const accuracyLevel = document.getElementById('accuracyLevel').value;
+
+        if (!characterName || !series || !cosplayType || !accuracyLevel) {
+            alert('Vui lòng điền đầy đủ thông tin cosplay (Tên nhân vật, Series, Loại, Mức độ hoàn thiện)!');
+            return false;
+        }
+
+        return true;
+    }
+
+    function toggleCosplayFields() {
+        const category = document.getElementById('category').value;
+        const cosplayFields = document.getElementById('cosplayFields');
+        const styleSection = document.getElementById('styleSection');
+        const colorSection = document.getElementById('colorSection');
+        const otherColorSection = document.getElementById('otherColorSection');
+        const customColorSection = document.getElementById('customColorSection');
+
+        if (category === 'Cosplay') {
+            // Show cosplay fields
+            cosplayFields.style.display = 'block';
+            
+            // Hide style field for cosplay
+            if (styleSection) {
+                styleSection.style.display = 'none';
+                document.getElementById('style').removeAttribute('required');
+            }
+            
+            // Hide color selection for cosplay
+            if (colorSection) colorSection.style.display = 'none';
+            if (otherColorSection) otherColorSection.style.display = 'none';
+            if (customColorSection) customColorSection.style.display = 'none';
+            
+            // Make cosplay fields required
+            document.getElementById('characterName').setAttribute('required', 'required');
+            document.getElementById('series').setAttribute('required', 'required');
+            document.getElementById('cosplayType').setAttribute('required', 'required');
+            document.getElementById('accuracyLevel').setAttribute('required', 'required');
+        } else {
+            // Hide cosplay fields
+            cosplayFields.style.display = 'none';
+            
+            // Show style field for non-cosplay
+            if (styleSection) {
+                styleSection.style.display = 'block';
+                document.getElementById('style').setAttribute('required', 'required');
+            }
+            
+            // Show color selection for non-cosplay
+            if (colorSection) colorSection.style.display = 'block';
+            if (otherColorSection) otherColorSection.style.display = 'block';
+            
+            // Remove required from cosplay fields
+            document.getElementById('characterName').removeAttribute('required');
+            document.getElementById('series').removeAttribute('required');
+            document.getElementById('cosplayType').removeAttribute('required');
+            document.getElementById('accuracyLevel').removeAttribute('required');
+        }
+    }
+
     // Initialize color preview on page load
     document.addEventListener('DOMContentLoaded', function() {
         updateColorPreview();
+        toggleCosplayFields(); // Initialize cosplay fields visibility
     });
 </script>
 </body>

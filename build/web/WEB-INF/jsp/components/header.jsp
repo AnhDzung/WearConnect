@@ -205,9 +205,16 @@
         <!-- Navigation Menu -->
         <ul class="header-nav">
             
+            <!-- Menu cho Guest (Chưa đăng nhập) -->
+            <% if (userRole == null || userRole.isEmpty()) { %>
+                <li><a href="${pageContext.request.contextPath}/home">Cửa Hàng</a></li>
+                <li><a href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes</a></li>
+            <% } %>
+            
             <!-- Menu cho User -->
             <% if ("User".equals(userRole)) { %>
                 <li><a href="${pageContext.request.contextPath}/home">Cửa Hàng</a></li>
+                <li><a href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes</a></li>
                 <li><a href="${pageContext.request.contextPath}/rental?action=myOrders">Đơn Thuê Của Tôi</a></li>
                 <li><a href="${pageContext.request.contextPath}/user?action=favorites">Yêu Thích</a></li>
             <% } %>
@@ -227,6 +234,7 @@
                 <li><a href="${pageContext.request.contextPath}/">Trang Chủ</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin">Người Dùng</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin?action=orders">Đơn Hàng</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin?action=reviewCosplay">Xét Duyệt Cosplay</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin?action=statistics">Thống Kê</a></li>
             <% } %>
             

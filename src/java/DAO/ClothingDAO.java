@@ -11,8 +11,8 @@ import java.math.BigDecimal;
 public class ClothingDAO {
     
     public static int addClothing(Clothing clothing) {
-        String sql = "INSERT INTO Clothing (RenterID, ClothingName, Category, Style, Occasion, Size, Description, HourlyPrice, DailyPrice, ImagePath, ImageData, AvailableFrom, AvailableTo, Quantity, DepositAmount) " +
-                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Clothing (RenterID, ClothingName, Category, Style, Occasion, Size, Description, HourlyPrice, DailyPrice, ImagePath, ImageData, AvailableFrom, AvailableTo, Quantity, DepositAmount, ClothingStatus) " +
+                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, clothing.getRenterID());
@@ -30,6 +30,7 @@ public class ClothingDAO {
             ps.setTimestamp(13, Timestamp.valueOf(clothing.getAvailableTo()));
             ps.setInt(14, clothing.getQuantity() > 0 ? clothing.getQuantity() : 1);
             ps.setBigDecimal(15, clothing.getDepositAmountBigDecimal());
+            ps.setString(16, clothing.getClothingStatus() != null ? clothing.getClothingStatus() : "ACTIVE");
             
             int row = ps.executeUpdate();
             if (row > 0) {
@@ -44,7 +45,7 @@ public class ClothingDAO {
 
     public static List<Clothing> getAllActiveClothing() {
         List<Clothing> list = new ArrayList<>();
-        String sql = "SELECT * FROM Clothing WHERE IsActive = 1";
+        String sql = "SELECT * FROM Clothing WHERE IsActive = 1 AND ClothingStatus != 'PENDING_COSPLAY_REVIEW'";
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -73,7 +74,7 @@ public class ClothingDAO {
 
     public static List<Clothing> searchByCategory(String category) {
         List<Clothing> list = new ArrayList<>();
-        String sql = "SELECT * FROM Clothing WHERE Category = ? AND IsActive = 1";
+        String sql = "SELECT * FROM Clothing WHERE Category = ? AND IsActive = 1 AND ClothingStatus != 'PENDING_COSPLAY_REVIEW'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, category);
@@ -90,7 +91,7 @@ public class ClothingDAO {
 
     public static List<Clothing> searchByStyle(String style) {
         List<Clothing> list = new ArrayList<>();
-        String sql = "SELECT * FROM Clothing WHERE Style LIKE ? AND IsActive = 1";
+        String sql = "SELECT * FROM Clothing WHERE Style LIKE ? AND IsActive = 1 AND ClothingStatus != 'PENDING_COSPLAY_REVIEW'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, "%" + style + "%");
@@ -107,7 +108,7 @@ public class ClothingDAO {
 
     public static List<Clothing> searchByOccasion(String occasion) {
         List<Clothing> list = new ArrayList<>();
-        String sql = "SELECT * FROM Clothing WHERE Occasion LIKE ? AND IsActive = 1";
+        String sql = "SELECT * FROM Clothing WHERE Occasion LIKE ? AND IsActive = 1 AND ClothingStatus != 'PENDING_COSPLAY_REVIEW'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, "%" + occasion + "%");
@@ -124,7 +125,7 @@ public class ClothingDAO {
 
     public static List<Clothing> searchByName(String name) {
         List<Clothing> list = new ArrayList<>();
-        String sql = "SELECT * FROM Clothing WHERE ClothingName LIKE ? AND IsActive = 1";
+        String sql = "SELECT * FROM Clothing WHERE ClothingName LIKE ? AND IsActive = 1 AND ClothingStatus != 'PENDING_COSPLAY_REVIEW'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, "%" + name + "%");
@@ -229,7 +230,62 @@ public class ClothingDAO {
             clothing.setDepositAmount(depositAmount);
         }
         
+        // Set clothing status
+        String clothingStatus = rs.getString("ClothingStatus");
+        clothing.setClothingStatus(clothingStatus != null ? clothingStatus : "ACTIVE");
+        
         clothing.setCreatedAt(rs.getTimestamp("CreatedAt").toLocalDateTime());
         return clothing;
+    }
+    
+    /**
+     * Get all cosplay products by status
+     */
+    public static List<Clothing> getCosplayByStatus(String status) {
+        List<Clothing> list = new ArrayList<>();
+        String sql = "SELECT * FROM Clothing WHERE Category = 'Cosplay' AND ClothingStatus = ? ORDER BY CreatedAt DESC";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(mapRowToClothing(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    
+    /**
+     * Update clothing status
+     */
+    public static boolean updateClothingStatus(int clothingID, String status) {
+        String sql = "UPDATE Clothing SET ClothingStatus = ? WHERE ClothingID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, clothingID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    /**
+     * Set clothing active status
+     */
+    public static boolean setClothingActive(int clothingID, boolean isActive) {
+        String sql = "UPDATE Clothing SET IsActive = ? WHERE ClothingID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, isActive ? 1 : 0);
+            ps.setInt(2, clothingID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

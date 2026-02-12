@@ -46,7 +46,7 @@
         
         <div class="form-group">
             <label for="category">Danh mục:</label>
-            <select id="category" name="category" required>
+            <select id="category" name="category" required onchange="toggleCosplayFields()">
                 <option value="">-- Chọn danh mục --</option>
                 <option value="Váy">Váy</option>
                 <option value="Áo dài">Áo dài</option>
@@ -59,7 +59,7 @@
             </select>
         </div>
         
-        <div class="form-group">
+        <div class="form-group" id="styleSection">
             <label for="style">Phong cách:</label>
             <select id="style" name="style" required>
                 <option value="">-- Chọn phong cách --</option>
@@ -89,6 +89,50 @@
             </select>
         </div>
         
+        <!-- Cosplay-specific fields (hidden by default) -->
+        <div id="cosplayFields" style="display: none;">
+            <div style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                <h3 style="margin-top: 0; color: #856404;">📝 Thông tin Cosplay bổ sung</h3>
+                <p style="margin-bottom: 5px; color: #856404; font-size: 14px;">Cosplay cần được admin xét duyệt trước khi hiển thị.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="characterName">Tên nhân vật: *</label>
+                <input type="text" id="characterName" name="characterName" placeholder="Ví dụ: Gojo Satoru, Luffy, Miku Hatsune">
+            </div>
+
+            <div class="form-group">
+                <label for="series">Series: *</label>
+                <input type="text" id="series" name="series" placeholder="Ví dụ: Jujutsu Kaisen, One Piece, Vocaloid">
+            </div>
+
+            <div class="form-group">
+                <label for="cosplayType">Loại: *</label>
+                <select id="cosplayType" name="cosplayType">
+                    <option value="">-- Chọn loại --</option>
+                    <option value="Anime">Anime</option>
+                    <option value="Game">Game</option>
+                    <option value="Movie">Movie</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="accuracyLevel">Mức độ hoàn thiện: *</label>
+                <select id="accuracyLevel" name="accuracyLevel">
+                    <option value="">-- Chọn mức độ --</option>
+                    <option value="Cao">Cao (99% giống gốc)</option>
+                    <option value="Trung bình">Trung bình (tương đối giống)</option>
+                    <option value="Cơ bản">Cơ bản (có thể thiếu chi tiết)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="accessoryList">Danh sách phụ kiện đi kèm:</label>
+                <textarea id="accessoryList" name="accessoryList" rows="3" placeholder="Ví dụ: Vương miện, gươm gỗ, găng tay, giày cao cổ, tóc giả xanh dương, kính đen..."></textarea>
+                <small style="color: #666; display: block; margin-top: 5px;">Liệt kê các phụ kiện đi kèm với outfit cosplay</small>
+            </div>
+        </div>
+
         <div class="form-group">
             <label for="size">Size:</label>
             <select id="size" name="size" required>
@@ -132,7 +176,7 @@
 
         <div class="form-group">
             <label>Màu sắc hiện có:</label>
-            <div class="color-grid">
+            <div class="color-grid" id="colorSection">
                 <%
                     for (Color color : availableColors) {
                         String colorClass = color.getManagerID() != null && color.getManagerID() == managerID ? "manager-custom" : "global";
@@ -150,7 +194,7 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="otherColorSection">
             <label>
                 <input type="checkbox" id="hasOtherColor" name="hasOtherColor" onchange="toggleCustomColorInput()">
                 Màu khác (không có trong danh sách)
@@ -228,6 +272,13 @@
     }
 
     function validateColors() {
+        const category = document.getElementById('category').value;
+        
+        // Skip color validation for Cosplay category
+        if (category === 'Cosplay') {
+            return validateCosplayFields();
+        }
+        
         const checkedColors = document.querySelectorAll('input[name="colors"]:checked').length > 0;
         const hasCustomColor = document.getElementById('hasOtherColor').checked;
         const customColorName = document.getElementById('customColorName').value.trim();
@@ -245,9 +296,74 @@
         return true;
     }
 
+    function validateCosplayFields() {
+        const characterName = document.getElementById('characterName').value.trim();
+        const series = document.getElementById('series').value.trim();
+        const cosplayType = document.getElementById('cosplayType').value;
+        const accuracyLevel = document.getElementById('accuracyLevel').value;
+
+        if (!characterName || !series || !cosplayType || !accuracyLevel) {
+            alert('Vui lòng điền đầy đủ thông tin cosplay (Tên nhân vật, Series, Loại, Mức độ hoàn thiện)!');
+            return false;
+        }
+
+        return true;
+    }
+
+    function toggleCosplayFields() {
+        const category = document.getElementById('category').value;
+        const cosplayFields = document.getElementById('cosplayFields');
+        const styleSection = document.getElementById('styleSection');
+        const colorSection = document.querySelector('.form-group:has(#colorSection)');
+        const otherColorSection = document.getElementById('otherColorSection');
+        const customColorSection = document.getElementById('customColorSection');
+
+        if (category === 'Cosplay') {
+            // Show cosplay fields
+            cosplayFields.style.display = 'block';
+            
+            // Hide style field for cosplay
+            if (styleSection) {
+                styleSection.style.display = 'none';
+                document.getElementById('style').removeAttribute('required');
+            }
+            
+            // Hide color selection for cosplay
+            if (colorSection) colorSection.style.display = 'none';
+            if (otherColorSection) otherColorSection.style.display = 'none';
+            if (customColorSection) customColorSection.style.display = 'none';
+            
+            // Make cosplay fields required
+            document.getElementById('characterName').setAttribute('required', 'required');
+            document.getElementById('series').setAttribute('required', 'required');
+            document.getElementById('cosplayType').setAttribute('required', 'required');
+            document.getElementById('accuracyLevel').setAttribute('required', 'required');
+        } else {
+            // Hide cosplay fields
+            cosplayFields.style.display = 'none';
+            
+            // Show style field for non-cosplay
+            if (styleSection) {
+                styleSection.style.display = 'block';
+                document.getElementById('style').setAttribute('required', 'required');
+            }
+            
+            // Show color selection for non-cosplay
+            if (colorSection) colorSection.style.display = 'block';
+            if (otherColorSection) otherColorSection.style.display = 'block';
+            
+            // Remove required from cosplay fields
+            document.getElementById('characterName').removeAttribute('required');
+            document.getElementById('series').removeAttribute('required');
+            document.getElementById('cosplayType').removeAttribute('required');
+            document.getElementById('accuracyLevel').removeAttribute('required');
+        }
+    }
+
     // Initialize color preview on page load
     document.addEventListener('DOMContentLoaded', function() {
         updateColorPreview();
+        toggleCosplayFields(); // Initialize on page load
     });
 </script>
 </body>

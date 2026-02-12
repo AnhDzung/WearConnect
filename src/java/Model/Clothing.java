@@ -21,6 +21,7 @@ public class Clothing {
     private boolean isActive;
     private int quantity; // Số lượng sản phẩm có sẵn
     private BigDecimal depositAmount; // Số tiền đặt cọc do manager định
+    private String clothingStatus; // ACTIVE, PENDING_COSPLAY_REVIEW, APPROVED_COSPLAY, INACTIVE
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -105,4 +106,7 @@ public class Clothing {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getClothingStatus() { return clothingStatus != null ? clothingStatus : "ACTIVE"; }
+    public void setClothingStatus(String clothingStatus) { this.clothingStatus = clothingStatus; }
 }

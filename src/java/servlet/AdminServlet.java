@@ -1,9 +1,14 @@
 package servlet;
 
 import Model.Account;
+import Model.Clothing;
+import Model.CosplayDetail;
 import Model.RentalOrder;
 import Controller.UserController;
 import Controller.PaymentController;
+import Controller.ClothingController;
+import DAO.ClothingDAO;
+import DAO.CosplayDetailDAO;
 import Service.DashboardService;
 import Service.RentalOrderService;
 import java.io.IOException;
@@ -70,6 +75,15 @@ public class AdminServlet extends HttpServlet {
             return;
         } else if ("statistics".equals(action)) {
             showStatistics(request, response);
+            return;
+        } else if ("reviewCosplay".equals(action)) {
+            showCosplayReviewPage(request, response);
+            return;
+        } else if ("approveCosplay".equals(action)) {
+            approveCosplay(request, response);
+            return;
+        } else if ("rejectCosplay".equals(action)) {
+            rejectCosplay(request, response);
             return;
         }
         
@@ -215,6 +229,68 @@ public class AdminServlet extends HttpServlet {
         request.setAttribute("topProducts", topProducts);
         
         request.getRequestDispatcher("/WEB-INF/jsp/admin/statistics.jsp").forward(request, response);
+    }
+    
+    /**
+     * Show cosplay review page with pending cosplay products
+     */
+    private void showCosplayReviewPage(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        // Get all pending cosplay products
+        List<Clothing> pendingCosplay = ClothingDAO.getCosplayByStatus("PENDING_COSPLAY_REVIEW");
+        
+        // Attach cosplay details to each product
+        for (Clothing clothing : pendingCosplay) {
+            CosplayDetail detail = CosplayDetailDAO.getCosplayDetailByClothingID(clothing.getClothingID());
+            request.setAttribute("cosplayDetail_" + clothing.getClothingID(), detail);
+        }
+        
+        request.setAttribute("pendingCosplay", pendingCosplay);
+        request.getRequestDispatcher("/WEB-INF/jsp/admin/review-cosplay.jsp").forward(request, response);
+    }
+    
+    /**
+     * Approve a cosplay product
+     */
+    private void approveCosplay(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        try {
+            int clothingID = Integer.parseInt(request.getParameter("id"));
+            boolean success = ClothingDAO.updateClothingStatus(clothingID, "APPROVED_COSPLAY");
+            
+            if (success) {
+                response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&success=approved");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&error=true");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&error=true");
+        }
+    }
+    
+    /**
+     * Reject a cosplay product
+     */
+    private void rejectCosplay(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        try {
+            int clothingID = Integer.parseInt(request.getParameter("id"));
+            // Set to INACTIVE and mark as not active
+            boolean success = ClothingDAO.updateClothingStatus(clothingID, "INACTIVE");
+            if (success) {
+                ClothingDAO.setClothingActive(clothingID, false);
+            }
+            
+            if (success) {
+                response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&success=rejected");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&error=true");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&error=true");
+        }
     }
     
     @Override
