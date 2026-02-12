@@ -232,7 +232,6 @@
             <!-- Menu cho Admin -->
             <% if ("Admin".equals(userRole)) { %>
                 <li><a href="${pageContext.request.contextPath}/">Trang Chủ</a></li>
-                <li><a href="${pageContext.request.contextPath}/admin">Người Dùng</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin?action=orders">Đơn Hàng</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin?action=reviewCosplay">Xét Duyệt Cosplay</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin?action=statistics">Thống Kê</a></li>

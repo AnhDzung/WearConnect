@@ -94,9 +94,12 @@ public class AdminServlet extends HttpServlet {
         } else if ("rejectCosplay".equals(action)) {
             rejectCosplay(request, response);
             return;
+        } else if ("users".equals(action)) {
+            showUsersPage(request, response);
+            return;
         }
 
-        // Admin home: danh sach san pham
+        // Admin home: danh sach san pham (default view)
         List<Clothing> products = ClothingDAO.getAllClothingAdmin();
         Map<Integer, Account> managerMap = new HashMap<>();
         for (Clothing clothing : products) {
@@ -108,6 +111,7 @@ public class AdminServlet extends HttpServlet {
         }
         request.setAttribute("products", products);
         request.setAttribute("managerMap", managerMap);
+        request.setAttribute("view", "products");
 
         // Thông báo đơn cần xác nhận (PENDING_PAYMENT hoặc PAYMENT_SUBMITTED)
         int pendingCount = RentalOrderService.countOrdersByStatus("PENDING_PAYMENT");
@@ -397,6 +401,23 @@ public class AdminServlet extends HttpServlet {
             e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&error=true");
         }
+    }
+    
+    private void showUsersPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // Get all users
+        List<Account> users = UserController.getAllUsers();
+        request.setAttribute("users", users);
+        request.setAttribute("view", "users");
+        
+        // Thông báo đơn cần xác nhận (PENDING_PAYMENT hoặc PAYMENT_SUBMITTED)
+        int pendingCount = RentalOrderService.countOrdersByStatus("PENDING_PAYMENT");
+        int verifyingCount = RentalOrderService.countOrdersByStatus("PAYMENT_SUBMITTED");
+        request.setAttribute("pendingCount", pendingCount);
+        request.setAttribute("verifyingCount", verifyingCount);
+        request.setAttribute("newOrdersCount", pendingCount + verifyingCount);
+        
+        request.getRequestDispatcher("/WEB-INF/jsp/admin/dashboard.jsp").forward(request, response);
     }
     
     @Override

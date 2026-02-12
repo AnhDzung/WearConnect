@@ -188,6 +188,37 @@
             color: #666;
             font-size: 16px;
         }
+
+        .tab-navigation {
+            display: flex;
+            gap: 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: cursive;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            margin-bottom: -2px;
+        }
+
+        .tab-button:hover {
+            color: #333;
+        }
+
+        .tab-button.active {
+            color: #1f8e74;
+            border-bottom-color: #1f8e74;
+        }
+    
     </style>
 </head>
 <body>
@@ -220,6 +251,18 @@
             </div>
         </c:if>
 
+        <div class="tab-navigation">
+            <button type="button" class="tab-button ${view eq 'products' ? 'active' : ''}" 
+                    onclick="location.href='${pageContext.request.contextPath}/admin'">
+                 Quản lý sản phẩm
+            </button>
+            <button type="button" class="tab-button ${view eq 'users' ? 'active' : ''}" 
+                    onclick="location.href='${pageContext.request.contextPath}/admin?action=users'">
+                 Quản lý người dùng
+            </button>
+        </div>
+
+        <c:if test="${view eq 'products'}">
         <div class="control-panel">
             <div><strong>Danh sách sản phẩm của tất cả manager</strong></div>
             <form method="GET" action="<%= request.getContextPath() %>/admin" style="display: inline;">
@@ -269,6 +312,7 @@
                                 </td>
                                 <td>
                                     <div class="action-buttons">
+                                        <button type="button" class="btn btn-add" onclick="viewProductDetails(<%= p.getClothingID() %>)">Chi tiết</button>
                                         <button type="button" class="btn btn-delete" onclick="openDeactivateModal(<%= p.getClothingID() %>)">Xóa</button>
                                         <% if ("PENDING_REVIEW".equals(status) || "PENDING_COSPLAY_REVIEW".equals(status)) { %>
                                             <form method="GET" action="<%= request.getContextPath() %>/admin" style="display: inline;">
@@ -292,6 +336,94 @@
             <%
                 }
             %>
+        </div>
+        </c:if>
+
+        <c:if test="${view eq 'users'}">
+        <div class="control-panel">
+            <div><strong>Danh sách người dùng</strong></div>
+            <form method="GET" action="<%= request.getContextPath() %>/admin?action=users" style="display: inline;">
+                <button type="submit" class="btn btn-refresh">Làm Mới</button>
+            </form>
+        </div>
+
+        <div class="table-container">
+            <%
+                @SuppressWarnings("unchecked")
+                List<Model.Account> users = (List<Model.Account>) request.getAttribute("users");
+                
+                if (users != null && !users.isEmpty()) {
+            %>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên người dùng</th>
+                            <th>Email</th>
+                            <th>Họ và tên</th>
+                            <th>Role</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <%
+                            for (Model.Account user : users) {
+                        %>
+                            <tr>
+                                <td><%= user.getAccountID() %></td>
+                                <td><%= user.getUsername() %></td>
+                                <td><%= user.getEmail() %></td>
+                                <td><%= user.getFullName() %></td>
+                                <td><span style="background: #667eea; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px;"><%= user.getUserRole() %></span></td>
+                                <td>
+                                    <% if (user.isStatus()) { %>
+                                        <span class="status-active">Hoạt động</span>
+                                    <% } else { %>
+                                        <span class="status-inactive">Không hoạt động</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <form method="GET" action="<%= request.getContextPath() %>/admin" style="display: inline;">
+                                            <input type="hidden" name="action" value="toggleStatus">
+                                            <input type="hidden" name="id" value="<%= user.getAccountID() %>">
+                                            <input type="hidden" name="status" value="<%= user.isStatus() ? "active" : "inactive" %>">
+                                            <button type="submit" class="btn btn-toggle"><%= user.isStatus() ? "Vô hiệu hóa" : "Kích hoạt" %></button>
+                                        </form>
+                                        <form method="GET" action="<%= request.getContextPath() %>/admin" style="display: inline;">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" value="<%= user.getAccountID() %>">
+                                            <button type="submit" class="btn btn-delete" onclick="return confirm('Bạn có chắc chắn muốn xóa người dùng này?')">Xóa</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <%
+                            }
+                        %>
+                    </tbody>
+                </table>
+            <%
+                } else {
+            %>
+                <div class="empty-message">Không có người dùng nào để hiển thị.</div>
+            <%
+                }
+            %>
+        </div>
+        </c:if>
+    </div>
+
+    <div id="detailsModal" class="modal">
+        <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Chi tiết sản phẩm</h3>
+                <button type="button" class="btn btn-toggle" onclick="closeDetailsModal()">Đóng</button>
+            </div>
+            <div id="detailsContent" style="padding: 15px 0;">
+                <p>Đang tải...</p>
+            </div>
         </div>
     </div>
 
@@ -327,6 +459,79 @@
         }
         function closeDeactivateModal() {
             document.getElementById('deactivateModal').classList.remove('show');
+        }
+
+        function viewProductDetails(clothingID) {
+            fetch('<%= request.getContextPath() %>/clothing?action=getDetails&id=' + clothingID)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const p = data.product;
+                        let html = '<div style="display: grid; gap: 12px;">';
+                        
+                        // Image
+                        if (p.imagePath) {
+                            html += '<div><img src="<%= request.getContextPath() %>/image?id=' + p.clothingID + '" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 6px;"></div>';
+                        }
+                        
+                        // Basic Info
+                        html += '<div style="border-bottom: 1px solid #eee; padding-bottom: 12px;">';
+                        html += '<p><strong>ID:</strong> ' + p.clothingID + '</p>';
+                        html += '<p><strong>Tên sản phẩm:</strong> ' + p.clothingName + '</p>';
+                        html += '<p><strong>Danh mục:</strong> ' + p.category + '</p>';
+                        html += '<p><strong>Style:</strong> ' + p.style + '</p>';
+                        html += '<p><strong>Dịp:</strong> ' + p.occasion + '</p>';
+                        html += '</div>';
+                        
+                        // Pricing
+                        html += '<div style="border-bottom: 1px solid #eee; padding-bottom: 12px;">';
+                        html += '<p><strong>Giá theo giờ:</strong> ' + new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(p.hourlyPrice) + '</p>';
+                        html += '<p><strong>Giá theo ngày:</strong> ' + new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(p.dailyPrice) + '</p>';
+                        html += '<p><strong>Tiền cọc:</strong> ' + new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(p.depositAmount) + '</p>';
+                        html += '</div>';
+                        
+                        // Details
+                        html += '<div style="border-bottom: 1px solid #eee; padding-bottom: 12px;">';
+                        html += '<p><strong>Size:</strong> ' + p.size + '</p>';
+                        html += '<p><strong>Số lượng:</strong> ' + p.quantity + '</p>';
+                        html += '<p><strong>Mô tả:</strong> ' + (p.description || 'N/A') + '</p>';
+                        html += '</div>';
+                        
+                        // Availability
+                        html += '<div style="border-bottom: 1px solid #eee; padding-bottom: 12px;">';
+                        html += '<p><strong>Có sẵn từ:</strong> ' + p.availableFrom + '</p>';
+                        html += '<p><strong>Có sẵn đến:</strong> ' + p.availableTo + '</p>';
+                        html += '</div>';
+                        
+                        // Status
+                        html += '<div>';
+                        html += '<p><strong>Trạng thái:</strong> <span style="padding: 4px 8px; border-radius: 4px; ';
+                        if (p.clothingStatus === 'ACTIVE' || p.clothingStatus === 'APPROVED_COSPLAY') {
+                            html += 'background: #d4edda; color: #155724;';
+                        } else if (p.clothingStatus === 'INACTIVE') {
+                            html += 'background: #f8d7da; color: #721c24;';
+                        } else {
+                            html += 'background: #fff3cd; color: #856404;';
+                        }
+                        html += '">' + p.clothingStatus + '</span></p>';
+                        html += '<p><strong>Hoạt động:</strong> ' + (p.active ? 'Có' : 'Không') + '</p>';
+                        html += '</div>';
+                        
+                        html += '</div>';
+                        document.getElementById('detailsContent').innerHTML = html;
+                        document.getElementById('detailsModal').classList.add('show');
+                    } else {
+                        alert('Không thể tải chi tiết sản phẩm');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Lỗi khi tải chi tiết sản phẩm');
+                });
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('detailsModal').classList.remove('show');
         }
     </script>
 </body>

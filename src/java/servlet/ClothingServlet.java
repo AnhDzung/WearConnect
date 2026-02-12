@@ -37,6 +37,51 @@ public class ClothingServlet extends HttpServlet {
         String action = request.getParameter("action");
         System.out.println("[ClothingServlet] action=" + action + ", id=" + request.getParameter("id"));
         
+        // Admin API endpoint to get complete product details as JSON
+        if ("getDetails".equals(action)) {
+            try {
+                int clothingID = Integer.parseInt(request.getParameter("id"));
+                Clothing clothing = ClothingController.getClothingDetails(clothingID);
+                
+                if (clothing != null) {
+                    // Build JSON with all product details
+                    String json = "{" +
+                        "\"success\":true," +
+                        "\"product\":{" +
+                        "\"clothingID\":" + clothing.getClothingID() + "," +
+                        "\"clothingName\":\"" + escapeJson(clothing.getClothingName()) + "\"," +
+                        "\"category\":\"" + escapeJson(clothing.getCategory()) + "\"," +
+                        "\"style\":\"" + escapeJson(clothing.getStyle()) + "\"," +
+                        "\"occasion\":\"" + escapeJson(clothing.getOccasion()) + "\"," +
+                        "\"size\":\"" + escapeJson(clothing.getSize()) + "\"," +
+                        "\"description\":\"" + escapeJson(clothing.getDescription() != null ? clothing.getDescription() : "") + "\"," +
+                        "\"hourlyPrice\":" + clothing.getHourlyPrice() + "," +
+                        "\"dailyPrice\":" + clothing.getDailyPrice() + "," +
+                        "\"depositAmount\":" + clothing.getDepositAmount() + "," +
+                        "\"quantity\":" + clothing.getQuantity() + "," +
+                        "\"imagePath\":\"" + escapeJson(clothing.getImagePath() != null ? clothing.getImagePath() : "") + "\"," +
+                        "\"availableFrom\":\"" + (clothing.getAvailableFrom() != null ? clothing.getAvailableFrom().toString() : "") + "\"," +
+                        "\"availableTo\":\"" + (clothing.getAvailableTo() != null ? clothing.getAvailableTo().toString() : "") + "\"," +
+                        "\"clothingStatus\":\"" + escapeJson(clothing.getClothingStatus()) + "\"," +
+                        "\"active\":" + clothing.isActive() +
+                        "}" +
+                    "}";
+                    
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().print(json);
+                } else {
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().print("{\"success\":false}");
+                }
+                return;
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().print("{\"success\":false,\"error\":\"" + e.getMessage() + "\"}");
+                return;
+            }
+        }
+        
         // API endpoint to get product details as JSON
         if (action == null && request.getParameter("id") != null) {
             try {
