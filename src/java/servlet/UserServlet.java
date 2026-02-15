@@ -71,6 +71,9 @@ public class UserServlet extends HttpServlet {
             } else if ("markNotificationRead".equals(action)) {
                 // AJAX endpoint: mark a specific notification as read
                 handleMarkNotificationRead(request, response, session);
+            } else if ("markAllNotificationsRead".equals(action)) {
+                // AJAX endpoint: mark all notifications as read for this user
+                handleMarkAllNotificationsRead(request, response, session);
             } else if ("favorites".equals(action)) {
                 request.getRequestDispatcher("/WEB-INF/jsp/user/favorites.jsp").forward(request, response);
             } else {
@@ -105,6 +108,27 @@ public class UserServlet extends HttpServlet {
             }
             int notificationID = Integer.parseInt(nid);
             boolean ok = Controller.NotificationController.markAsRead(notificationID);
+            out.print("{\"success\":" + ok + "}");
+        } catch (Exception e) {
+            e.printStackTrace();
+            out.print("{\"success\":false,\"error\":\"" + e.getMessage() + "\"}");
+        } finally {
+            out.flush();
+        }
+    }
+    
+    private void handleMarkAllNotificationsRead(HttpServletRequest request, HttpServletResponse response, HttpSession session) 
+            throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        java.io.PrintWriter out = response.getWriter();
+        try {
+            if (session == null || session.getAttribute("account") == null) {
+                out.print("{\"success\":false,\"error\":\"Not authenticated\"}");
+                return;
+            }
+            Model.Account account = (Model.Account) session.getAttribute("account");
+            int userID = account.getAccountID();
+            boolean ok = DAO.NotificationDAO.markAllAsReadForUser(userID);
             out.print("{\"success\":" + ok + "}");
         } catch (Exception e) {
             e.printStackTrace();

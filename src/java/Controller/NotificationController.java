@@ -25,4 +25,8 @@ public class NotificationController {
     public static boolean markAsRead(int notificationID) {
         return NotificationService.markAsRead(notificationID);
     }
+    
+    public static boolean markAllAsReadForUser(int userID) {
+        return NotificationService.markAllAsReadForUser(userID);
+    }
 }

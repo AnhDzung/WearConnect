@@ -26,4 +26,8 @@ public class NotificationService {
     public static boolean markAsRead(int notificationID) {
         return NotificationDAO.markAsRead(notificationID);
     }
+    
+    public static boolean markAllAsReadForUser(int userID) {
+        return NotificationDAO.markAllAsReadForUser(userID);
+    }
 }

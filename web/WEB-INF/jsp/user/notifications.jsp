@@ -23,25 +23,30 @@
         .note.read { opacity:0.65; background:#fafafa; }
         .actions { margin-top:12px; text-align:right; }
         .btn { padding:8px 12px; background:#007bff; color:white; border-radius:6px; text-decoration:none; margin-right:6px; display:inline-block; }
-        .btn-mark-read { padding:8px 12px; background:#6c757d; color:white; border-radius:6px; text-decoration:none; border:none; cursor:pointer; font-size:13px; }
-        .btn-mark-read:hover { background:#5a6268; }
+        .btn-mark-all { padding:8px 14px; background:#28a745; color:white; border-radius:6px; text-decoration:none; border:none; cursor:pointer; font-size:14px; font-weight:500; }
+        .btn-mark-all:hover { background:#218838; }
     </style>
 </head>
 <body>
     <div class="box">
         <div class="title-row">
             <div class="title">Thông Báo Mới Nhận</div>
-            <c:choose>
-                <c:when test="${sessionScope.userRole == 'Admin'}">
-                    <a class="btn-home" href="${pageContext.request.contextPath}/admin">Quay lại trang chủ</a>
-                </c:when>
-                <c:when test="${sessionScope.userRole == 'Manager'}">
-                    <a class="btn-home" href="${pageContext.request.contextPath}/manager">Quay lại trang chủ</a>
-                </c:when>
-                <c:otherwise>
-                    <a class="btn-home" href="${pageContext.request.contextPath}/home">Quay lại trang chủ</a>
-                </c:otherwise>
-            </c:choose>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <c:if test="${not empty notifications}">
+                    <button onclick="markAllAsRead(); return false;" class="btn-mark-all">✓ Đánh dấu tất cả đã đọc</button>
+                </c:if>
+                <c:choose>
+                    <c:when test="${sessionScope.userRole == 'Admin'}">
+                        <a class="btn-home" href="${pageContext.request.contextPath}/admin">Quay lại trang chủ</a>
+                    </c:when>
+                    <c:when test="${sessionScope.userRole == 'Manager'}">
+                        <a class="btn-home" href="${pageContext.request.contextPath}/manager">Quay lại trang chủ</a>
+                    </c:when>
+                    <c:otherwise>
+                        <a class="btn-home" href="${pageContext.request.contextPath}/home">Quay lại trang chủ</a>
+                    </c:otherwise>
+                </c:choose>
+            </div>
         </div>
         <c:choose>
             <c:when test="${not empty notifications}">
@@ -110,25 +115,9 @@
                                     }
                                     if (pid != null) {
                                 %>
-                                    <a href="${pageContext.request.contextPath}/clothing?action=view&id=<%= pid %>" class="btn">Xem sản phẩm</a>
+                                    <a href="#" onclick="markAndViewProduct(<%= (nid!=null?nid:-1) %>, <%= pid %>); return false;" class="btn">Xem sản phẩm</a>
                                 <%
                                     }
-                                    // Always show "Mark as Read" button if notification is unread
-                                    try {
-                                        Object o = pageContext.findAttribute("n");
-                                        Boolean isRead = false;
-                                        if (o != null) {
-                                            try {
-                                                java.lang.reflect.Method readMethod = o.getClass().getMethod("isRead");
-                                                isRead = (Boolean) readMethod.invoke(o);
-                                            } catch (NoSuchMethodException ignore) {}
-                                        }
-                                        if (!isRead && nid != null) {
-                                %>
-                                    <button onclick="markAsRead(<%= nid %>); return false;" class="btn-mark-read">✓ Đã đọc</button>
-                                <%
-                                        }
-                                    } catch (Exception ex) {}
                                 %>
                         </div>
                     </div>
@@ -162,20 +151,39 @@
         }
     }
     
-    function markAsRead(notificationID) {
-        if (notificationID <= 0) return;
+    function markAndViewProduct(notificationID, productID) {
+        try {
+            if (notificationID > 0) {
+                // Mark as read before redirecting
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', window.location.origin + '${pageContext.request.contextPath}/user?action=markNotificationRead&notificationID=' + encodeURIComponent(notificationID), true);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        window.location.href = '${pageContext.request.contextPath}/clothing?action=view&id=' + productID;
+                    }
+                };
+                xhr.send();
+            } else {
+                window.location.href = '${pageContext.request.contextPath}/clothing?action=view&id=' + productID;
+            }
+        } catch (e) {
+            window.location.href = '${pageContext.request.contextPath}/clothing?action=view&id=' + productID;
+        }
+    }
+    
+    function markAllAsRead() {
         try {
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', window.location.origin + '${pageContext.request.contextPath}/user?action=markNotificationRead&notificationID=' + encodeURIComponent(notificationID), true);
+            xhr.open('GET', window.location.origin + '${pageContext.request.contextPath}/user?action=markAllNotificationsRead', true);
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4 && xhr.status === 200) {
-                    // Reload page to reflect the change
                     window.location.reload();
                 }
             };
             xhr.send();
         } catch (e) {
-            console.error('Error marking notification as read:', e);
+            console.error('Error marking all notifications as read:', e);
+            window.location.reload();
         }
     }
 </script>

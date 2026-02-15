@@ -97,4 +97,24 @@ public class NotificationDAO {
         }
         return false;
     }
+    
+    /**
+     * Mark all unread notifications as read for a specific user
+     * @param userID The user ID
+     * @return true if at least one notification was marked as read
+     */
+    public static boolean markAllAsReadForUser(int userID) {
+        String sql = "UPDATE Notifications SET IsRead = 1 WHERE UserID = ? AND IsRead = 0";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userID);
+            int updated = ps.executeUpdate();
+            System.out.println("[NotificationDAO] Marked " + updated + " notifications as read for user " + userID);
+            return updated > 0;
+        } catch (SQLException e) {
+            System.err.println("[NotificationDAO] Error marking all notifications as read: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
