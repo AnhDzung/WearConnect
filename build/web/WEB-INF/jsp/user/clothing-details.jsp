@@ -221,15 +221,22 @@
             <div class="info-row">
                 <strong>Danh mục:</strong> ${clothing.category}
             </div>
-            <div class="info-row">
-                <strong>Phong cách:</strong> ${clothing.style}
-            </div>
+            <c:if test="${clothing.category ne 'Cosplay'}">
+                <div class="info-row">
+                    <strong>Phong cách:</strong> ${clothing.style}
+                </div>
+            </c:if>
             <div class="info-row">
                 <strong>Mục đích:</strong> ${clothing.occasion}
             </div>
             <div class="info-row">
                 <strong>Size:</strong> ${clothing.size}
             </div>
+            <c:if test="${clothing.category eq 'Cosplay' && cosplayDetail != null}">
+                <div class="info-row">
+                    <strong>Phụ kiện đi kèm:</strong> ${cosplayDetail.accessoryList}
+                </div>
+            </c:if>
             <div class="info-row">
                 <strong>Giá thuê:</strong> <fmt:formatNumber value="${clothing.hourlyPrice}" pattern="#,##0"/> VNĐ/giờ • <fmt:formatNumber value="${clothing.dailyPrice}" pattern="#,##0"/> VNĐ/ngày
             </div>

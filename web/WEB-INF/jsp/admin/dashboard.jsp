@@ -479,7 +479,10 @@
                         html += '<p><strong>ID:</strong> ' + p.clothingID + '</p>';
                         html += '<p><strong>Tên sản phẩm:</strong> ' + p.clothingName + '</p>';
                         html += '<p><strong>Danh mục:</strong> ' + p.category + '</p>';
-                        html += '<p><strong>Style:</strong> ' + p.style + '</p>';
+                        // Show Style only for non-Cosplay items
+                        if (p.category !== 'Cosplay') {
+                            html += '<p><strong>Phong cách:</strong> ' + p.style + '</p>';
+                        }
                         html += '<p><strong>Dịp:</strong> ' + p.occasion + '</p>';
                         html += '</div>';
                         
@@ -493,6 +496,10 @@
                         // Details
                         html += '<div style="border-bottom: 1px solid #eee; padding-bottom: 12px;">';
                         html += '<p><strong>Size:</strong> ' + p.size + '</p>';
+                        // Show Accessories for Cosplay items
+                        if (p.category === 'Cosplay' && p.cosplayDetail && p.cosplayDetail.accessoryList) {
+                            html += '<p><strong>Phụ kiện đi kèm:</strong> ' + p.cosplayDetail.accessoryList + '</p>';
+                        }
                         html += '<p><strong>Số lượng:</strong> ' + p.quantity + '</p>';
                         html += '<p><strong>Mô tả:</strong> ' + (p.description || 'N/A') + '</p>';
                         html += '</div>';

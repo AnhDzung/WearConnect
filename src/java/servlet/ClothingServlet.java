@@ -63,8 +63,19 @@ public class ClothingServlet extends HttpServlet {
                         "\"availableFrom\":\"" + (clothing.getAvailableFrom() != null ? clothing.getAvailableFrom().toString() : "") + "\"," +
                         "\"availableTo\":\"" + (clothing.getAvailableTo() != null ? clothing.getAvailableTo().toString() : "") + "\"," +
                         "\"clothingStatus\":\"" + escapeJson(clothing.getClothingStatus()) + "\"," +
-                        "\"active\":" + clothing.isActive() +
-                        "}" +
+                        "\"active\":" + clothing.isActive();
+                    
+                    // Add cosplay details if it's a cosplay product
+                    if ("Cosplay".equals(clothing.getCategory())) {
+                        CosplayDetail cosplayDetail = CosplayDetailDAO.getCosplayDetailByClothingID(clothingID);
+                        if (cosplayDetail != null) {
+                            json += ",\"cosplayDetail\":{" +
+                                "\"accessoryList\":\"" + escapeJson(cosplayDetail.getAccessoryList() != null ? cosplayDetail.getAccessoryList() : "") + "\"" +
+                                "}";
+                        }
+                    }
+                    
+                    json += "}" +
                     "}";
                     
                     response.setContentType("application/json;charset=UTF-8");
@@ -138,6 +149,13 @@ public class ClothingServlet extends HttpServlet {
                 request.setAttribute("images", ClothingController.getClothingImages(clothingID));
                 request.setAttribute("avgRating", RatingDAO.getAverageRatingForClothing(clothingID));
                 request.setAttribute("ratings", RatingDAO.getRatingsByClothing(clothingID));
+                
+                // Fetch cosplay details if it's a cosplay product
+                if ("Cosplay".equals(clothing.getCategory())) {
+                    CosplayDetail cosplayDetail = CosplayDetailDAO.getCosplayDetailByClothingID(clothingID);
+                    request.setAttribute("cosplayDetail", cosplayDetail);
+                }
+                
                 System.out.println("[ClothingServlet] Forwarding to clothing-details.jsp");
                 request.getRequestDispatcher("/WEB-INF/jsp/user/clothing-details.jsp").forward(request, response);
                 return;
