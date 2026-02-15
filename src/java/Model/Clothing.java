@@ -20,7 +20,7 @@ public class Clothing {
     private LocalDateTime availableTo;
     private boolean isActive;
     private int quantity; // Số lượng sản phẩm có sẵn
-    private BigDecimal depositAmount; // Số tiền đặt cọc do manager định
+    private BigDecimal itemValue; // Giá trị sản phẩm (Item value) do manager định
     private String clothingStatus; // ACTIVE, PENDING_COSPLAY_REVIEW, APPROVED_COSPLAY, INACTIVE
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -96,10 +96,20 @@ public class Clothing {
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
 
-    public double getDepositAmount() { return depositAmount != null ? depositAmount.doubleValue() : 0.0; }
-    public BigDecimal getDepositAmountBigDecimal() { return depositAmount; }
-    public void setDepositAmount(double depositAmount) { this.depositAmount = new BigDecimal(depositAmount); }
-    public void setDepositAmount(BigDecimal depositAmount) { this.depositAmount = depositAmount; }
+    public double getItemValue() { return itemValue != null ? itemValue.doubleValue() : 0.0; }
+    public BigDecimal getItemValueBigDecimal() { return itemValue; }
+    public void setItemValue(double itemValue) { this.itemValue = new BigDecimal(itemValue); }
+    public void setItemValue(BigDecimal itemValue) { this.itemValue = itemValue; }
+    
+    // Keep deprecated methods for backward compatibility
+    @Deprecated
+    public double getDepositAmount() { return getItemValue(); }
+    @Deprecated
+    public BigDecimal getDepositAmountBigDecimal() { return getItemValueBigDecimal(); }
+    @Deprecated
+    public void setDepositAmount(double depositAmount) { setItemValue(depositAmount); }
+    @Deprecated
+    public void setDepositAmount(BigDecimal depositAmount) { setItemValue(depositAmount); }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

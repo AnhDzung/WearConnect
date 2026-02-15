@@ -3,14 +3,15 @@ package DAO;
 import config.DatabaseConnection;
 import Model.RentalOrder;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class RentalOrderDAO {
     
     public static int addRentalOrder(RentalOrder rentalOrder) {
-        String sql = "INSERT INTO RentalOrder (ClothingID, RenterUserID, RentalStartDate, RentalEndDate, TotalPrice, DepositAmount, Status, SelectedSize, ColorID) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO RentalOrder (ClothingID, RenterUserID, RentalStartDate, RentalEndDate, TotalPrice, DepositAmount, Status, SelectedSize, ColorID, UserRating, TrustBasedMultiplier, AdjustedDepositAmount) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, rentalOrder.getClothingID());
@@ -28,6 +29,10 @@ public class RentalOrderDAO {
                 ps.setNull(9, Types.INTEGER);
             }
             
+            ps.setDouble(10, rentalOrder.getUserRating());
+            ps.setDouble(11, rentalOrder.getTrustBasedMultiplier());
+            ps.setDouble(12, rentalOrder.getAdjustedDepositAmount());
+            
             int row = ps.executeUpdate();
             if (row > 0) {
                 ResultSet rs = ps.getGeneratedKeys();
@@ -40,7 +45,9 @@ public class RentalOrderDAO {
     }
 
     public static RentalOrder getRentalOrderByID(int rentalOrderID) {
-        String sql = "SELECT ro.*, c.ClothingName, c.RenterID, a.Username AS RenterUsername " +
+        String sql = "SELECT ro.*, c.ClothingName, c.RenterID, " +
+                 "a.Username AS RenterUsername, a.FullName AS RenterFullName, " +
+                 "a.Email AS RenterEmail, a.PhoneNumber AS RenterPhone, a.Address AS RenterAddress " +
                  "FROM RentalOrder ro " +
                  "LEFT JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
                  "LEFT JOIN Accounts a ON ro.RenterUserID = a.AccountID " +
@@ -65,7 +72,9 @@ public class RentalOrderDAO {
 
     public static List<RentalOrder> getRentalOrdersByUser(int userID) {
         List<RentalOrder> list = new ArrayList<>();
-        String sql = "SELECT ro.*, c.ClothingName, a.Username AS RenterUsername " +
+        String sql = "SELECT ro.*, c.ClothingName, " +
+                 "a.Username AS RenterUsername, a.FullName AS RenterFullName, " +
+                 "a.Email AS RenterEmail, a.PhoneNumber AS RenterPhone, a.Address AS RenterAddress " +
                  "FROM RentalOrder ro " +
                  "LEFT JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
                  "LEFT JOIN Accounts a ON ro.RenterUserID = a.AccountID " +
@@ -89,7 +98,9 @@ public class RentalOrderDAO {
 
     public static List<RentalOrder> getRentalOrdersByClothing(int clothingID) {
         List<RentalOrder> list = new ArrayList<>();
-        String sql = "SELECT ro.*, c.ClothingName, a.Username AS RenterUsername " +
+        String sql = "SELECT ro.*, c.ClothingName, " +
+                 "a.Username AS RenterUsername, a.FullName AS RenterFullName, " +
+                 "a.Email AS RenterEmail, a.PhoneNumber AS RenterPhone, a.Address AS RenterAddress " +
                  "FROM RentalOrder ro " +
                  "LEFT JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
                  "LEFT JOIN Accounts a ON ro.RenterUserID = a.AccountID " +
@@ -161,7 +172,9 @@ public class RentalOrderDAO {
 
     public static List<RentalOrder> getRentalOrdersByStatus(String status) {
         List<RentalOrder> list = new ArrayList<>();
-        String sql = "SELECT ro.*, c.ClothingName, a.Username AS RenterUsername " +
+        String sql = "SELECT ro.*, c.ClothingName, " +
+                 "a.Username AS RenterUsername, a.FullName AS RenterFullName, " +
+                 "a.Email AS RenterEmail, a.PhoneNumber AS RenterPhone, a.Address AS RenterAddress " +
                  "FROM RentalOrder ro " +
                  "LEFT JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
                  "LEFT JOIN Accounts a ON ro.RenterUserID = a.AccountID " +
@@ -203,10 +216,14 @@ public class RentalOrderDAO {
 
     public static List<RentalOrder> getRentalOrdersByManager(int managerID) {
         List<RentalOrder> list = new ArrayList<>();
-        String sql = "SELECT ro.*, c.ClothingName, a.Username AS RenterUsername FROM RentalOrder ro " +
+        String sql = "SELECT ro.*, c.ClothingName, " +
+                     "a.Username AS RenterUsername, a.FullName AS RenterFullName, " +
+                     "a.Email AS RenterEmail, a.PhoneNumber AS RenterPhone, a.Address AS RenterAddress " +
+                     "FROM RentalOrder ro " +
                      "INNER JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
                      "LEFT JOIN Accounts a ON ro.RenterUserID = a.AccountID " +
-                     "WHERE c.RenterID = ? ORDER BY ro.CreatedAt DESC";
+                     "WHERE c.RenterID = ? " +
+                     "ORDER BY ro.CreatedAt DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, managerID);
@@ -252,6 +269,10 @@ public class RentalOrderDAO {
         order.setCreatedAt(rs.getTimestamp("CreatedAt").toLocalDateTime());
         try { order.setClothingName(rs.getString("ClothingName")); } catch (SQLException ignore) {}
         try { order.setRenterUsername(rs.getString("RenterUsername")); } catch (SQLException ignore) {}
+        try { order.setRenterFullName(rs.getString("RenterFullName")); } catch (SQLException ignore) {}
+        try { order.setRenterEmail(rs.getString("RenterEmail")); } catch (SQLException ignore) {}
+        try { order.setRenterPhone(rs.getString("RenterPhone")); } catch (SQLException ignore) {}
+        try { order.setRenterAddress(rs.getString("RenterAddress")); } catch (SQLException ignore) {}
         try { order.setSelectedSize(rs.getString("SelectedSize")); } catch (SQLException ignore) {}
         
         // Map colorID
@@ -264,6 +285,24 @@ public class RentalOrderDAO {
         try { order.setPaymentProofImage(rs.getString("PaymentProofImage")); } catch (SQLException ignore) {}
         try { order.setReceivedProofImage(rs.getString("ReceivedProofImage")); } catch (SQLException ignore) {}
         try { order.setTrackingNumber(rs.getString("TrackingNumber")); } catch (SQLException ignore) {}
+        
+        // Map new fields for trust-based deposit
+        try { order.setUserRating(rs.getDouble("UserRating")); } catch (SQLException ignore) {}
+        try { order.setTrustBasedMultiplier(rs.getDouble("TrustBasedMultiplier")); } catch (SQLException ignore) {}
+        try { order.setAdjustedDepositAmount(rs.getDouble("AdjustedDepositAmount")); } catch (SQLException ignore) {}
+        
+        // Map return/refund fields
+        try { 
+            Timestamp actualReturnTs = rs.getTimestamp("ActualReturnDate");
+            if (actualReturnTs != null) {
+                order.setActualReturnDate(actualReturnTs.toLocalDateTime());
+            }
+        } catch (SQLException ignore) {}
+        try { order.setReturnStatus(rs.getString("ReturnStatus")); } catch (SQLException ignore) {}
+        try { order.setDamagePercentage(rs.getDouble("DamagePercentage")); } catch (SQLException ignore) {}
+        try { order.setLateFees(rs.getDouble("LateFees")); } catch (SQLException ignore) {}
+        try { order.setCompensationAmount(rs.getDouble("CompensationAmount")); } catch (SQLException ignore) {}
+        try { order.setRefundAmount(rs.getDouble("RefundAmount")); } catch (SQLException ignore) {}
         
         return order;
     }
@@ -305,5 +344,88 @@ public class RentalOrderDAO {
             e.printStackTrace();
         }
         return false;
+    }
+    
+    /**
+     * Update return information and calculate refund
+     * Cập nhật thông tin trả hàng và tính toán hoàn lại
+     */
+    public static boolean updateReturnInfo(int rentalOrderID, LocalDateTime actualReturnDate, 
+                                          String returnStatus, double damagePercentage,
+                                          double lateFees, double compensationAmount,
+                                          double refundAmount, double additionalCharges) {
+        String sql = "UPDATE RentalOrder SET ActualReturnDate = ?, ReturnStatus = ?, " +
+                    "DamagePercentage = ?, LateFees = ?, CompensationAmount = ?, " +
+                    "RefundAmount = ?, AdditionalCharges = ?, Status = 'RETURNED' " +
+                    "WHERE RentalOrderID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setTimestamp(1, Timestamp.valueOf(actualReturnDate));
+            ps.setString(2, returnStatus);
+            ps.setDouble(3, damagePercentage);
+            ps.setDouble(4, lateFees);
+            ps.setDouble(5, compensationAmount);
+            ps.setDouble(6, refundAmount);
+            ps.setDouble(7, additionalCharges);
+            ps.setInt(8, rentalOrderID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    /**
+     * Get rental orders ready for return (status = DELIVERED_PENDING_CONFIRMATION)
+     */
+    public static List<RentalOrder> getReadyForReturnOrders(int userID) {
+        List<RentalOrder> list = new ArrayList<>();
+        String sql = "SELECT ro.*, c.ClothingName, " +
+                    "a.Username AS RenterUsername, a.FullName AS RenterFullName, " +
+                    "a.Email AS RenterEmail, a.PhoneNumber AS RenterPhone, a.Address AS RenterAddress " +
+                    "FROM RentalOrder ro " +
+                    "LEFT JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
+                    "LEFT JOIN Accounts a ON ro.RenterUserID = a.AccountID " +
+                    "WHERE ro.RenterUserID = ? AND ro.Status = 'DELIVERED_PENDING_CONFIRMATION' " +
+                    "ORDER BY ro.RentalEndDate DESC";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userID);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRowToRentalOrder(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    
+    /**
+     * Get rental orders with return status (for manager to review)
+     */
+    public static List<RentalOrder> getReturnedOrdersByManager(int managerID) {
+        List<RentalOrder> list = new ArrayList<>();
+        String sql = "SELECT ro.*, c.ClothingName, " +
+                    "a.Username AS RenterUsername, a.FullName AS RenterFullName, " +
+                    "a.Email AS RenterEmail, a.PhoneNumber AS RenterPhone, a.Address AS RenterAddress " +
+                    "FROM RentalOrder ro " +
+                    "INNER JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
+                    "LEFT JOIN Accounts a ON ro.RenterUserID = a.AccountID " +
+                    "WHERE c.RenterID = ? AND ro.Status = 'RETURNED' " +
+                    "ORDER BY ro.ActualReturnDate DESC";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, managerID);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRowToRentalOrder(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

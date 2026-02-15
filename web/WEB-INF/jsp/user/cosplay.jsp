@@ -376,8 +376,8 @@
                             </div>
                             
                             <div class="deposit-info">
-                                Cọc: <fmt:formatNumber value="${clothing.depositAmount}" pattern="#,###" />k 
-                                <span class="deposit-refund">(hoàn lại)</span>
+                                Giá trị: <fmt:formatNumber value="${clothing.itemValue}" pattern="#,###" />k 
+                                <span class="deposit-refund">(sản phẩm)</span>
                             </div>
                             
                             <div class="rating-row">

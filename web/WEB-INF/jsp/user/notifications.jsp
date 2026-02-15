@@ -22,7 +22,9 @@
         .empty { text-align:center; padding:40px; color:#666; }
         .note.read { opacity:0.65; background:#fafafa; }
         .actions { margin-top:12px; text-align:right; }
-        .btn { padding:8px 12px; background:#007bff; color:white; border-radius:6px; text-decoration:none; }
+        .btn { padding:8px 12px; background:#007bff; color:white; border-radius:6px; text-decoration:none; margin-right:6px; display:inline-block; }
+        .btn-mark-read { padding:8px 12px; background:#6c757d; color:white; border-radius:6px; text-decoration:none; border:none; cursor:pointer; font-size:13px; }
+        .btn-mark-read:hover { background:#5a6268; }
     </style>
 </head>
 <body>
@@ -73,22 +75,25 @@
                                                 if (v2 != null) nid = (Integer) v2;
                                             } catch (NoSuchMethodException ignore) {}
 
-                                            if (oid == null) {
-                                                try {
-                                                    String msg = (String) o.getClass().getMethod("getMessage").invoke(o);
-                                                    if (msg != null) {
-                                                        java.util.regex.Matcher mm = java.util.regex.Pattern.compile("#(\\d+)").matcher(msg);
-                                                        if (mm.find()) oid = Integer.parseInt(mm.group(1));
-                                                    }
-                                                } catch (NoSuchMethodException ignore) {}
-                                            }
-
+                                            // Extract product ID first (SP#123) to avoid conflict with order ID (#123)
                                             if (pid == null) {
                                                 try {
                                                     String msg = (String) o.getClass().getMethod("getMessage").invoke(o);
                                                     if (msg != null) {
                                                         java.util.regex.Matcher pm = java.util.regex.Pattern.compile("SP#(\\d+)").matcher(msg);
                                                         if (pm.find()) pid = Integer.parseInt(pm.group(1));
+                                                    }
+                                                } catch (NoSuchMethodException ignore) {}
+                                            }
+
+                                            // Extract order ID (#123) only if NOT part of SP# pattern
+                                            if (oid == null) {
+                                                try {
+                                                    String msg = (String) o.getClass().getMethod("getMessage").invoke(o);
+                                                    if (msg != null) {
+                                                        // Use negative lookbehind to avoid matching SP#123
+                                                        java.util.regex.Matcher mm = java.util.regex.Pattern.compile("(?<!SP)#(\\d+)").matcher(msg);
+                                                        if (mm.find()) oid = Integer.parseInt(mm.group(1));
                                                     }
                                                 } catch (NoSuchMethodException ignore) {}
                                             }
@@ -105,9 +110,25 @@
                                     }
                                     if (pid != null) {
                                 %>
-                                    <a href="${pageContext.request.contextPath}/clothing?action=view&id=<%= pid %>" class="btn">Xem san pham</a>
+                                    <a href="${pageContext.request.contextPath}/clothing?action=view&id=<%= pid %>" class="btn">Xem sản phẩm</a>
                                 <%
                                     }
+                                    // Always show "Mark as Read" button if notification is unread
+                                    try {
+                                        Object o = pageContext.findAttribute("n");
+                                        Boolean isRead = false;
+                                        if (o != null) {
+                                            try {
+                                                java.lang.reflect.Method readMethod = o.getClass().getMethod("isRead");
+                                                isRead = (Boolean) readMethod.invoke(o);
+                                            } catch (NoSuchMethodException ignore) {}
+                                        }
+                                        if (!isRead && nid != null) {
+                                %>
+                                    <button onclick="markAsRead(<%= nid %>); return false;" class="btn-mark-read">✓ Đã đọc</button>
+                                <%
+                                        }
+                                    } catch (Exception ex) {}
                                 %>
                         </div>
                     </div>
@@ -138,6 +159,23 @@
         } catch (e) {
             // fallback: directly open order
             window.location.href = '${pageContext.request.contextPath}/rental?action=viewOrder&id=' + orderID;
+        }
+    }
+    
+    function markAsRead(notificationID) {
+        if (notificationID <= 0) return;
+        try {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', window.location.origin + '${pageContext.request.contextPath}/user?action=markNotificationRead&notificationID=' + encodeURIComponent(notificationID), true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    // Reload page to reflect the change
+                    window.location.reload();
+                }
+            };
+            xhr.send();
+        } catch (e) {
+            console.error('Error marking notification as read:', e);
         }
     }
 </script>

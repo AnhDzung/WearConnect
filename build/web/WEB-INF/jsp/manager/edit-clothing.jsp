@@ -208,10 +208,10 @@
         </div>
         
         <div class="form-group">
-            <label for="depositAmount">Tiền đặt cọc (VNĐ):</label>
-                 <input type="number" id="depositAmount" name="depositAmount" step="0.01" min="0" max="99999999.99" 
-                     value="${clothing.depositAmount > 0 ? clothing.depositAmount : clothing.hourlyPrice * 24 * 0.2}" required>
-            <small style="color: #666; display: block; margin-top: 5px;">Đặt cọc tối thiểu người dùng phải trả khi đặt thuê. Người dùng sẽ thanh toán 100% tổng tiền.</small>
+            <label for="itemValue">Item value (VNĐ):</label>
+                 <input type="number" id="itemValue" name="itemValue" step="0.01" min="0" max="99999999.99" 
+                     value="${clothing.itemValue > 0 ? clothing.itemValue : clothing.hourlyPrice * 24 * 0.2}" required>
+            <small style="color: #666; display: block; margin-top: 5px;">Giá trị sản phẩm - người dùng phải trả khi đặt thuê. Người dùng sẽ thanh toán 100% tổng tiền.</small>
         </div>
 
         <!-- Chỉnh sửa màu sắc -->

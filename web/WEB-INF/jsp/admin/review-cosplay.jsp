@@ -547,11 +547,11 @@
                                         </span>
                                     </div>
                                     <div class="price-row">
-                                        <span class="price-label">Đặt cọc:</span>
+                                        <span class="price-label">Item value:</span>
                                         <span class="price-value">
                                             <c:choose>
-                                                <c:when test="${not empty clothing.depositAmount}">
-                                                    <fmt:formatNumber value="${clothing.depositAmount}" pattern="#,###" /> ₫
+                                                <c:when test="${not empty clothing.itemValue}">
+                                                    <fmt:formatNumber value="${clothing.itemValue}" pattern="#,###" /> ₫
                                                 </c:when>
                                                 <c:otherwise>0 ₫</c:otherwise>
                                             </c:choose>
@@ -664,8 +664,8 @@
                                                 <div class="detail-label">Tiền Đặt Cọc</div>
                                                 <div class="detail-value">
                                                     <c:choose>
-                                                        <c:when test="${not empty clothing.depositAmount}">
-                                                            <fmt:formatNumber value="${clothing.depositAmount}" pattern="#,###" /> ₫
+                                                        <c:when test="${not empty clothing.itemValue}">
+                                                            <fmt:formatNumber value="${clothing.itemValue}" pattern="#,###" /> ₫
                                                         </c:when>
                                                         <c:otherwise>0 ₫</c:otherwise>
                                                     </c:choose>

@@ -57,7 +57,8 @@ public class ClothingServlet extends HttpServlet {
                         "\"description\":\"" + escapeJson(clothing.getDescription() != null ? clothing.getDescription() : "") + "\"," +
                         "\"hourlyPrice\":" + clothing.getHourlyPrice() + "," +
                         "\"dailyPrice\":" + clothing.getDailyPrice() + "," +
-                        "\"depositAmount\":" + clothing.getDepositAmount() + "," +
+                        "\"itemValue\":" + clothing.getItemValue() + "," +
+                        "\"depositAmount\":" + clothing.getItemValue() + "," +
                         "\"quantity\":" + clothing.getQuantity() + "," +
                         "\"imagePath\":\"" + escapeJson(clothing.getImagePath() != null ? clothing.getImagePath() : "") + "\"," +
                         "\"availableFrom\":\"" + (clothing.getAvailableFrom() != null ? clothing.getAvailableFrom().toString() : "") + "\"," +
@@ -222,7 +223,7 @@ public class ClothingServlet extends HttpServlet {
             String description = request.getParameter("description");
             String hourlyPriceStr = request.getParameter("hourlyPrice");
             String dailyPriceStr = request.getParameter("dailyPrice");
-            String depositAmountStr = request.getParameter("depositAmount");
+            String itemValueStr = request.getParameter("itemValue");
             String quantityStr = request.getParameter("quantity");
             String availableFromStr = request.getParameter("availableFrom");
             String availableToStr = request.getParameter("availableTo");
@@ -292,13 +293,13 @@ public class ClothingServlet extends HttpServlet {
                     quantity = 1;
                 }
 
-                double depositAmount = 0;
+                double itemValue = 0;
                 try {
-                    depositAmount = Double.parseDouble(depositAmountStr);
-                    if (depositAmount < 0) depositAmount = 0;
-                    if (depositAmount > 99999999.99) depositAmount = 99999999.99;
+                    itemValue = Double.parseDouble(itemValueStr);
+                    if (itemValue < 0) itemValue = 0;
+                    if (itemValue > 99999999.99) itemValue = 99999999.99;
                 } catch (Exception e) {
-                    depositAmount = dailyPrice * 0.2;
+                    itemValue = dailyPrice * 0.2;
                 }
 
                 Clothing clothing = new Clothing();
@@ -324,7 +325,7 @@ public class ClothingServlet extends HttpServlet {
                 clothing.setAvailableFrom(availableFrom);
                 clothing.setAvailableTo(availableTo);
                 clothing.setQuantity(quantity);
-                clothing.setDepositAmount(depositAmount);
+                clothing.setItemValue(itemValue);
                 
                 // Set status based on category
                 if ("Cosplay".equals(category)) {
@@ -429,7 +430,7 @@ public class ClothingServlet extends HttpServlet {
                 String description = request.getParameter("description");
                 String hourlyPriceStr = request.getParameter("hourlyPrice");
                 String dailyPriceStr = request.getParameter("dailyPrice");
-                String depositAmountStr = request.getParameter("depositAmount");
+                String itemValueStr = request.getParameter("itemValue");
                 String quantityStr = request.getParameter("quantity");
                 String availableFromStr = request.getParameter("availableFrom");
                 String availableToStr = request.getParameter("availableTo");
@@ -460,13 +461,13 @@ public class ClothingServlet extends HttpServlet {
                     quantity = 1;
                 }
 
-                double depositAmount = 0;
+                double itemValue = 0;
                 try {
-                    depositAmount = Double.parseDouble(depositAmountStr);
-                    if (depositAmount < 0) depositAmount = 0;
-                    if (depositAmount > 99999999.99) depositAmount = 99999999.99;
+                    itemValue = Double.parseDouble(itemValueStr);
+                    if (itemValue < 0) itemValue = 0;
+                    if (itemValue > 99999999.99) itemValue = 99999999.99;
                 } catch (Exception e) {
-                    depositAmount = dailyPrice * 0.2;
+                    itemValue = dailyPrice * 0.2;
                 }
 
                 List<ClothingImage> imagesToSave = new ArrayList<>();
@@ -533,7 +534,7 @@ public class ClothingServlet extends HttpServlet {
                 clothing.setAvailableFrom(availableFrom);
                 clothing.setAvailableTo(availableTo);
                 clothing.setQuantity(quantity);
-                clothing.setDepositAmount(depositAmount);
+                clothing.setItemValue(itemValue);
                 clothing.setImagePath(imagePath);
                 clothing.setImageData(imageData);
 

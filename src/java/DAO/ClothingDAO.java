@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 public class ClothingDAO {
     
     public static int addClothing(Clothing clothing) {
-        String sql = "INSERT INTO Clothing (RenterID, ClothingName, Category, Style, Occasion, Size, Description, HourlyPrice, DailyPrice, ImagePath, ImageData, AvailableFrom, AvailableTo, Quantity, DepositAmount, ClothingStatus) " +
+        String sql = "INSERT INTO Clothing (RenterID, ClothingName, Category, Style, Occasion, Size, Description, HourlyPrice, DailyPrice, ImagePath, ImageData, AvailableFrom, AvailableTo, Quantity, ItemValue, ClothingStatus) " +
                  "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -29,7 +29,7 @@ public class ClothingDAO {
             ps.setTimestamp(12, Timestamp.valueOf(clothing.getAvailableFrom()));
             ps.setTimestamp(13, Timestamp.valueOf(clothing.getAvailableTo()));
             ps.setInt(14, clothing.getQuantity() > 0 ? clothing.getQuantity() : 1);
-            ps.setBigDecimal(15, clothing.getDepositAmountBigDecimal());
+            ps.setBigDecimal(15, clothing.getItemValueBigDecimal());
             ps.setString(16, clothing.getClothingStatus() != null ? clothing.getClothingStatus() : "ACTIVE");
             
             int row = ps.executeUpdate();
@@ -173,7 +173,7 @@ public class ClothingDAO {
     }
 
     public static boolean updateClothing(Clothing clothing) {
-        String sql = "UPDATE Clothing SET ClothingName = ?, Category = ?, Style = ?, Occasion = ?, Size = ?, Description = ?, HourlyPrice = ?, DailyPrice = ?, ImagePath = ?, ImageData = ?, AvailableFrom = ?, AvailableTo = ?, Quantity = ?, DepositAmount = ? WHERE ClothingID = ?";
+        String sql = "UPDATE Clothing SET ClothingName = ?, Category = ?, Style = ?, Occasion = ?, Size = ?, Description = ?, HourlyPrice = ?, DailyPrice = ?, ImagePath = ?, ImageData = ?, AvailableFrom = ?, AvailableTo = ?, Quantity = ?, ItemValue = ? WHERE ClothingID = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, clothing.getClothingName());
@@ -189,7 +189,7 @@ public class ClothingDAO {
             ps.setTimestamp(11, Timestamp.valueOf(clothing.getAvailableFrom()));
             ps.setTimestamp(12, Timestamp.valueOf(clothing.getAvailableTo()));
             ps.setInt(13, clothing.getQuantity());
-            ps.setBigDecimal(14, clothing.getDepositAmountBigDecimal());
+            ps.setBigDecimal(14, clothing.getItemValueBigDecimal());
             ps.setInt(15, clothing.getClothingID());
             
             return ps.executeUpdate() > 0;
@@ -240,9 +240,9 @@ public class ClothingDAO {
         clothing.setQuantity(quantity > 0 ? quantity : 1);
         
         // Set deposit amount
-        BigDecimal depositAmount = rs.getBigDecimal("DepositAmount");
-        if (depositAmount != null) {
-            clothing.setDepositAmount(depositAmount);
+        BigDecimal itemValue = rs.getBigDecimal("ItemValue");
+        if (itemValue != null) {
+            clothing.setItemValue(itemValue);
         }
         
         // Set clothing status

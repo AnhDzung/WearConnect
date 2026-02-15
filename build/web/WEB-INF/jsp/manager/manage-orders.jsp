@@ -57,6 +57,26 @@
         .status.completed { background-color: #198754; color: white; font-weight: 700; }
         .status.cancelled { background-color: #f8d7da; color: #842029; }
         
+        /* Renter info styling for PAYMENT_VERIFIED status */
+        .renter-info {
+            font-size: 0.85em;
+            color: #495057;
+            margin-top: 8px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-left: 3px solid #28a745;
+            border-radius: 4px;
+        }
+        .renter-info div {
+            margin: 3px 0;
+            line-height: 1.5;
+        }
+        .renter-info strong {
+            color: #212529;
+            min-width: 70px;
+            display: inline-block;
+        }
+        
         .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
         
         .btn { 
@@ -247,8 +267,22 @@
                         </c:choose>
                     </td>
                     <td>
-                        <c:set var="renterID" value="${order.renterUserID}" />
-                        ${renterID}
+                        <c:choose>
+                            <c:when test="${not empty order.renterUsername}">
+                                <strong>${order.renterUsername}</strong>
+                                <c:if test="${order.status == 'PAYMENT_VERIFIED'}">
+                                    <div class="renter-info">
+                                        <div><strong>Họ tên:</strong> ${order.renterFullName}</div>
+                                        <div><strong>SĐT:</strong> ${order.renterPhone}</div>
+                                        <div><strong>Email:</strong> ${order.renterEmail}</div>
+                                        <div><strong>Địa chỉ:</strong> ${order.renterAddress}</div>
+                                    </div>
+                                </c:if>
+                            </c:when>
+                            <c:otherwise>
+                                ID: ${order.renterUserID}
+                            </c:otherwise>
+                        </c:choose>
                     </td>
                     <td>${order.formattedStartDate}</td>
                     <td>${order.formattedEndDate}</td>

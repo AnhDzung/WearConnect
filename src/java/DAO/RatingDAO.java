@@ -179,6 +179,35 @@ public class RatingDAO {
         }
         return 0.0;
     }
+    
+    /**
+     * Get average rating for a user (renter/customer)
+     * Returns the average rating that this user has received from managers
+     * after completing rental orders.
+     * 
+     * @param userID The AccountID of the user (renter)
+     * @return Average rating (0.0 if no ratings exist)
+     */
+    public static double getAverageRatingForUser(int userID) {
+        String sql = "SELECT AVG(CAST(r.Rating AS FLOAT)) as AvgRating FROM Rating r " +
+                     "JOIN RentalOrder ro ON r.RentalOrderID = ro.RentalOrderID " +
+                     "WHERE ro.RenterUserID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userID);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    double avgRating = rs.getDouble("AvgRating");
+                    System.out.println("[RatingDAO] Average rating for user " + userID + ": " + avgRating);
+                    return avgRating;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[RatingDAO] Error getting average rating for user: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return 0.0;
+    }
 
     public static boolean deleteRating(int ratingID) {
         String sql = "DELETE FROM Rating WHERE RatingID = ?";

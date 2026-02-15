@@ -490,7 +490,7 @@
                         html += '<div style="border-bottom: 1px solid #eee; padding-bottom: 12px;">';
                         html += '<p><strong>Giá theo giờ:</strong> ' + new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(p.hourlyPrice) + '</p>';
                         html += '<p><strong>Giá theo ngày:</strong> ' + new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(p.dailyPrice) + '</p>';
-                        html += '<p><strong>Tiền cọc:</strong> ' + new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(p.depositAmount) + '</p>';
+                        html += '<p><strong>Item value:</strong> ' + new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(p.itemValue) + '</p>';
                         html += '</div>';
                         
                         // Details

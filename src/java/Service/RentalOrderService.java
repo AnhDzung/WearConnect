@@ -3,8 +3,10 @@ package Service;
 import DAO.RentalOrderDAO;
 import DAO.PaymentDAO;
 import DAO.ClothingDAO;
+import DAO.RatingDAO;
 import Model.RentalOrder;
 import Model.Clothing;
+import config.DepositCalculationConfig;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -20,19 +22,45 @@ public class RentalOrderService {
         Clothing clothing = ClothingDAO.getClothingByID(clothingID);
         if (clothing == null) return -1;
         
-        // Calculate total price based on hourly rate and duration
-        long hours = ChronoUnit.HOURS.between(startDate, endDate);
-        double totalPrice = hours * clothing.getHourlyPrice();
+        // Calculate rental duration in hours
+        long durationHours = ChronoUnit.HOURS.between(startDate, endDate);
+        if (durationHours <= 0) return -1;
         
-        // Use deposit amount set by manager (not 20%)
-        double depositAmount = clothing.getDepositAmount();
-        if (depositAmount <= 0) {
-            // Fallback to 20% if not set
-            depositAmount = totalPrice * 0.2;
+        // Get item value (product value set by manager)
+        double itemValue = clothing.getItemValue();
+        if (itemValue <= 0) {
+            // Fallback to 20% of daily price if not set
+            itemValue = clothing.getDailyPrice() * 0.2;
         }
         
-        RentalOrder order = new RentalOrder(clothingID, renterUserID, startDate, endDate, totalPrice, depositAmount);
+        // Calculate rental fee based on duration
+        double totalPrice;
+        double depositAmount;
+        
+        // Determine if using daily or hourly pricing
+        if (DepositCalculationConfig.shouldUseDailyPricing(durationHours)) {
+            // Use daily pricing for rentals >= 24 hours
+            long durationDays = durationHours / 24;
+            totalPrice = durationDays * clothing.getDailyPrice();
+            depositAmount = DepositCalculationConfig.calculateDailyDeposit(itemValue, totalPrice);
+        } else {
+            // Use hourly pricing for rentals < 24 hours
+            totalPrice = durationHours * clothing.getHourlyPrice();
+            depositAmount = DepositCalculationConfig.calculateHourlyDeposit(itemValue, totalPrice);
+        }
+        
+        // Get user's average rating for trust-based deposit adjustment
+        double userRating = RatingDAO.getAverageRatingForUser(renterUserID);
+        double trustBasedMultiplier = DepositCalculationConfig.getTrustBasedMultiplier(
+            userRating > 0 ? userRating : null
+        );
+        double adjustedDepositAmount = depositAmount * trustBasedMultiplier;
+        
+        RentalOrder order = new RentalOrder(clothingID, renterUserID, startDate, endDate, totalPrice, adjustedDepositAmount);
         order.setSelectedSize(selectedSize);
+        order.setUserRating(userRating);
+        order.setTrustBasedMultiplier(trustBasedMultiplier);
+        order.setAdjustedDepositAmount(adjustedDepositAmount);
         if (colorID != null) {
             order.setColorID(colorID);
         }
