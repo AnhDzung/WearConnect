@@ -270,7 +270,10 @@
     <div class="container">
         <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
             <h1>Tất cả đơn hàng</h1>
-            <a href="${pageContext.request.contextPath}/admin" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; transition: background 0.3s;">Quay lại Dashboard</a>
+            <div style="display:flex; gap:10px;">
+                <a href="${pageContext.request.contextPath}/admin?action=ratings" style="padding: 10px 20px; background: #17a2b8; color: white; text-decoration: none; border-radius: 5px; transition: background 0.3s;">Đánh giá</a>
+                <a href="${pageContext.request.contextPath}/admin" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; transition: background 0.3s;">Quay lại Dashboard</a>
+            </div>
         </div>
         
         <!-- Alert messages -->
@@ -316,7 +319,8 @@
                                 <th>Sản phẩm</th>
                                 <th>Người thuê</th>
                                 <th>Manager</th>
-                                <th>Giá</th>
+                                <th>Giá thuê</th>
+                                <th>Tiền cọc</th>
                                 <th>Trạng thái</th>
                                 <th>Thanh toán</th>
                                 <th>Ngày tạo</th>
@@ -335,6 +339,9 @@
                                     <td>${order.managerName}</td>
                                     <td class="price">
                                         <fmt:formatNumber value="${order.totalPrice}" type="number" groupingUsed="true"/>đ
+                                    </td>
+                                    <td class="price">
+                                        <fmt:formatNumber value="${order.adjustedDepositAmount}" type="number" groupingUsed="true"/>đ
                                     </td>
                                     <td>
                                         <span class="status ${order.status.toLowerCase()}">

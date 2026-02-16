@@ -186,7 +186,7 @@ public class PaymentServlet extends HttpServlet {
                 if (filePart != null && filePart.getSize() > 0) {
                     // User uploaded payment proof - create payment WITHOUT auto-confirming
                     RentalOrder ro = Controller.RentalOrderController.getRentalOrderDetails(rentalOrderID);
-                    double base = ro != null ? ro.getTotalPrice() : 0.0;
+                    double base = ro != null ? (ro.getTotalPrice() + ro.getAdjustedDepositAmount()) : 0.0;
                     double amount = base * (1.0 - discountPercent / 100.0);
                     int paymentID = PaymentController.createPaymentOnly(rentalOrderID, paymentMethod, amount);
                     
@@ -227,7 +227,7 @@ public class PaymentServlet extends HttpServlet {
                 } else {
                     // No file uploaded - create payment and keep as PENDING
                     RentalOrder ro2 = Controller.RentalOrderController.getRentalOrderDetails(rentalOrderID);
-                    double base2 = ro2 != null ? ro2.getTotalPrice() : 0.0;
+                    double base2 = ro2 != null ? (ro2.getTotalPrice() + ro2.getAdjustedDepositAmount()) : 0.0;
                     double amount2 = base2 * (1.0 - discountPercent / 100.0);
                     int paymentID = PaymentController.createPaymentOnly(rentalOrderID, paymentMethod, amount2);
                     if (paymentID > 0) {
@@ -240,7 +240,7 @@ public class PaymentServlet extends HttpServlet {
             } else {
                 // Credit card or other methods - use normal processPayment (auto-confirms)
                 RentalOrder ro3 = Controller.RentalOrderController.getRentalOrderDetails(rentalOrderID);
-                double base3 = ro3 != null ? ro3.getTotalPrice() : 0.0;
+                double base3 = ro3 != null ? (ro3.getTotalPrice() + ro3.getAdjustedDepositAmount()) : 0.0;
                 double amount3 = base3 * (1.0 - discountPercent / 100.0);
                 int paymentID = PaymentController.processPayment(rentalOrderID, paymentMethod, amount3);
                 

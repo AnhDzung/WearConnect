@@ -97,6 +97,9 @@ public class AdminServlet extends HttpServlet {
         } else if ("users".equals(action)) {
             showUsersPage(request, response);
             return;
+        } else if ("ratings".equals(action)) {
+            showRatingsPage(request, response);
+            return;
         }
 
         // Admin home: danh sach san pham (default view)
@@ -222,6 +225,13 @@ public class AdminServlet extends HttpServlet {
         request.setAttribute("statusFilter", statusFilter);
         
         request.getRequestDispatcher("/WEB-INF/jsp/admin/orders.jsp").forward(request, response);
+    }
+
+    private void showRatingsPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        List<Map<String, Object>> ratings = DashboardService.getAllRatingsWithDetails();
+        request.setAttribute("ratings", ratings);
+        request.getRequestDispatcher("/WEB-INF/jsp/admin/ratings.jsp").forward(request, response);
     }
     
     /**

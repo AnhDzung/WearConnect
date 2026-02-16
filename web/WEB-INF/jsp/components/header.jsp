@@ -216,6 +216,7 @@
                 <li><a href="${pageContext.request.contextPath}/home">Cửa Hàng</a></li>
                 <li><a href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes</a></li>
                 <li><a href="${pageContext.request.contextPath}/rental?action=myOrders">Đơn Thuê Của Tôi</a></li>
+                <li><a href="${pageContext.request.contextPath}/return?action=list">Trả Hàng</a></li>
                 <li><a href="${pageContext.request.contextPath}/user?action=favorites">Yêu Thích</a></li>
             <% } %>
             

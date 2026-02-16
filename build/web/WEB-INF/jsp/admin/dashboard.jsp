@@ -260,6 +260,10 @@
                     onclick="location.href='${pageContext.request.contextPath}/admin?action=users'">
                  Quản lý người dùng
             </button>
+            <button type="button" class="tab-button"
+                    onclick="location.href='${pageContext.request.contextPath}/admin?action=ratings'">
+                 Đánh giá
+            </button>
         </div>
 
         <c:if test="${view eq 'products'}">

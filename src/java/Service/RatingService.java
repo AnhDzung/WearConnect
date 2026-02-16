@@ -45,6 +45,22 @@ public class RatingService {
             return -6; // Not authorized to rate this order
         }
 
+        // System adjustment: reduce stars when renter lacks required proof images
+        if (ratingFromUserID == managerID) {
+            int penalty = 0;
+            String paymentProof = order.getPaymentProofImage();
+            String receivedProof = order.getReceivedProofImage();
+            if (paymentProof == null || paymentProof.trim().isEmpty()) {
+                penalty += 1;
+            }
+            if (receivedProof == null || receivedProof.trim().isEmpty()) {
+                penalty += 1;
+            }
+            if (penalty > 0) {
+                rating = Math.max(1, rating - penalty);
+            }
+        }
+
         // Prevent duplicate rating by the same user for the same order
         Rating existing = RatingDAO.getRatingByRentalOrderAndUser(rentalOrderID, ratingFromUserID);
         if (existing != null) {

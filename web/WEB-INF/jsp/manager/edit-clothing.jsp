@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ page import="java.util.List" %>
 <%@ page import="Model.Color" %>
 <%@ page import="Model.CosplayDetail" %>
@@ -15,12 +16,19 @@
     CosplayDetail cosplayDetail = null;
     String availableFromValue = "";
     String availableToValue = "";
+    String[] existingSizes = new String[0];
     try {
         Object clothing = pageContext.getAttribute("clothing", PageContext.REQUEST_SCOPE);
         if (clothing != null && clothing instanceof Model.Clothing) {
             clothingID = ((Model.Clothing) clothing).getClothingID();
             // Fetch existing cosplay detail if it exists
             cosplayDetail = CosplayDetailDAO.getCosplayDetailByClothingID(clothingID);
+            
+            // Parse existing sizes
+            String sizeStr = ((Model.Clothing) clothing).getSize();
+            if (sizeStr != null && !sizeStr.isEmpty()) {
+                existingSizes = sizeStr.split(",\\s*");
+            }
 
             java.time.LocalDateTime from = ((Model.Clothing) clothing).getAvailableFrom();
             java.time.LocalDateTime to = ((Model.Clothing) clothing).getAvailableTo();
@@ -167,15 +175,25 @@
         </div>
 
         <div class="form-group">
-            <label for="size">Size:</label>
-            <select id="size" name="size" required>
-                <option value="XS" <c:if test="${clothing.size == 'XS'}">selected</c:if>>XS</option>
-                <option value="S" <c:if test="${clothing.size == 'S'}">selected</c:if>>S</option>
-                <option value="M" <c:if test="${clothing.size == 'M'}">selected</c:if>>M</option>
-                <option value="L" <c:if test="${clothing.size == 'L'}">selected</c:if>>L</option>
-                <option value="XL" <c:if test="${clothing.size == 'XL'}">selected</c:if>>XL</option>
-                <option value="XXL" <c:if test="${clothing.size == 'XXL'}">selected</c:if>>XXL</option>
-            </select>
+            <label>Size: *</label>
+            <%
+                String[] allSizes = {"XS", "S", "M", "L", "XL", "XXL"};
+                java.util.Set<String> existingSizeSet = new java.util.HashSet<>(java.util.Arrays.asList(existingSizes));
+            %>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px;">
+                <%
+                for (String sizeOption : allSizes) {
+                    boolean isChecked = existingSizeSet.contains(sizeOption);
+                %>
+                <label style="display: flex; align-items: center; padding: 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='white'">
+                    <input type="checkbox" name="size" value="<%= sizeOption %>" <%= isChecked ? "checked" : "" %> style="margin-right: 8px; cursor: pointer;">
+                    <span style="font-weight: 500;"><%= sizeOption %></span>
+                </label>
+                <%
+                }
+                %>
+            </div>
+            <small style="color: #666; display: block; margin-top: 5px;">Chọn tất cả size có sẵn cho sản phẩm này</small>
         </div>
         
         <div class="form-group">

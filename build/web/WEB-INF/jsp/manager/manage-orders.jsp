@@ -268,16 +268,11 @@
                     </td>
                     <td>
                         <c:choose>
+                            <c:when test="${not empty order.renterFullName}">
+                                ${order.renterFullName}
+                            </c:when>
                             <c:when test="${not empty order.renterUsername}">
-                                <strong>${order.renterUsername}</strong>
-                                <c:if test="${order.status == 'PAYMENT_VERIFIED'}">
-                                    <div class="renter-info">
-                                        <div><strong>Họ tên:</strong> ${order.renterFullName}</div>
-                                        <div><strong>SĐT:</strong> ${order.renterPhone}</div>
-                                        <div><strong>Email:</strong> ${order.renterEmail}</div>
-                                        <div><strong>Địa chỉ:</strong> ${order.renterAddress}</div>
-                                    </div>
-                                </c:if>
+                                ${order.renterUsername}
                             </c:when>
                             <c:otherwise>
                                 ID: ${order.renterUserID}
@@ -304,14 +299,6 @@
                     </td>
                     <td>
                         <a href="${pageContext.request.contextPath}/rental?action=viewOrder&id=${order.rentalOrderID}" class="btn btn-info">Chi tiết</a>
-                        <c:if test="${order.status == 'PAYMENT_VERIFIED'}">
-                            <form method="POST" action="${pageContext.request.contextPath}/manager" style="display:inline-block;">
-                                <input type="hidden" name="action" value="shipOrder" />
-                                <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
-                                <input type="text" name="trackingNumber" placeholder="Mã tracking" required style="padding:6px 8px; margin-right:6px;" />
-                                <button type="submit" class="btn btn-success">Bàn giao (Gửi)</button>
-                            </form>
-                        </c:if>
                         <c:if test="${order.status == 'SHIPPING'}">
                             <form method="POST" action="${pageContext.request.contextPath}/manager" style="display:inline-block;">
                                 <input type="hidden" name="action" value="confirmDelivery" />

@@ -218,7 +218,8 @@ public class ClothingServlet extends HttpServlet {
             String clothingName = request.getParameter("clothingName");
             String category = request.getParameter("category");
             String style = request.getParameter("style");
-            String size = request.getParameter("size");
+            String[] sizeArray = request.getParameterValues("size");
+            String size = (sizeArray != null && sizeArray.length > 0) ? String.join(", ", sizeArray) : "M";
             String occasion = request.getParameter("occasion");
             String description = request.getParameter("description");
             String hourlyPriceStr = request.getParameter("hourlyPrice");
@@ -425,7 +426,8 @@ public class ClothingServlet extends HttpServlet {
                 String clothingName = request.getParameter("clothingName");
                 String category = request.getParameter("category");
                 String style = request.getParameter("style");
-                String size = request.getParameter("size");
+                String[] sizeArray = request.getParameterValues("size");
+                String size = (sizeArray != null && sizeArray.length > 0) ? String.join(", ", sizeArray) : "M";
                 String occasion = request.getParameter("occasion");
                 String description = request.getParameter("description");
                 String hourlyPriceStr = request.getParameter("hourlyPrice");

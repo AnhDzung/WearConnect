@@ -3,11 +3,15 @@ package servlet;
 import Controller.RentalOrderController;
 import Controller.PaymentController;
 import Model.RentalOrder;
+import Model.Clothing;
 import DAO.ClothingImageDAO;
+import DAO.ClothingDAO;
 import DAO.OrderIssueDAO;
+import DAO.RentalOrderDAO;
 import Model.ClothingImage;
 import Model.OrderIssue;
 import Model.Payment;
+import Service.NotificationService;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -43,6 +47,11 @@ public class RentalOrderServlet extends HttpServlet {
                 request.setAttribute("clothingID", clothingID);
                 request.setAttribute("hourlyPrice", hourlyPrice);
                 request.setAttribute("dailyPrice", dailyPrice);
+                
+                // Get itemValue from database
+                Clothing clothing = ClothingDAO.getClothingByID(clothingID);
+                double itemValue = (clothing != null) ? clothing.getItemValue() : 0;
+                request.setAttribute("itemValue", itemValue);
                 
                 // Check for error and pass conflicting orders info
                 String error = request.getParameter("error");
@@ -113,8 +122,11 @@ public class RentalOrderServlet extends HttpServlet {
             request.setAttribute("order", order);
             request.setAttribute("payment", payment);
             
-            // Load images for the product
+            // Load product details and images
             if (order != null) {
+                Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
+                request.setAttribute("clothing", clothing);
+
                 List<ClothingImage> images = ClothingImageDAO.getImagesByClothing(order.getClothingID());
                 request.setAttribute("clothingImages", images);
             }
@@ -178,9 +190,21 @@ public class RentalOrderServlet extends HttpServlet {
                     return;
                 }
                 
-                if (selectedSize == null || selectedSize.trim().isEmpty()) {
-                    throw new IllegalArgumentException("Vui lòng chọn size");
+                // Check if this is a cosplay item (no size/color required)
+                String isCosplayParam = request.getParameter("isCosplay");
+                boolean isCosplay = "true".equalsIgnoreCase(isCosplayParam);
+                
+                // For non-cosplay items, size is required
+                if (!isCosplay && (selectedSize == null || selectedSize.trim().isEmpty())) {
+                    throw new IllegalArgumentException("Vui lòng chọn size phù hợp");
                 }
+                
+                // For cosplay, use placeholder size if not provided
+                if (isCosplay && (selectedSize == null || selectedSize.trim().isEmpty())) {
+                    selectedSize = "Cosplay";
+                }
+                
+                selectedSize = selectedSize.trim();
 
                 // Parse color ID if provided
                 Integer colorID = null;
@@ -261,7 +285,19 @@ public class RentalOrderServlet extends HttpServlet {
                 // store received proof and update status to RENTED
                 boolean stored = RentalOrderController.setReceivedProofPath(rentalOrderID, proofPath);
                 boolean ok = RentalOrderController.updateOrderStatus(rentalOrderID, "RENTED");
+                
+                // Gửi thông báo cho manager
                 if (ok) {
+                    RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+                    if (order != null) {
+                        String orderCode = "WRC" + String.format("%05d", order.getRentalOrderID());
+                        NotificationService.createNotification(
+                            order.getManagerID(),
+                            "Đơn hàng đã giao thành công",
+                            "Đơn hàng " + orderCode + " (" + (order.getClothingName() != null ? order.getClothingName() : "ID: " + order.getClothingID()) + ") đã được giao thành công. Khách hàng " + (order.getRenterFullName() != null ? order.getRenterFullName() : "ID: " + order.getRenterUserID()) + " đã xác nhận nhận hàng.",
+                            rentalOrderID
+                        );
+                    }
                     response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&received=true");
                 } else {
                     response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&received=false");

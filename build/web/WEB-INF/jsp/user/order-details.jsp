@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ page import="DAO.ColorDAO" %>
 <%@ page import="Model.Color" %>
@@ -108,6 +109,26 @@
                         <div class="info-row">
                             <strong>Quần áo:</strong> ${empty order.clothingName ? order.clothingID : order.clothingName}
                         </div>
+                        
+                        <!-- Thông tin người thuê (chỉ manager/admin xem được) -->
+                        <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Admin'}">
+                            <div style="background-color: #fff9e6; padding: 12px; border-radius: 6px; margin: 12px 0; border-left: 3px solid #ffa500;">
+                                <div style="font-weight: bold; color: #ff8c00; margin-bottom: 8px;">📋 Thông tin người đặt</div>
+                                <div class="info-row" style="margin: 6px 0;">
+                                    <strong>Họ tên:</strong> ${order.renterFullName}
+                                </div>
+                                <div class="info-row" style="margin: 6px 0;">
+                                    <strong>SĐT:</strong> ${order.renterPhone}
+                                </div>
+                                <div class="info-row" style="margin: 6px 0;">
+                                    <strong>Email:</strong> ${order.renterEmail}
+                                </div>
+                                <div class="info-row" style="margin: 6px 0;">
+                                    <strong>Địa chỉ:</strong> ${order.renterAddress}
+                                </div>
+                            </div>
+                        </c:if>
+                        
                         <div class="info-row">
                             <strong>Ngày bắt đầu:</strong> ${order.rentalStartDate}
                         </div>
@@ -115,11 +136,43 @@
                             <strong>Ngày kết thúc:</strong> ${order.rentalEndDate}
                         </div>
                         <div class="info-row">
-                            <strong>Tổng giá:</strong> ${order.totalPrice} VNĐ
+                            <strong>Tổng giá thuê:</strong> <fmt:formatNumber value="${order.totalPrice}" pattern="#,##0"/> VNĐ
                         </div>
-                        <div class="info-row">
-                            <strong>Tiền cọc:</strong> ${order.depositAmount} VNĐ
-                        </div>
+                        
+                        <c:if test="${sessionScope.userRole != 'Manager'}">
+                            <!-- Tiền cọc chi tiết -->
+                            <c:choose>
+                                <c:when test="${not empty order.trustBasedMultiplier and order.trustBasedMultiplier > 0 and order.trustBasedMultiplier < 1.0}">
+                                    <c:set var="baseDeposit" value="${order.adjustedDepositAmount / order.trustBasedMultiplier}" />
+                                    <div class="info-row">
+                                        <strong>Tiền cọc gốc:</strong> 
+                                        <span style="text-decoration: line-through; color: #999;">
+                                            <fmt:formatNumber value="${baseDeposit}" pattern="#,##0"/> VNĐ
+                                        </span>
+                                    </div>
+                                    <div class="info-row" style="background-color: #e8f5e9; padding: 8px; border-radius: 4px;">
+                                        <strong style="color: #2e7d32;">Vourcher đặc biệt:</strong> 
+                                        <span style="color: #2e7d32; font-weight: bold;">
+                                            -<fmt:formatNumber value="${baseDeposit - order.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                                        </span>
+                                    </div>
+                                    <div class="info-row">
+                                        <strong>Tiền cọc chính thức:</strong> 
+                                        <span style="color: #2e7d32; font-weight: bold; font-size: 16px;">
+                                            <fmt:formatNumber value="${order.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                                        </span>
+                                    </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="info-row">
+                                        <strong>Tiền cọc:</strong> <fmt:formatNumber value="${order.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+                            <div class="info-row" style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; border-left: 3px solid #cc3399;">
+                                <strong style="font-size: 16px; color: #cc3399;">Tổng tiền phải thanh toán:</strong> <span style="font-size: 16px; font-weight: bold; color: #cc3399;"><fmt:formatNumber value="${order.totalPrice + order.adjustedDepositAmount}" pattern="#,##0"/> VNĐ</span>
+                            </div>
+                        </c:if>
                         <div class="info-row">
                             <strong>Trạng thái:</strong>
                             <span class="status ${order.status.toLowerCase()}">
@@ -129,11 +182,18 @@
                         <div class="info-row">
                             <strong>Ngày tạo:</strong> ${order.createdAt}
                         </div>
-                        <c:if test="${not empty order.selectedSize}">
-                            <div class="info-row">
-                                <strong>Size đã chọn:</strong> ${order.selectedSize}
-                            </div>
-                        </c:if>
+                        <c:choose>
+                            <c:when test="${not empty order.selectedSize && fn:toLowerCase(order.selectedSize) != 'cosplay'}">
+                                <div class="info-row">
+                                    <strong>Size đã chọn:</strong> ${order.selectedSize}
+                                </div>
+                            </c:when>
+                            <c:when test="${not empty clothing && clothing.category == 'Cosplay' && not empty clothing.size}">
+                                <div class="info-row">
+                                    <strong>Size đã chọn:</strong> ${clothing.size}
+                                </div>
+                            </c:when>
+                        </c:choose>
                         <c:if test="${order.colorID != null}">
                             <%
                                 Integer colorID = (Integer) pageContext.getAttribute("order", PageContext.PAGE_SCOPE) != null ? 
@@ -199,7 +259,7 @@
                     <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}">
                     <div class="form-group">
                         <label for="receivedImage">Tải ảnh chứng minh đã nhận hàng (tối đa 5MB):</label>
-                        <input type="file" id="receivedImage" name="receivedImage" accept="image/*" required style="padding:8px; border:1px solid #ddd; border-radius:4px; width:100%; box-sizing:border-box;">
+                        <input type="file" id="receivedImage" name="receivedImage" accept="image/*" style="padding:8px; border:1px solid #ddd; border-radius:4px; width:100%; box-sizing:border-box;">
                     </div>
                     <button type="submit" class="btn" style="background-color:#28a745;">Tôi đã nhận hàng</button>
                 </form>
@@ -238,6 +298,22 @@
                             </div>
                             <button type="submit" class="btn">Gửi đánh giá</button>
                         </form>
+                    </div>
+                </c:if>
+            </c:if>
+
+            <c:if test="${sessionScope.userRole == 'Manager'}">
+                <c:if test="${order.status == 'PAYMENT_VERIFIED'}">
+                    <form method="POST" action="${pageContext.request.contextPath}/manager" style="margin-top:16px;">
+                        <input type="hidden" name="action" value="shipOrder" />
+                        <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
+                        <input type="text" name="trackingNumber" placeholder="Mã tracking" required style="padding:6px 8px; margin-right:6px;" />
+                        <button type="submit" class="btn btn-success">Bàn giao (Gửi)</button>
+                    </form>
+                </c:if>
+                <c:if test="${not empty order.trackingNumber}">
+                    <div style="margin-top:12px; padding:12px; border:1px solid #e1e5ee; border-radius:6px; background:#f1f7ff;">
+                        <strong>Mã vận đơn:</strong> ${order.trackingNumber}
                     </div>
                 </c:if>
             </c:if>
@@ -348,8 +424,8 @@
         </div>
     </c:if>
 
-    <!-- Tracking info -->
-    <c:if test="${not empty order.trackingNumber}">
+    <!-- Tracking info (non-manager) -->
+    <c:if test="${sessionScope.userRole != 'Manager' && not empty order.trackingNumber}">
         <div style="margin-top:12px; padding:12px; border:1px solid #e1e5ee; border-radius:6px; background:#f1f7ff;">
             <strong>Mã vận đơn:</strong> ${order.trackingNumber}
         </div>

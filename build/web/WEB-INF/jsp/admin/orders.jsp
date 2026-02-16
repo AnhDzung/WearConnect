@@ -316,7 +316,8 @@
                                 <th>Sản phẩm</th>
                                 <th>Người thuê</th>
                                 <th>Manager</th>
-                                <th>Giá</th>
+                                <th>Giá thuê</th>
+                                <th>Tiền cọc</th>
                                 <th>Trạng thái</th>
                                 <th>Thanh toán</th>
                                 <th>Ngày tạo</th>
@@ -335,6 +336,9 @@
                                     <td>${order.managerName}</td>
                                     <td class="price">
                                         <fmt:formatNumber value="${order.totalPrice}" type="number" groupingUsed="true"/>đ
+                                    </td>
+                                    <td class="price">
+                                        <fmt:formatNumber value="${order.adjustedDepositAmount}" type="number" groupingUsed="true"/>đ
                                     </td>
                                     <td>
                                         <span class="status ${order.status.toLowerCase()}">

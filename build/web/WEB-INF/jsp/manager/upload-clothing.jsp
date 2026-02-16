@@ -134,15 +134,34 @@
         </div>
 
         <div class="form-group">
-            <label for="size">Size:</label>
-            <select id="size" name="size" required>
-                <option value="XS">XS</option>
-                <option value="S">S</option>
-                <option value="M">M</option>
-                <option value="L">L</option>
-                <option value="XL">XL</option>
-                <option value="XXL">XXL</option>
-            </select>
+            <label>Size: *</label>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px;">
+                <label style="display: flex; align-items: center; padding: 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='white'">
+                    <input type="checkbox" name="size" value="XS" style="margin-right: 8px; cursor: pointer;">
+                    <span style="font-weight: 500;">XS</span>
+                </label>
+                <label style="display: flex; align-items: center; padding: 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='white'">
+                    <input type="checkbox" name="size" value="S" style="margin-right: 8px; cursor: pointer;">
+                    <span style="font-weight: 500;">S</span>
+                </label>
+                <label style="display: flex; align-items: center; padding: 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='white'">
+                    <input type="checkbox" name="size" value="M" style="margin-right: 8px; cursor: pointer;">
+                    <span style="font-weight: 500;">M</span>
+                </label>
+                <label style="display: flex; align-items: center; padding: 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='white'">
+                    <input type="checkbox" name="size" value="L" style="margin-right: 8px; cursor: pointer;">
+                    <span style="font-weight: 500;">L</span>
+                </label>
+                <label style="display: flex; align-items: center; padding: 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='white'">
+                    <input type="checkbox" name="size" value="XL" style="margin-right: 8px; cursor: pointer;">
+                    <span style="font-weight: 500;">XL</span>
+                </label>
+                <label style="display: flex; align-items: center; padding: 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='white'">
+                    <input type="checkbox" name="size" value="XXL" style="margin-right: 8px; cursor: pointer;">
+                    <span style="font-weight: 500;">XXL</span>
+                </label>
+            </div>
+            <small style="color: #666; display: block; margin-top: 5px;">Chọn tất cả size có sẵn cho sản phẩm này</small>
         </div>
         
         <div class="form-group">

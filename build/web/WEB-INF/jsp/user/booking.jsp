@@ -3,11 +3,22 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page import="java.util.List" %>
 <%@ page import="Model.Color" %>
+<%@ page import="Model.Clothing" %>
 <%@ page import="DAO.ColorDAO" %>
+<%@ page import="DAO.ClothingDAO" %>
 <%
     int clothingID = 0;
+    Clothing clothing = null;
+    boolean isCosplay = false;
     try {
         clothingID = Integer.parseInt(request.getParameter("clothingID") != null ? request.getParameter("clothingID") : "0");
+        if (clothingID > 0) {
+            clothing = ClothingDAO.getClothingByID(clothingID);
+            if (clothing != null) {
+                String status = clothing.getClothingStatus();
+                isCosplay = status != null && status.contains("COSPLAY");
+            }
+        }
     } catch (Exception e) {}
     List<Color> availableColors = clothingID > 0 ? ColorDAO.getColorsByClothing(clothingID) : new java.util.ArrayList<>();
 %>
@@ -99,12 +110,22 @@
         <input type="hidden" name="clothingID" value="${clothingID}">
         <input type="hidden" name="hourlyPrice" value="${hourlyPrice}">
         <input type="hidden" name="dailyPrice" value="${dailyPrice}">
+        <input type="hidden" name="itemValue" value="${itemValue}">
         <input type="hidden" id="rentalTypeInput" name="rentalType" value="hourly">
+        <input type="hidden" id="isCosplayInput" name="isCosplay" value="<%= isCosplay %>">
         
+        <% if (isCosplay) { %>
+        <!-- Thông báo cho cosplay -->
+        <div style="background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 5px; padding: 12px; margin-bottom: 20px; color: #0c5460;">
+            <strong>Sản phẩm Cosplay:</strong> Kích thước và màu sắc đã được thiết kế sẵn theo nhân vật.
+        </div>
+        <% } %>
+        
+        <% if (!isCosplay) { %>
         <!-- Chọn size -->
         <div class="form-group">
-            <label for="selectedSize">Chọn size phù hợp:</label>
-            <select id="selectedSize" name="selectedSize" required>
+            <label for="selectedSize">Chọn size phù hợp: <span style="color: red;">*</span></label>
+            <select id="selectedSize" name="selectedSize">
                 <option value="">-- Chọn size --</option>
                 <option value="XS">XS</option>
                 <option value="S">S</option>
@@ -132,6 +153,7 @@
                 <small style="color: #999; display: block; margin-top: 5px;">Sản phẩm này không có lựa chọn màu sắc</small>
             <% } %>
         </div>
+        <% } // End if (!isCosplay) %>
         
         <!-- Lựa chọn loại thuê -->
         <div class="form-group">
@@ -151,12 +173,12 @@
         <!-- Phần thuê theo giờ -->
         <div id="hourlySection" class="form-section active">
             <div class="form-group">
-                <label for="hourlyStartDate">Ngày giờ bắt đầu:</label>
+                <label for="hourlyStartDate">Ngày giờ bắt đầu: <span style="color: red;">*</span></label>
                 <input type="datetime-local" id="hourlyStartDate" name="startDate" required onchange="calculatePrice()">
             </div>
             
             <div class="form-group">
-                <label for="hourlyEndDate">Ngày giờ kết thúc:</label>
+                <label for="hourlyEndDate">Ngày giờ kết thúc: <span style="color: red;">*</span></label>
                 <input type="datetime-local" id="hourlyEndDate" name="endDate" required onchange="calculatePrice()">
             </div>
         </div>
@@ -164,23 +186,25 @@
         <!-- Phần thuê theo ngày -->
         <div id="dailySection" class="form-section">
             <div class="form-group">
-                <label for="dailyStartDate">Ngày bắt đầu:</label>
+                <label for="dailyStartDate">Ngày bắt đầu: <span style="color: red;">*</span></label>
                 <input type="date" id="dailyStartDate" name="dailyStartDate" required onchange="calculatePrice()">
             </div>
             
             <div class="form-group">
-                <label for="dailyEndDate">Ngày kết thúc:</label>
+                <label for="dailyEndDate">Ngày kết thúc: <span style="color: red;">*</span></label>
                 <input type="date" id="dailyEndDate" name="dailyEndDate" required onchange="calculatePrice()">
             </div>
         </div>
         
         <div class="price-summary">
-            <p><strong>Tổng giá:</strong> <span id="totalPrice">0</span> VNĐ</p>
-            <p style="color: #d9534f; font-weight: bold;"><strong>Số tiền phải thanh toán:</strong> <span id="paymentAmount">0</span> VNĐ</p>
-            <small style="color: #666;">Bạn sẽ thanh toán 100% tổng tiền thuê khi đặt hàng.</small>
+            <p><strong>Tổng giá thuê:</strong> <span id="rentalFee">0</span> VNĐ</p>
+            <p><strong>Tiền cọc:</strong> <span id="depositAmount">0</span> VNĐ</p>
+            <p style="color: #d9534f; font-weight: bold; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;"><strong>Số tiền phải thanh toán:</strong> <span id="paymentAmount">0</span> VNĐ</p>
+            <small style="color: #666; display: block; margin-top: 10px;">Bạn sẽ thanh toán tổng tiền thuê + tiền cọc. Tiền cọc sẽ được hoàn lại sau khi trả hàng và sản phẩm không có lỗi gì.</small>
+            <!-- <small style="color: #2e7d32; display: block; margin-top: 8px;"><strong>💡 Mẹo:</strong> Nếu bạn có độ tin tưởng cao (uy tín từ những lần thuê trước), tiền cọc sẽ được giảm tự động ở phần thanh toán!</small> -->
         </div>
         
-        <button type="submit">Tiến hành thanh toán</button>
+        <button type="submit" onclick="return validateForm()">Tiến hành thanh toán</button>
         <button type="button" onclick="history.back()">Quay lại</button>
     </form>
 </div>
@@ -188,6 +212,66 @@
 <script>
     const HOURLY_PRICE = Number('${hourlyPrice}');
     const DAILY_PRICE = Number('${dailyPrice}');
+    const ITEM_VALUE = Number('${itemValue}');
+    
+    function calculateDeposit(hours, rentalType) {
+        if (hours <= 0) return 0;
+        
+        if (rentalType === 'hourly') {
+            // Hourly: MAX(40% × itemValue, 2 × hourlyPrice)
+            const percentBased = ITEM_VALUE * 0.40;
+            const priceBased = HOURLY_PRICE * 2;
+            return Math.max(percentBased, priceBased);
+        } else {
+            // Daily: MAX(30% × itemValue, 0.5 × dailyPrice)
+            const days = hours; // hours is already in days for daily rental
+            const percentBased = ITEM_VALUE * 0.30 * days;
+            const priceBased = DAILY_PRICE * 0.5 * days;
+            return Math.max(percentBased, priceBased);
+        }
+    }
+    
+    function validateForm() {
+        const rentalType = document.querySelector('input[name="rentalType"]:checked').value;
+        const isCosplay = document.getElementById('isCosplayInput').value === 'true';
+        
+        // Check size for non-cosplay items
+        if (!isCosplay) {
+            const selectedSize = document.getElementById('selectedSize').value;
+            if (!selectedSize || selectedSize.trim() === '') {
+                alert('Vui lòng chọn size');
+                return false;
+            }
+        }
+        
+        // Validate datetime inputs
+        if (rentalType === 'hourly') {
+            const startDate = document.getElementById('hourlyStartDate').value;
+            const endDate = document.getElementById('hourlyEndDate').value;
+            if (!startDate || !endDate) {
+                alert('Vui lòng nhập đầy đủ ngày giờ bắt đầu và kết thúc');
+                return false;
+            }
+            // Compare datetime strings directly (format YYYY-MM-DDTHH:mm is lexicographically sorted)
+            if (startDate >= endDate) {
+                alert('Ngày giờ kết thúc phải sau ngày giờ bắt đầu');
+                return false;
+            }
+        } else {
+            const startDate = document.getElementById('dailyStartDate').value;
+            const endDate = document.getElementById('dailyEndDate').value;
+            if (!startDate || !endDate) {
+                alert('Vui lòng nhập đầy đủ ngày bắt đầu và kết thúc');
+                return false;
+            }
+            // Compare date strings directly (format YYYY-MM-DD is lexicographically sorted)
+            if (startDate >= endDate) {
+                alert('Ngày kết thúc phải sau ngày bắt đầu');
+                return false;
+            }
+        }
+        return true;
+    }
     
     function toggleRentalType() {
         const rentalType = document.querySelector('input[name="rentalType"]:checked').value;
@@ -215,67 +299,42 @@
         
         calculatePrice();
     }
-    
-    function parseFlexibleDate(value) {
-        if (!value) return null;
-        // Try direct parse (ISO format from datetime-local / date inputs)
-        let d = new Date(value);
-        if (!isNaN(d.getTime())) return d;
-
-        // Try parse common localized format: dd/MM/yyyy HH:mm [AM|PM]
-        // Examples: "02/04/2026 11:43 AM" or "02/04/2026 11:43"
-        const m = value.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?:\s*(AM|PM))?/i);
-        if (m) {
-            let day = parseInt(m[1], 10);
-            let month = parseInt(m[2], 10) - 1;
-            let year = parseInt(m[3], 10);
-            let hour = parseInt(m[4], 10);
-            let minute = parseInt(m[5], 10);
-            let ampm = m[6];
-            if (ampm) {
-                ampm = ampm.toUpperCase();
-                if (ampm === 'PM' && hour < 12) hour += 12;
-                if (ampm === 'AM' && hour === 12) hour = 0;
-            }
-            return new Date(year, month, day, hour, minute);
-        }
-
-        // Fallback: invalid date
-        return null;
-    }
 
     function calculatePrice() {
         const rentalType = document.querySelector('input[name="rentalType"]:checked').value;
-        let totalPrice = 0;
+        let rentalPrice = 0;
+        let depositPrice = 0;
 
         if (rentalType === 'hourly') {
             const rawStart = document.getElementById('hourlyStartDate').value;
             const rawEnd = document.getElementById('hourlyEndDate').value;
-            const startDate = parseFlexibleDate(rawStart);
-            const endDate = parseFlexibleDate(rawEnd);
-
-            if (startDate instanceof Date && endDate instanceof Date && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && startDate < endDate) {
-                const hours = (endDate - startDate) / (1000 * 60 * 60);
-                totalPrice = hours * HOURLY_PRICE;
+            
+            if (rawStart && rawEnd && rawStart < rawEnd) {
+                const start = new Date(rawStart);
+                const end = new Date(rawEnd);
+                const hours = (end - start) / (1000 * 60 * 60);
+                rentalPrice = hours * HOURLY_PRICE;
+                depositPrice = calculateDeposit(hours, 'hourly');
             }
         } else {
-            // daily inputs usually provide yyyy-mm-dd which Date() handles
             const rawStart = document.getElementById('dailyStartDate').value;
             const rawEnd = document.getElementById('dailyEndDate').value;
-            const startDate = parseFlexibleDate(rawStart) || new Date(rawStart);
-            const endDate = parseFlexibleDate(rawEnd) || new Date(rawEnd);
-
-            if (startDate instanceof Date && endDate instanceof Date && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && startDate < endDate) {
-                const timeDiff = endDate - startDate;
+            
+            if (rawStart && rawEnd && rawStart < rawEnd) {
+                const start = new Date(rawStart);
+                const end = new Date(rawEnd);
+                const timeDiff = end - start;
                 const days = timeDiff / (1000 * 60 * 60 * 24);
-                totalPrice = days * DAILY_PRICE;
+                rentalPrice = days * DAILY_PRICE;
+                depositPrice = calculateDeposit(days, 'daily');
             }
         }
 
-        const paymentAmount = totalPrice; // 100% payment
+        const totalPayment = rentalPrice + depositPrice;
 
-        document.getElementById('totalPrice').textContent = (isFinite(totalPrice) && totalPrice > 0) ? Math.round(totalPrice).toLocaleString('vi-VN') : '0';
-        document.getElementById('paymentAmount').textContent = (isFinite(paymentAmount) && paymentAmount > 0) ? Math.round(paymentAmount).toLocaleString('vi-VN') : '0';
+        document.getElementById('rentalFee').textContent = (isFinite(rentalPrice) && rentalPrice > 0) ? Math.round(rentalPrice).toLocaleString('vi-VN') : '0';
+        document.getElementById('depositAmount').textContent = (isFinite(depositPrice) && depositPrice > 0) ? Math.round(depositPrice).toLocaleString('vi-VN') : '0';
+        document.getElementById('paymentAmount').textContent = (isFinite(totalPayment) && totalPayment > 0) ? Math.round(totalPayment).toLocaleString('vi-VN') : '0';
     }
 </script>
 <jsp:include page="/WEB-INF/jsp/components/footer.jsp" />

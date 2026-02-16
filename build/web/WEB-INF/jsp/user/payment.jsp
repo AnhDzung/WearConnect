@@ -98,27 +98,62 @@
                 <span>WRC<fmt:formatNumber value="${rentalOrderID}" pattern="00000"/></span>
             </div>
             <div class="payment-info-row">
-                <strong>💰 Tổng tiền:</strong>
-                <span id="totalAmount" data-amount="${rentalOrder.totalPrice}" style="color: #cc3399; font-weight: bold; font-size: 18px;">
+                <strong>Tiền thuê:</strong>
+                <span style="color: #333; font-weight: bold;">
                     <fmt:formatNumber value="${rentalOrder.totalPrice}" pattern="#,##0"/> VNĐ
+                </span>
+            </div>
+            
+            <!-- Tiền cọc chi tiết -->
+            <c:choose>
+                <c:when test="${not empty rentalOrder.trustBasedMultiplier and rentalOrder.trustBasedMultiplier > 0 and rentalOrder.trustBasedMultiplier < 1.0}">
+                    <c:set var="baseDeposit" value="${rentalOrder.adjustedDepositAmount / rentalOrder.trustBasedMultiplier}" />
+                    <div class="payment-info-row">
+                        <strong>Tiền cọc gốc:</strong>
+                        <span style="color: #999; font-weight: bold; text-decoration: line-through;">
+                            <fmt:formatNumber value="${baseDeposit}" pattern="#,##0"/> VNĐ
+                        </span>
+                    </div>
+                    <div class="payment-info-row" style="background-color: #e8f5e9; padding: 8px; border-radius: 4px;">
+                        <strong style="color: #2e7d32;">Vourcher đặc biệt:</strong>
+                        <span style="color: #2e7d32; font-weight: bold;">
+                            -<fmt:formatNumber value="${baseDeposit - rentalOrder.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                        </span>
+                    </div>
+                    <div class="payment-info-row">
+                        <strong>Tiền cọc chính thức:</strong>
+                        <span style="color: #2e7d32; font-weight: bold; font-size: 16px;">
+                            <fmt:formatNumber value="${rentalOrder.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                        </span>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <div class="payment-info-row">
+                        <strong>Tiền cọc:</strong>
+                        <span style="color: #333; font-weight: bold;">
+                            <fmt:formatNumber value="${rentalOrder.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                        </span>
+                    </div>
+                </c:otherwise>
+            </c:choose>
+            <div class="payment-info-row" style="background-color: #fff5fa; padding: 12px; border-radius: 4px; border-top: 2px solid #cc3399; border-bottom: 2px solid #cc3399;">
+                <strong style="font-size: 18px;">Tổng tiền phải thanh toán:</strong>
+                <span id="totalAmount" data-amount="${ rentalOrder.totalPrice + rentalOrder.adjustedDepositAmount}" style="color: #cc3399; font-weight: bold; font-size: 18px;">
+                    <fmt:formatNumber value="${rentalOrder.totalPrice + rentalOrder.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
                 </span>
             </div>
             <c:if test="${not empty userBadge and userBadge.discount != null}">
                 <div class="payment-info-row">
-                    <strong>🏅 Huy hiệu:</strong>
+                    <strong>Huy hiệu:</strong>
                     <span style="color:#333">${userBadge.badge} — Giảm ${userBadge.discount}%</span>
                 </div>
                 <div class="payment-info-row">
-                    <strong>💸 Tiền sau giảm:</strong>
+                    <strong>Tiền sau giảm:</strong>
                     <span style="color: #28a745; font-weight: bold; font-size: 18px;">
-                        <fmt:formatNumber value="${rentalOrder.totalPrice * (1 - (userBadge.discount/100))}" pattern="#,##0"/> VNĐ
+                        <fmt:formatNumber value="${(rentalOrder.totalPrice + rentalOrder.adjustedDepositAmount) * (1 - (userBadge.discount/100))}" pattern="#,##0"/> VNĐ
                     </span>
                 </div>
             </c:if>
-            <div class="payment-info-row">
-                <strong>🔐 Tiền cọc:</strong>
-                <span><fmt:formatNumber value="${rentalOrder.depositAmount}" pattern="#,##0"/> VNĐ</span>
-            </div>
         </div>
         
         <c:if test="${payment == null || payment.paymentStatus == 'PENDING'}">
@@ -175,10 +210,10 @@
                             <td style="border: 1px solid #ffe0b2; color: #ff6f00; font-weight: bold; font-size: 16px;">
                                 <c:choose>
                                     <c:when test="${not empty userBadge and userBadge.discount != null}">
-                                        <fmt:formatNumber value="${rentalOrder.totalPrice * (1 - (userBadge.discount/100))}" pattern="#,##0"/> VNĐ
+                                        <fmt:formatNumber value="${(rentalOrder.totalPrice + rentalOrder.adjustedDepositAmount) * (1 - (userBadge.discount/100))}" pattern="#,##0"/> VNĐ
                                     </c:when>
                                     <c:otherwise>
-                                        <fmt:formatNumber value="${rentalOrder.totalPrice}" pattern="#,##0"/> VNĐ
+                                        <fmt:formatNumber value="${rentalOrder.totalPrice + rentalOrder.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
                                     </c:otherwise>
                                 </c:choose>
                             </td>
@@ -221,7 +256,16 @@
                 
                 <div id="creditCardDetails" class="payment-details">
                     <h3>Thanh Toán Bằng Thẻ Visa/MasterCard</h3>
-                    <p><strong>Số tiền:</strong> <fmt:formatNumber value="${rentalOrder.totalPrice}" pattern="#,##0"/> VNĐ</p>
+                    <p><strong>Số tiền:</strong> 
+                        <c:choose>
+                            <c:when test="${not empty userBadge and userBadge.discount != null}">
+                                <fmt:formatNumber value="${(rentalOrder.totalPrice + rentalOrder.adjustedDepositAmount) * (1 - (userBadge.discount/100))}" pattern="#,##0"/> VNĐ
+                            </c:when>
+                            <c:otherwise>
+                                <fmt:formatNumber value="${rentalOrder.totalPrice + rentalOrder.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                            </c:otherwise>
+                        </c:choose>
+                    </p>
                     
                     <div class="form-group">
                         <label>Tên chủ thẻ:</label>

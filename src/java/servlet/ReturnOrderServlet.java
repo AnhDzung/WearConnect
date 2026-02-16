@@ -1,6 +1,7 @@
 package servlet;
 
 import Service.ReturnOrderService;
+import Service.NotificationService;
 import DAO.RentalOrderDAO;
 import Model.RentalOrder;
 import util.RefundCalculationUtil.RefundDetails;
@@ -125,6 +126,19 @@ public class ReturnOrderServlet extends HttpServlet {
                 );
                 
                 if (success) {
+                    // Gửi thông báo cho manager
+                    RentalOrder returnedOrder = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+                    if (returnedOrder != null) {
+                        String orderCode = "WRC" + String.format("%05d", returnedOrder.getRentalOrderID());
+                        String renterName = returnedOrder.getRenterFullName() != null ? returnedOrder.getRenterFullName() : "Khách hàng";
+                        NotificationService.createNotification(
+                            returnedOrder.getManagerID(),
+                            "Khách hàng đang trả hàng",
+                            renterName + " đang trả hàng cho đơn " + orderCode + " (" + (returnedOrder.getClothingName() != null ? returnedOrder.getClothingName() : "ID: " + returnedOrder.getClothingID()) + "). Vui lòng xác nhận khi nhận được hàng.",
+                            rentalOrderID
+                        );
+                    }
+                    
                     // Redirect to refund details
                     response.sendRedirect(request.getContextPath() + 
                         "/return?action=refundDetails&id=" + rentalOrderID);

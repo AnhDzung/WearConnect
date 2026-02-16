@@ -202,6 +202,47 @@ public class DashboardService {
     // ===================================================================
     // ADMIN STATISTICS METHODS
     // ===================================================================
+
+    /**
+     * Get all ratings with order and user details for admin
+     */
+    public static List<Map<String, Object>> getAllRatingsWithDetails() {
+        List<Map<String, Object>> result = new ArrayList<>();
+        String sql = "SELECT r.RatingID, r.Rating, r.Comment, r.CreatedAt, " +
+                     "ro.RentalOrderID, c.ClothingName, " +
+                     "rater.FullName AS RaterName, rater.UserRole AS RaterRole, " +
+                     "CASE WHEN r.RatingFromUserID = c.RenterID THEN renter.FullName ELSE manager.FullName END AS RatedName, " +
+                     "CASE WHEN r.RatingFromUserID = c.RenterID THEN 'User' ELSE 'Manager' END AS RatedRole " +
+                     "FROM Rating r " +
+                     "JOIN RentalOrder ro ON r.RentalOrderID = ro.RentalOrderID " +
+                     "JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
+                     "JOIN Accounts manager ON c.RenterID = manager.AccountID " +
+                     "JOIN Accounts renter ON ro.RenterUserID = renter.AccountID " +
+                     "JOIN Accounts rater ON r.RatingFromUserID = rater.AccountID " +
+                     "ORDER BY r.CreatedAt DESC";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Map<String, Object> row = new HashMap<>();
+                row.put("ratingID", rs.getInt("RatingID"));
+                row.put("rating", rs.getInt("Rating"));
+                row.put("comment", rs.getString("Comment"));
+                row.put("createdAt", rs.getTimestamp("CreatedAt"));
+                row.put("rentalOrderID", rs.getInt("RentalOrderID"));
+                row.put("clothingName", rs.getString("ClothingName"));
+                row.put("raterName", rs.getString("RaterName"));
+                row.put("raterRole", rs.getString("RaterRole"));
+                row.put("ratedName", rs.getString("RatedName"));
+                row.put("ratedRole", rs.getString("RatedRole"));
+                result.add(row);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
     
     /**
      * Get top rated managers (highest average rating)
@@ -288,7 +329,7 @@ public class DashboardService {
         
         // Use DISTINCT to avoid duplicate rows from LEFT JOIN Payment
         String sql = "SELECT DISTINCT " +
-                     "ro.RentalOrderID, ro.Status, ro.TotalPrice, ro.CreatedAt, " +
+                 "ro.RentalOrderID, ro.Status, ro.TotalPrice, ro.AdjustedDepositAmount, ro.CreatedAt, " +
                      "c.ClothingName, c.Category, " +
                      "manager.FullName as ManagerName, " +
                      "renter.FullName as RenterName, " +
@@ -323,6 +364,7 @@ public class DashboardService {
                     row.put("status", rs.getString("Status"));
                     row.put("totalPrice", rs.getDouble("TotalPrice"));
                     row.put("createdAt", rs.getTimestamp("CreatedAt"));
+                    row.put("adjustedDepositAmount", rs.getDouble("AdjustedDepositAmount"));
                     row.put("clothingName", rs.getString("ClothingName"));
                     row.put("category", rs.getString("Category"));
                     row.put("managerName", rs.getString("ManagerName"));

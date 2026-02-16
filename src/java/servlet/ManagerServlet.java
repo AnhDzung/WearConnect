@@ -7,9 +7,12 @@ import Model.Rating;
 import Model.OrderIssue;
 import Controller.ClothingController;
 import Controller.RentalOrderController;
+import DAO.AccountDAO;
 import DAO.RatingDAO;
 import DAO.OrderIssueDAO;
+import DAO.RentalOrderDAO;
 import Service.DashboardService;
+import Service.NotificationService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -102,6 +105,27 @@ public class ManagerServlet extends HttpServlet {
                     if ("RENTED".equals(status) || "RETURNED".equals(status) || "COMPLETED".equals(status) || "CANCELLED".equals(status)) {
                         boolean updated = RentalOrderController.updateOrderStatus(rentalOrderID, status);
                         System.out.println("[ManagerServlet] Update status to " + status + " for order " + rentalOrderID + " => " + updated);
+                        
+                        // Gửi thông báo cho admin khi đơn hoàn thành (manager đã nhận hàng trả về)
+                        if (updated && "COMPLETED".equals(status)) {
+                            RentalOrder completedOrder = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+                            if (completedOrder != null) {
+                                String orderCode = "WRC" + String.format("%05d", completedOrder.getRentalOrderID());
+                                String renterName = completedOrder.getRenterFullName() != null ? completedOrder.getRenterFullName() : "Khách hàng";
+                                String clothingInfo = completedOrder.getClothingName() != null ? completedOrder.getClothingName() : "ID: " + completedOrder.getClothingID();
+                                
+                                // Gửi thông báo cho tất cả admin
+                                List<Account> admins = AccountDAO.findByRole("Admin");
+                                for (Account admin : admins) {
+                                    NotificationService.createNotification(
+                                        admin.getAccountID(),
+                                        "Đơn thuê hoàn thành",
+                                        "Đơn hàng " + orderCode + " (" + clothingInfo + ") thuê thành công. Tiến hành hoàn lại cọc cho " + renterName + ".",
+                                        rentalOrderID
+                                    );
+                                }
+                            }
+                        }
                     } else {
                         System.out.println("[ManagerServlet] Invalid status update attempt: " + status);
                     }
@@ -121,6 +145,20 @@ public class ManagerServlet extends HttpServlet {
                         boolean stored = RentalOrderController.setTrackingNumber(rentalOrderID, trackingNumber.trim());
                         boolean updated = RentalOrderController.updateOrderStatus(rentalOrderID, "SHIPPING");
                         System.out.println("[ManagerServlet] shipOrder stored=" + stored + " updated=" + updated);
+                        
+                        // Gửi thông báo cho user
+                        if (updated) {
+                            RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+                            if (order != null) {
+                                String orderCode = "WRC" + String.format("%05d", order.getRentalOrderID());
+                                NotificationService.createNotification(
+                                    order.getRenterUserID(),
+                                    "Đơn hàng đã được gửi",
+                                    "Đơn hàng " + orderCode + " (" + (order.getClothingName() != null ? order.getClothingName() : "ID: " + order.getClothingID()) + ") đã được gửi đi. Mã vận đơn: " + trackingNumber + ". Vui lòng đợi và nhận hàng.",
+                                    rentalOrderID
+                                );
+                            }
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -133,7 +171,20 @@ public class ManagerServlet extends HttpServlet {
             if ("confirmDelivery".equals(action)) {
                 try {
                     int rentalOrderID = Integer.parseInt(request.getParameter("rentalOrderID"));
-                    RentalOrderController.updateOrderStatus(rentalOrderID, "DELIVERED_PENDING_CONFIRMATION");
+                    boolean updated = RentalOrderController.updateOrderStatus(rentalOrderID, "DELIVERED_PENDING_CONFIRMATION");
+                    if (updated) {
+                        RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+                        if (order != null) {
+                            String orderCode = "WRC" + String.format("%05d", order.getRentalOrderID());
+                            String clothingInfo = order.getClothingName() != null ? order.getClothingName() : "ID: " + order.getClothingID();
+                            NotificationService.createNotification(
+                                order.getRenterUserID(),
+                                "Đơn hàng đã đến",
+                                "Đơn hàng " + orderCode + " (" + clothingInfo + ") đã đến. Vui lòng nhận hàng và chụp ảnh đơn hàng để xác nhận bạn đã nhận được.",
+                                rentalOrderID
+                            );
+                        }
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

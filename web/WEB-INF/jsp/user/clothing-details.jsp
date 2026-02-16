@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" session="true" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page import="Model.Clothing" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -230,7 +231,36 @@
                 <strong>Mục đích:</strong> ${clothing.occasion}
             </div>
             <div class="info-row">
-                <strong>Size:</strong> ${clothing.size}
+                <strong>Size có sẵn:</strong>
+                <%
+                    String sizeStr = null;
+                    try {
+                        Object clothingObj = pageContext.getAttribute("clothing", PageContext.REQUEST_SCOPE);
+                        if (clothingObj != null && clothingObj instanceof Model.Clothing) {
+                            sizeStr = ((Model.Clothing) clothingObj).getSize();
+                        }
+                    } catch (Exception e) {
+                        sizeStr = null;
+                    }
+                    
+                    if (sizeStr != null && !sizeStr.isEmpty()) {
+                        String[] sizes = sizeStr.split(", ");
+                %>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
+                <%
+                        for (String s : sizes) {
+                            s = s.trim();
+                %>
+                    <span style="background-color: #e8f5e9; color: #2e7d32; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500; border: 1px solid #81c784;">
+                        <%= s %>
+                    </span>
+                <%
+                        }
+                %>
+                </div>
+                <%
+                    }
+                %>
             </div>
             <c:if test="${clothing.category eq 'Cosplay' && cosplayDetail != null}">
                 <div class="info-row">
