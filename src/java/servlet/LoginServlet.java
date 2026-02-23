@@ -30,6 +30,12 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute("userRole", account.getUserRole());
             session.setMaxInactiveInterval(30 * 60); // 30 minutes
             
+            // Check for incomplete profile and create notification
+            String role = account.getUserRole();
+            if ("User".equals(role) || "Manager".equals(role)) {
+                checkProfileCompletionAndNotify(account);
+            }
+            
             // Debug log
             System.out.println("=== Login Debug ===");
             System.out.println("Username: " + account.getUsername());
@@ -38,7 +44,6 @@ public class LoginServlet extends HttpServlet {
             System.out.println("==================");
             
             // Redirect dựa trên role
-            String role = account.getUserRole();
             if (role != null) {
                 role = role.trim(); // Xóa khoảng trắng
             }
@@ -58,6 +63,80 @@ public class LoginServlet extends HttpServlet {
         } else {
             request.setAttribute("error", "Tên đăng nhập hoặc mật khẩu không chính xác!");
             request.getRequestDispatcher("/WEB-INF/jsp/login.jsp").forward(request, response);
+        }
+    }
+    
+    /**
+     * Check if user/manager profile is incomplete and create notification
+     */
+    private void checkProfileCompletionAndNotify(Account account) {
+        try {
+            boolean isIncomplete = false;
+            StringBuilder missingFields = new StringBuilder();
+            
+            // Check phone number
+            if (account.getPhoneNumber() == null || account.getPhoneNumber().trim().isEmpty()) {
+                isIncomplete = true;
+                missingFields.append("Số điện thoại, ");
+            }
+            
+            // Check address
+            if (account.getAddress() == null || account.getAddress().trim().isEmpty()) {
+                isIncomplete = true;
+                missingFields.append("Địa chỉ, ");
+            }
+            
+            // Check bank account number
+            try {
+                if (account.getBankAccountNumber() == null || account.getBankAccountNumber().trim().isEmpty()) {
+                    isIncomplete = true;
+                    missingFields.append("Số tài khoản ngân hàng, ");
+                }
+            } catch (Exception e) {
+                isIncomplete = true;
+                missingFields.append("Số tài khoản ngân hàng, ");
+            }
+            
+            // Check bank name
+            try {
+                if (account.getBankName() == null || account.getBankName().trim().isEmpty()) {
+                    isIncomplete = true;
+                    missingFields.append("Tên ngân hàng, ");
+                }
+            } catch (Exception e) {
+                isIncomplete = true;
+                missingFields.append("Tên ngân hàng, ");
+            }
+            
+            // If profile is incomplete, create notification
+            if (isIncomplete && missingFields.length() > 0) {
+                // Check if similar notification already exists
+                java.util.List<Model.Notification> unreadNotifs = Service.NotificationService.getUnreadNotifications(account.getAccountID());
+                boolean alreadyNotified = false;
+                
+                if (unreadNotifs != null) {
+                    for (Model.Notification notif : unreadNotifs) {
+                        if ("Cập nhật thông tin Profile".equals(notif.getTitle())) {
+                            alreadyNotified = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // Only create notification if not already notified
+                if (!alreadyNotified) {
+                    String fields = missingFields.substring(0, missingFields.length() - 2); // Remove last ", "
+                    String message = "Cảm ơn bạn đã tin tưởng và sử dụng WearConnect. Hãy cập nhật đầy đủ thông tin của bạn trong profile để trải nghiệm tốt hơn!\n\nThông tin chưa đầy đủ: " + fields;
+                    
+                    Service.NotificationService.createNotification(
+                        account.getAccountID(),
+                        "Cập nhật thông tin Profile",
+                        message
+                    );
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error checking profile completion: " + e.getMessage());
         }
     }
 }

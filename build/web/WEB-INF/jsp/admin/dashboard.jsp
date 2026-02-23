@@ -264,6 +264,10 @@
                     onclick="location.href='${pageContext.request.contextPath}/admin?action=ratings'">
                  Đánh giá
             </button>
+            <button type="button" class="tab-button ${view eq 'payments' ? 'active' : ''}"
+                    onclick="location.href='${pageContext.request.contextPath}/admin?action=payments'">
+                 💰 Xử lý thanh toán
+            </button>
         </div>
 
         <c:if test="${view eq 'products'}">
@@ -417,6 +421,93 @@
             %>
         </div>
         </c:if>
+        
+        <c:if test="${view eq 'payments'}">
+        <c:if test="${param.success == 'true'}">
+            <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;">
+                ✓ Xác nhận thanh toán thành công! Thông báo đã được gửi đến User và Manager.
+            </div>
+        </c:if>
+        <c:if test="${param.error == 'true'}">
+            <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;">
+                ✗ Có lỗi xảy ra khi xử lý thanh toán. Vui lòng thử lại.
+            </div>
+        </c:if>
+        <div class="control-panel">
+            <div><strong>Xử lý thanh toán cho các đơn hàng đã trả</strong></div>
+        </div>
+
+        <div class="table-container">
+            <%
+                @SuppressWarnings("unchecked")
+                List<Model.RentalOrder> returnedOrders = (List<Model.RentalOrder>) request.getAttribute("returnedOrders");
+                @SuppressWarnings("unchecked")
+                java.util.Map<Integer, Model.Account> accountMap = (java.util.Map<Integer, Model.Account>) request.getAttribute("accountMap");
+                @SuppressWarnings("unchecked")
+                java.util.Map<Integer, Model.Clothing> clothingMap = (java.util.Map<Integer, Model.Clothing>) request.getAttribute("clothingMap");
+                
+                if (returnedOrders != null && returnedOrders.size() > 0) {
+            %>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Sản phẩm</th>
+                            <th>Người thuê (User)</th>
+                            <th>Số TK User</th>
+                            <th>Chủ sản phẩm (Manager)</th>
+                            <th>Số TK Manager</th>
+                            <th>Tiền cọc</th>
+                            <th>Giá thuê</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <%
+                            for (Model.RentalOrder order : returnedOrders) {
+                                Model.Account renter = accountMap.get(order.getRenterUserID());
+                                Model.Clothing clothing = clothingMap.get(order.getClothingID());
+                                Model.Account manager = (clothing != null) ? accountMap.get(clothing.getRenterID()) : null;
+                                
+                                String renterBankInfo = "Chưa cập nhật";
+                                if (renter != null && renter.getBankAccountNumber() != null && !renter.getBankAccountNumber().trim().isEmpty()) {
+                                    renterBankInfo = renter.getBankAccountNumber() + " - " + (renter.getBankName() != null ? renter.getBankName() : "");
+                                }
+                                
+                                String managerBankInfo = "Chưa cập nhật";
+                                if (manager != null && manager.getBankAccountNumber() != null && !manager.getBankAccountNumber().trim().isEmpty()) {
+                                    managerBankInfo = manager.getBankAccountNumber() + " - " + (manager.getBankName() != null ? manager.getBankName() : "");
+                                }
+                        %>
+                            <tr>
+                                <td>#<%= order.getRentalOrderID() %></td>
+                                <td><%= clothing != null ? clothing.getClothingName() : "N/A" %></td>
+                                <td><%= renter != null ? renter.getFullName() : "N/A" %></td>
+                                <td style="font-size: 12px;"><%= renterBankInfo %></td>
+                                <td><%= manager != null ? manager.getFullName() : "N/A" %></td>
+                                <td style="font-size: 12px;"><%= managerBankInfo %></td>
+                                <td><%= String.format("%,.0f", order.getDepositAmount()) %> VND</td>
+                                <td><%= String.format("%,.0f", order.getTotalPrice()) %> VND</td>
+                                <td>
+                                    <button type="button" class="btn btn-add" onclick="openPaymentModal(<%= order.getRentalOrderID() %>, '<%= order.getDepositAmount() %>', '<%= order.getTotalPrice() %>')">
+                                        Xác nhận thanh toán
+                                    </button>
+                                </td>
+                            </tr>
+                        <%
+                            }
+                        %>
+                    </tbody>
+                </table>
+            <%
+                } else {
+            %>
+                <div class="empty-message">Không có đơn hàng nào cần xử lý thanh toán.</div>
+            <%
+                }
+            %>
+        </div>
+        </c:if>
     </div>
 
     <div id="detailsModal" class="modal">
@@ -428,6 +519,39 @@
             <div id="detailsContent" style="padding: 15px 0;">
                 <p>Đang tải...</p>
             </div>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Xác nhận thanh toán</h3>
+                <button type="button" class="btn btn-toggle" onclick="closePaymentModal()">Đóng</button>
+            </div>
+            <form method="POST" action="<%= request.getContextPath() %>/admin" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="confirmPayment">
+                <input type="hidden" name="orderID" id="paymentOrderID">
+                <div style="padding: 15px 0; display: grid; gap: 15px;">
+                    <div>
+                        <strong>Tiền cọc trả lại User:</strong> <span id="depositDisplay"></span> VND
+                        <div style="margin-top: 8px;">
+                            <label style="display: block; margin-bottom: 5px;">Upload ảnh chứng minh đã hoàn cọc:</label>
+                            <input type="file" name="refundProof" accept="image/*" required style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                    </div>
+                    <div>
+                        <strong>Tiền thuê trả cho Manager:</strong> <span id="rentalDisplay"></span> VND
+                        <div style="margin-top: 8px;">
+                            <label style="display: block; margin-bottom: 5px;">Upload ảnh chứng minh đã trả tiền cho Manager:</label>
+                            <input type="file" name="managerPaymentProof" accept="image/*" required style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-toggle" onclick="closePaymentModal()">Hủy</button>
+                    <button type="submit" class="btn btn-add">Xác nhận đã thanh toán</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -457,6 +581,16 @@
     </div>
 
     <script>
+        function openPaymentModal(orderID, depositAmount, totalAmount) {
+            document.getElementById('paymentOrderID').value = orderID;
+            document.getElementById('depositDisplay').textContent = parseFloat(depositAmount).toLocaleString('vi-VN');
+            document.getElementById('rentalDisplay').textContent = parseFloat(totalAmount).toLocaleString('vi-VN');
+            document.getElementById('paymentModal').classList.add('show');
+        }
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('show');
+        }
+        
         function openDeactivateModal(id) {
             document.getElementById('deactivateClothingID').value = id;
             document.getElementById('deactivateModal').classList.add('show');

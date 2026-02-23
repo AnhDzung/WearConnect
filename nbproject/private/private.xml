@@ -8,13 +8,16 @@
             <file>file:/D:/Fpt/sm7/WearConnect/src/java/DAO/RatingDAO.java</file>
             <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/ImageServlet.java</file>
             <file>file:/D:/Fpt/sm7/WearConnect/src/java/Service/RentalOrderService.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/RatingServlet.java</file>
+            <file>file:/D:/Fpt/sm7/WearConnect/src/java/Model/RentalOrder.java</file>
             <file>file:/D:/Fpt/sm7/WearConnect/web/WEB-INF/jsp/home.jsp</file>
             <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/RentalOrderServlet.java</file>
             <file>file:/D:/Fpt/sm7/WearConnect/src/java/DAO/RentalOrderDAO.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/UserServlet.java</file>
             <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/ManagerServlet.java</file>
             <file>file:/D:/Fpt/sm7/WearConnect/web/WEB-INF/jsp/user/payment.jsp</file>
+            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/LoginServlet.java</file>
+            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/RatingServlet.java</file>
+            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/UserServlet.java</file>
+            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/AdminServlet.java</file>
         </group>
     </open-files>
 </project-private>

@@ -234,12 +234,47 @@ public class RentalOrderServlet extends HttpServlet {
             }
         } else if ("requestReturn".equals(action)) {
             int rentalOrderID = Integer.parseInt(request.getParameter("rentalOrderID"));
-            // User requests to mark the order as returned (manager will see status change)
-            boolean ok = RentalOrderController.updateOrderStatus(rentalOrderID, "RETURNED");
+            // User requests to return item - set status to RETURN_REQUESTED
+            boolean ok = RentalOrderController.updateOrderStatus(rentalOrderID, "RETURN_REQUESTED");
             if (ok) {
+                // Gửi thông báo cho manager
+                RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+                if (order != null) {
+                    String orderCode = "WRC" + String.format("%05d", order.getRentalOrderID());
+                    String clothingInfo = order.getClothingName() != null ? order.getClothingName() : "ID: " + order.getClothingID();
+                    NotificationService.createNotification(
+                        order.getManagerID(),
+                        "Khách hàng yêu cầu trả hàng",
+                        "Đơn hàng " + orderCode + " (" + clothingInfo + ") - Khách hàng " + (order.getRenterFullName() != null ? order.getRenterFullName() : "ID: " + order.getRenterUserID()) + " yêu cầu trả hàng. Vui lòng chọn phương thức nhận hàng.",
+                        rentalOrderID
+                    );
+                }
                 response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&returnRequested=true");
             } else {
                 response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&returnRequested=false");
+            }
+        } else if ("submitReturnTracking".equals(action)) {
+            int rentalOrderID = Integer.parseInt(request.getParameter("rentalOrderID"));
+            String returnTrackingNumber = request.getParameter("returnTrackingNumber");
+            
+            boolean updated = RentalOrderDAO.updateReturnTrackingNumber(rentalOrderID, returnTrackingNumber);
+            
+            if (updated) {
+                // Gửi thông báo cho manager
+                RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+                if (order != null) {
+                    String orderCode = "WRC" + String.format("%05d", order.getRentalOrderID());
+                    String clothingInfo = order.getClothingName() != null ? order.getClothingName() : "ID: " + order.getClothingID();
+                    NotificationService.createNotification(
+                        order.getManagerID(),
+                        "Khách hàng đã gửi hàng trả",
+                        "Đơn hàng " + orderCode + " (" + clothingInfo + ") - Khách hàng đã gửi hàng trả về. Mã vận đơn: " + returnTrackingNumber + ". Vui lòng theo dõi và xác nhận khi nhận được.",
+                        rentalOrderID
+                    );
+                }
+                response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&trackingSubmitted=true");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&trackingSubmitted=false");
             }
         } else if ("reportIssue".equals(action)) {
             int rentalOrderID = Integer.parseInt(request.getParameter("rentalOrderID"));
@@ -269,6 +304,20 @@ public class RentalOrderServlet extends HttpServlet {
             if (issueID > 0) {
                 // Auto-update order status to ISSUE
                 RentalOrderController.updateOrderStatus(rentalOrderID, "ISSUE");
+                
+                // Gửi thông báo cho manager
+                RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+                if (order != null) {
+                    String orderCode = "WRC" + String.format("%05d", order.getRentalOrderID());
+                    String clothingName = order.getClothingName() != null ? order.getClothingName() : ("ID: " + order.getClothingID());
+                    NotificationService.createNotification(
+                        order.getManagerID(),
+                        "Sản phẩm có vấn đề",
+                        "Đơn hàng " + orderCode + " (" + clothingName + ") có vấn đề được báo cáo. Vui lòng kiểm tra.",
+                        rentalOrderID
+                    );
+                }
+                
                 response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&issueReported=true");
             } else {
                 response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&issueReported=false");
@@ -286,15 +335,26 @@ public class RentalOrderServlet extends HttpServlet {
                 boolean stored = RentalOrderController.setReceivedProofPath(rentalOrderID, proofPath);
                 boolean ok = RentalOrderController.updateOrderStatus(rentalOrderID, "RENTED");
                 
-                // Gửi thông báo cho manager
+                // Gửi thông báo cho manager và user
                 if (ok) {
                     RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
                     if (order != null) {
                         String orderCode = "WRC" + String.format("%05d", order.getRentalOrderID());
+                        String clothingInfo = order.getClothingName() != null ? order.getClothingName() : "ID: " + order.getClothingID();
+                        
+                        // Thông báo cho manager
                         NotificationService.createNotification(
                             order.getManagerID(),
                             "Đơn hàng đã giao thành công",
-                            "Đơn hàng " + orderCode + " (" + (order.getClothingName() != null ? order.getClothingName() : "ID: " + order.getClothingID()) + ") đã được giao thành công. Khách hàng " + (order.getRenterFullName() != null ? order.getRenterFullName() : "ID: " + order.getRenterUserID()) + " đã xác nhận nhận hàng.",
+                            "Đơn hàng " + orderCode + " (" + clothingInfo + ") đã được giao thành công. Khách hàng " + (order.getRenterFullName() != null ? order.getRenterFullName() : "ID: " + order.getRenterUserID()) + " đã xác nhận nhận hàng.",
+                            rentalOrderID
+                        );
+                        
+                        // Thông báo cho user
+                        NotificationService.createNotification(
+                            order.getRenterUserID(),
+                            "Xác nhận nhận hàng thành công",
+                            "Bạn đã xác nhận nhận đơn hàng " + orderCode + " (" + clothingInfo + "). Đơn hàng đang ở trạng thái thuê. Vui lòng sử dụng và trả hàng đúng hạn.",
                             rentalOrderID
                         );
                     }

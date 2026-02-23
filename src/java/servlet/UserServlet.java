@@ -245,6 +245,8 @@ public class UserServlet extends HttpServlet {
             String email = request.getParameter("email");
             String phoneNumber = request.getParameter("phoneNumber");
             String address = request.getParameter("address");
+            String bankAccountNumber = request.getParameter("bankAccountNumber");
+            String bankName = request.getParameter("bankName");
             
             // Validate
             if (fullName == null || fullName.trim().isEmpty() || 
@@ -258,12 +260,18 @@ public class UserServlet extends HttpServlet {
             user.setEmail(email);
             user.setPhoneNumber(phoneNumber);
             user.setAddress(address);
+            user.setBankAccountNumber(bankAccountNumber);
+            user.setBankName(bankName);
             
             // Gọi UserService để cập nhật
             if (Service.UserService.updateProfile(user)) {
                 // Update session
                 HttpSession session = request.getSession();
                 session.setAttribute("account", user);
+                
+                // Check if profile is now complete and mark notification as read
+                checkAndMarkProfileNotificationAsRead(user);
+                
                 response.sendRedirect(request.getContextPath() + "/user?action=profile&success=true");
             } else {
                 response.sendRedirect(request.getContextPath() + "/user?action=profile&error=update");
@@ -318,4 +326,54 @@ public class UserServlet extends HttpServlet {
             e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/user?action=profile&pwdError=exception");
         }
-    }}
+    }
+    
+    /**
+     * Check if profile is complete and mark profile completion notification as read
+     */
+    private void checkAndMarkProfileNotificationAsRead(Account user) {
+        try {
+            // Check if profile is complete
+            boolean isComplete = true;
+            
+            if (user.getPhoneNumber() == null || user.getPhoneNumber().trim().isEmpty()) {
+                isComplete = false;
+            }
+            if (user.getAddress() == null || user.getAddress().trim().isEmpty()) {
+                isComplete = false;
+            }
+            
+            try {
+                if (user.getBankAccountNumber() == null || user.getBankAccountNumber().trim().isEmpty()) {
+                    isComplete = false;
+                }
+            } catch (Exception e) {
+                isComplete = false;
+            }
+            
+            try {
+                if (user.getBankName() == null || user.getBankName().trim().isEmpty()) {
+                    isComplete = false;
+                }
+            } catch (Exception e) {
+                isComplete = false;
+            }
+            
+            // If profile is complete, mark notification as read
+            if (isComplete) {
+                java.util.List<Model.Notification> unreadNotifs = Service.NotificationService.getUnreadNotifications(user.getAccountID());
+                
+                if (unreadNotifs != null) {
+                    for (Model.Notification notif : unreadNotifs) {
+                        if ("Cập nhật thông tin Profile".equals(notif.getTitle())) {
+                            Service.NotificationService.markAsRead(notif.getNotificationID());
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error marking profile notification as read: " + e.getMessage());
+        }
+    }
+}

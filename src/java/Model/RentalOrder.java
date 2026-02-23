@@ -37,6 +37,11 @@ public class RentalOrder {
     private String paymentProofImage;
     private String receivedProofImage;
     private String trackingNumber;
+    private String returnMethod; // MANAGER_PICKUP hoặc SHIP_TO_MANAGER
+    private String returnTrackingNumber; // Mã vận đơn khi user gửi hàng về
+    private String refundProofImage; // Ảnh chứng minh hoàn cọc cho user
+    private String managerPaymentProofImage; // Ảnh chứng minh trả tiền cho manager
+    private LocalDateTime paymentProcessedDate; // Ngày admin xử lý thanh toán
 
     public RentalOrder() {}
 
@@ -140,6 +145,21 @@ public class RentalOrder {
 
     public String getTrackingNumber() { return trackingNumber; }
     public void setTrackingNumber(String trackingNumber) { this.trackingNumber = trackingNumber; }
+
+    public String getReturnMethod() { return returnMethod; }
+    public void setReturnMethod(String returnMethod) { this.returnMethod = returnMethod; }
+
+    public String getReturnTrackingNumber() { return returnTrackingNumber; }
+    public void setReturnTrackingNumber(String returnTrackingNumber) { this.returnTrackingNumber = returnTrackingNumber; }
+
+    public String getRefundProofImage() { return refundProofImage; }
+    public void setRefundProofImage(String refundProofImage) { this.refundProofImage = refundProofImage; }
+
+    public String getManagerPaymentProofImage() { return managerPaymentProofImage; }
+    public void setManagerPaymentProofImage(String managerPaymentProofImage) { this.managerPaymentProofImage = managerPaymentProofImage; }
+
+    public LocalDateTime getPaymentProcessedDate() { return paymentProcessedDate; }
+    public void setPaymentProcessedDate(LocalDateTime paymentProcessedDate) { this.paymentProcessedDate = paymentProcessedDate; }
 
     // Format order code as WRC + 5-digit ID (e.g., WRC00001)
     public String getOrderCode() {

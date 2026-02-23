@@ -121,6 +121,32 @@
                 <div class="label">Địa chỉ</div>
                 <div class="value"><%= (manager.getAddress() != null) ? manager.getAddress() : "" %></div>
             </div>
+            <%
+                String bankAccountDisplay = "Chưa cập nhật";
+                String bankNameDisplay = "Chưa cập nhật";
+                try {
+                    if (manager.getBankAccountNumber() != null && !manager.getBankAccountNumber().isEmpty()) {
+                        bankAccountDisplay = manager.getBankAccountNumber();
+                    }
+                } catch (Exception e) {
+                    // Field not exists in database yet
+                }
+                try {
+                    if (manager.getBankName() != null && !manager.getBankName().isEmpty()) {
+                        bankNameDisplay = manager.getBankName();
+                    }
+                } catch (Exception e) {
+                    // Field not exists in database yet
+                }
+            %>
+            <div class="info-item">
+                <div class="label">Số tài khoản ngân hàng</div>
+                <div class="value"><%= bankAccountDisplay %></div>
+            </div>
+            <div class="info-item">
+                <div class="label">Tên ngân hàng</div>
+                <div class="value"><%= bankNameDisplay %></div>
+            </div>
         </div>
         <div class="actions">
             <button class="btn btn-edit" onclick="openEditModal()">Chỉnh sửa thông tin</button>
@@ -153,6 +179,24 @@
                 <div class="form-group">
                     <label for="address">Địa chỉ</label>
                     <input type="text" id="address" name="address" value="<%= (manager.getAddress() != null) ? manager.getAddress() : "" %>">
+                </div>
+                <%
+                    String bankAccountValue = "";
+                    String bankNameValue = "";
+                    try {
+                        bankAccountValue = (manager.getBankAccountNumber() != null) ? manager.getBankAccountNumber() : "";
+                    } catch (Exception e) {}
+                    try {
+                        bankNameValue = (manager.getBankName() != null) ? manager.getBankName() : "";
+                    } catch (Exception e) {}
+                %>
+                <div class="form-group">
+                    <label for="bankAccountNumber">Số tài khoản ngân hàng</label>
+                    <input type="text" id="bankAccountNumber" name="bankAccountNumber" value="<%= bankAccountValue %>" placeholder="Nhập số tài khoản">
+                </div>
+                <div class="form-group">
+                    <label for="bankName">Tên ngân hàng</label>
+                    <input type="text" id="bankName" name="bankName" value="<%= bankNameValue %>" placeholder="VD: Vietcombank, Techcombank, BIDV...">
                 </div>
                 <div class="modal-buttons">
                     <button type="button" class="btn btn-cancel" onclick="closeEditModal()">Hủy</button>

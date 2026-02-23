@@ -224,16 +224,16 @@
 
                     <div style="margin-top:20px; display:flex; gap:10px; flex-wrap: wrap;">
                         <form method="POST" action="${pageContext.request.contextPath}/manager">
-                            <input type="hidden" name="action" value="updateStatus" />
+                            <input type="hidden" name="action" value="replaceItem" />
                             <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
-                            <input type="hidden" name="status" value="RENTED" />
-                            <button type="submit" class="btn btn-info"> Đổi hàng (đưa về RENTED)</button>
+                            <input type="hidden" name="issueID" value="${issue.issueID}" />
+                            <button type="submit" class="btn btn-info" onclick="return confirm('Xác nhận đổi hàng mới cho khách hàng?')">🔄 Đổi hàng</button>
                         </form>
                         <form method="POST" action="${pageContext.request.contextPath}/manager">
-                            <input type="hidden" name="action" value="updateStatus" />
+                            <input type="hidden" name="action" value="cancelOrderIssue" />
                             <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
-                            <input type="hidden" name="status" value="RETURNED" />
-                            <button type="submit" class="btn btn-danger">Hủy đơn hàng (yêu cầu trả)</button>
+                            <input type="hidden" name="issueID" value="${issue.issueID}" />
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Xác nhận hủy đơn hàng và hoàn tiền 100% cho khách hàng?')">❌ Hủy đơn hàng (yêu cầu trả)</button>
                         </form>
                     </div>
                 </div>

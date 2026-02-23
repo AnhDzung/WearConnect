@@ -284,7 +284,9 @@ public class RentalOrderDAO {
         } catch (SQLException ignore) {}
         try { order.setPaymentProofImage(rs.getString("PaymentProofImage")); } catch (SQLException ignore) {}
         try { order.setReceivedProofImage(rs.getString("ReceivedProofImage")); } catch (SQLException ignore) {}
-        try { order.setTrackingNumber(rs.getString("TrackingNumber")); } catch (SQLException ignore) {}
+        try { order.setTrackingNumber(rs.getString("TrackingNumber")); } catch (SQLException ignore) {}   
+        try { order.setReturnMethod(rs.getString("ReturnMethod")); } catch (SQLException ignore) {}
+        try { order.setReturnTrackingNumber(rs.getString("ReturnTrackingNumber")); } catch (SQLException ignore) {}
         
         // Map new fields for trust-based deposit
         try { order.setUserRating(rs.getDouble("UserRating")); } catch (SQLException ignore) {}
@@ -338,6 +340,32 @@ public class RentalOrderDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trackingNumber);
+            ps.setInt(2, rentalOrderID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    public static boolean updateReturnMethod(int rentalOrderID, String returnMethod) {
+        String sql = "UPDATE RentalOrder SET ReturnMethod = ? WHERE RentalOrderID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, returnMethod);
+            ps.setInt(2, rentalOrderID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    public static boolean updateReturnTrackingNumber(int rentalOrderID, String returnTrackingNumber) {
+        String sql = "UPDATE RentalOrder SET ReturnTrackingNumber = ? WHERE RentalOrderID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, returnTrackingNumber);
             ps.setInt(2, rentalOrderID);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {

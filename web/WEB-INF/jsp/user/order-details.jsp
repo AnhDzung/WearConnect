@@ -25,6 +25,8 @@
         .status.confirmed { background-color: #28a745; color: white; }
         .status.rented { background-color: #28a745; color: white; }
         .status.returned { background-color: #6c757d; color: white; }
+        .status.issue { background-color: #dc3545; color: white; }
+        .status.return_requested { background-color: #ff9800; color: white; }
         .btn { padding: 10px 20px; margin-top: 20px; background-color: #007bff; color: white; border: none; cursor: pointer; text-decoration: none; display: inline-block; border-radius: 4px; }
         .btn-danger { background-color: #dc3545; }
         .alert { padding: 15px; margin-bottom: 20px; border-radius: 5px; }
@@ -273,7 +275,114 @@
                 </form>
                 <button type="button" class="btn" style="background-color:#dc3545; margin-top:16px;" onclick="openIssueModal('${order.rentalOrderID}')">Báo cáo vấn đề</button>
             </c:if>
-
+            
+            <!-- User đã yêu cầu trả hàng - hiển thị thông báo thành công -->
+            <c:if test="${param.returnRequested == 'true'}">
+                <div class="alert alert-success" style="margin-top:12px;">
+                    ✅ Yêu cầu trả hàng đã được gửi! Manager sẽ chọn phương thức nhận hàng sớm.
+                </div>
+            </c:if>
+            
+            <c:if test="${param.trackingSubmitted == 'true'}">
+                <div class="alert alert-success" style="margin-top:12px;">
+                    ✅ Mã vận đơn đã được cập nhật! Manager sẽ theo dõi và xác nhận khi nhận được hàng.
+                </div>
+            </c:if>
+            
+            <!-- User đã yêu cầu trả hàng - chờ manager chọn phương thức -->
+            <c:if test="${order.status == 'RETURN_REQUESTED' && sessionScope.userRole == 'User'}">
+                <c:if test="${empty order.returnMethod}">
+                    <div style="margin-top:20px; padding:16px; border:2px solid #ff9800; border-radius:8px; background:#fff3e0;">
+                        <h3 style="color:#e65100; margin-top:0;">⏳ Đang chờ xác nhận</h3>
+                        <p>Yêu cầu trả hàng của bạn đã được gửi. Manager đang xem xét và sẽ chọn phương thức nhận hàng sớm.</p>
+                    </div>
+                </c:if>
+                
+                <c:if test="${not empty order.returnMethod}">
+                    <%@ page import="DAO.AccountDAO" %>
+                    <%@ page import="Model.Account" %>
+                    <%
+                        Model.RentalOrder ord = (Model.RentalOrder) request.getAttribute("order");
+                        if (ord != null && ord.getManagerID() > 0) {
+                            Account mgr = AccountDAO.findById(ord.getManagerID());
+                            if (mgr != null) {
+                                pageContext.setAttribute("manager", mgr);
+                            }
+                        }
+                    %>
+                    
+                    <c:choose>
+                        <c:when test="${order.returnMethod == 'MANAGER_PICKUP'}">
+                            <div style="margin-top:20px; padding:16px; border:2px solid #4caf50; border-radius:8px; background:#e8f5e9;">
+                                <h3 style="color:#2e7d32; margin-top:0;">🚗 Manager sẽ đến lấy hàng</h3>
+                                <p>Manager sẽ liên hệ với bạn để sắp xếp thời gian lấy hàng.</p>
+                                <c:if test="${not empty manager}">
+                                    <div style="background:#fff; padding:12px; border-radius:4px; margin-top:12px;">
+                                        <strong>Thông tin liên hệ Manager:</strong><br/>
+                                        📞 SĐT: ${manager.phoneNumber}<br/>
+                                        👤 Tên: ${manager.fullName}
+                                    </div>
+                                </c:if>
+                            </div>
+                        </c:when>
+                        <c:when test="${order.returnMethod == 'SHIP_TO_MANAGER'}">
+                            <div style="margin-top:20px; padding:16px; border:2px solid #2196f3; border-radius:8px; background:#e3f2fd;">
+                                <h3 style="color:#1565c0; margin-top:0;">📦 Vui lòng gửi hàng về địa chỉ sau</h3>
+                                <c:if test="${not empty manager}">
+                                    <div style="background:#fff; padding:16px; border-radius:4px; margin-top:12px; border-left:4px solid #2196f3;">
+                                        <div style="margin-bottom:10px;"><strong>📍 Địa chỉ:</strong> ${manager.address}</div>
+                                        <div style="margin-bottom:10px;"><strong>📞 SĐT:</strong> ${manager.phoneNumber}</div>
+                                        <div><strong>👤 Người nhận:</strong> ${manager.fullName}</div>
+                                    </div>
+                                </c:if>
+                                
+                                <c:if test="${empty order.returnTrackingNumber}">
+                                    <form method="POST" action="${pageContext.request.contextPath}/rental" style="margin-top:16px;">
+                                        <input type="hidden" name="action" value="submitReturnTracking" />
+                                        <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
+                                        <label for="returnTracking" style="display:block; margin-bottom:8px; font-weight:600;">Mã vận đơn (sau khi gửi):</label>
+                                        <input type="text" id="returnTracking" name="returnTrackingNumber" placeholder="Nhập mã vận đơn" required style="padding:8px; border:1px solid #ddd; border-radius:4px; width:70%; margin-right:8px;" />
+                                        <button type="submit" class="btn" style="background-color:#4caf50;">Xác nhận đã gửi</button>
+                                    </form>
+                                </c:if>
+                                
+                                <c:if test="${not empty order.returnTrackingNumber}">
+                                    <div style="margin-top:16px; padding:12px; background:#fff; border-radius:4px;">
+                                        <strong>✅ Mã vận đơn trả hàng:</strong> ${order.returnTrackingNumber}
+                                        <p style="color:#666; margin-top:8px;">Đang chờ manager xác nhận nhận hàng.</p>
+                                    </div>
+                                </c:if>
+                            </div>
+                        </c:when>
+                    </c:choose>
+                </c:if>
+            </c:if>
+            
+            <!-- Đơn hàng đã trả về - thông báo cho user -->
+            <c:if test="${order.status == 'RETURNED' && sessionScope.userRole == 'User'}">
+                <c:if test="${param.returnConfirmed == 'true'}">
+                    <div class="alert alert-success" style="margin-top:12px;">
+                        ✅ Manager đã xác nhận nhận hàng trả về! 
+                    </div>
+                </c:if>
+                <div style="margin-top:20px; padding:20px; border:2px solid #4caf50; border-radius:8px; background:#e8f5e9;">
+                    <h3 style="color:#2e7d32; margin-top:0;">✅ Đã trả hàng thành công</h3>
+                    <p>Manager đã xác nhận nhận được hàng trả về. Admin đang xử lý hoàn tiền cọc cho bạn.</p>
+                    <p style="color:#666; margin-bottom:0;">Vui lòng chờ thông báo từ admin về việc hoàn tiền.</p>
+                </div>
+            </c:if>
+            
+            <c:if test="${order.status == 'ISSUE'}">
+                <c:if test="${param.issueReported == 'true'}">
+                    <div class="alert alert-success" style="margin-top:12px;">
+                        Vấn đề đã được báo cáo thành công! Manager sẽ kiểm tra và xử lý sớm.
+                    </div>
+                </c:if>
+                <a href="${pageContext.request.contextPath}/orderissue?rentalOrderID=${order.rentalOrderID}" class="btn" style="background-color:#ff6600; margin-top:16px;">
+                    Chi tiết vấn đề
+                </a>
+            </c:if>
+            
             <c:if test="${order.status == 'COMPLETED'}">
                 <c:if test="${sessionScope.userRole == 'User' && sessionScope.accountID != order.managerID}">
                     <div style="margin-top: 25px; padding: 16px; border: 1px solid #e1e5ee; border-radius: 6px; background: #f8fafc;">
@@ -303,6 +412,60 @@
             </c:if>
 
             <c:if test="${sessionScope.userRole == 'Manager'}">
+                <!-- Manager chọn phương thức nhận hàng khi user yêu cầu trả -->
+                <c:if test="${order.status == 'RETURN_REQUESTED' && empty order.returnMethod}">
+                    <div style="margin-top:20px; padding:20px; border:2px solid #ff9800; border-radius:8px; background:#fff3e0;">
+                        <h3 style="color:#e65100; margin-top:0;">⚠️ Khách hàng yêu cầu trả hàng</h3>
+                        <p style="margin-bottom:16px;">Vui lòng chọn phương thức nhận hàng:</p>
+                        <form method="POST" action="${pageContext.request.contextPath}/manager" style="margin-bottom:12px;">
+                            <input type="hidden" name="action" value="setReturnMethod" />
+                            <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
+                            <input type="hidden" name="returnMethod" value="MANAGER_PICKUP" />
+                            <button type="submit" class="btn" style="background-color:#4caf50;">🚗 Tôi sẽ đến lấy hàng trực tiếp</button>
+                        </form>
+                        <form method="POST" action="${pageContext.request.contextPath}/manager">
+                            <input type="hidden" name="action" value="setReturnMethod" />
+                            <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
+                            <input type="hidden" name="returnMethod" value="SHIP_TO_MANAGER" />
+                            <button type="submit" class="btn" style="background-color:#2196f3;">📦 Khách gửi về địa chỉ của tôi</button>
+                        </form>
+                    </div>
+                </c:if>
+                
+                <!-- Manager xác nhận đã nhận hàng trả về -->
+                <c:if test="${order.status == 'RETURN_REQUESTED' && not empty order.returnMethod}">
+                    <div style="margin-top:20px; padding:20px; border:2px solid #2196f3; border-radius:8px; background:#e3f2fd;">
+                        <h3 style="color:#1565c0; margin-top:0;">📦 Đang chờ nhận hàng trả về</h3>
+                        
+                        <c:choose>
+                            <c:when test="${order.returnMethod == 'MANAGER_PICKUP'}">
+                                <p>Bạn đã chọn <strong>đến lấy hàng trực tiếp</strong>.</p>
+                                <p style="color:#666;">Sau khi lấy hàng từ khách hàng, vui lòng xác nhận bên dưới.</p>
+                            </c:when>
+                            <c:when test="${order.returnMethod == 'SHIP_TO_MANAGER'}">
+                                <p>Khách hàng đang gửi hàng về địa chỉ của bạn.</p>
+                                <c:if test="${not empty order.returnTrackingNumber}">
+                                    <div style="background:#fff; padding:12px; border-radius:4px; margin:12px 0;">
+                                        <strong>📍 Mã vận đơn:</strong> ${order.returnTrackingNumber}
+                                    </div>
+                                    <p style="color:#666;">Sau khi nhận được hàng, vui lòng xác nhận bên dưới.</p>
+                                </c:if>
+                                <c:if test="${empty order.returnTrackingNumber}">
+                                    <p style="color:#ff9800;">⏳ Đang chờ khách hàng cập nhật mã vận đơn...</p>
+                                </c:if>
+                            </c:when>
+                        </c:choose>
+                        
+                        <form method="POST" action="${pageContext.request.contextPath}/manager" style="margin-top:16px;">
+                            <input type="hidden" name="action" value="confirmReturnReceived" />
+                            <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
+                            <button type="submit" class="btn" style="background-color:#4caf50;" onclick="return confirm('Xác nhận bạn đã nhận được hàng trả về từ khách hàng?')">
+                                ✅ Xác nhận đã nhận hàng trả về
+                            </button>
+                        </form>
+                    </div>
+                </c:if>
+                
                 <c:if test="${order.status == 'PAYMENT_VERIFIED'}">
                     <form method="POST" action="${pageContext.request.contextPath}/manager" style="margin-top:16px;">
                         <input type="hidden" name="action" value="shipOrder" />

@@ -197,7 +197,7 @@ public class AccountDAO {
      */
     public static boolean update(Account account) {
         String query = "UPDATE Accounts SET FullName = ?, Email = ?, PhoneNumber = ?, " +
-                      "Address = ?, UpdatedDate = GETDATE() WHERE AccountID = ?";
+                      "Address = ?, BankAccountNumber = ?, BankName = ?, UpdatedDate = GETDATE() WHERE AccountID = ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
@@ -206,7 +206,9 @@ public class AccountDAO {
             ps.setString(2, account.getEmail());
             ps.setString(3, account.getPhoneNumber());
             ps.setString(4, account.getAddress());
-            ps.setInt(5, account.getAccountID());
+            ps.setString(5, account.getBankAccountNumber());
+            ps.setString(6, account.getBankName());
+            ps.setInt(7, account.getAccountID());
             
             int result = ps.executeUpdate();
             return result > 0;
@@ -363,6 +365,8 @@ public class AccountDAO {
         account.setPhoneNumber(rs.getString("PhoneNumber"));
         account.setAddress(rs.getString("Address"));
         account.setStatus(rs.getBoolean("Status"));
+        try { account.setBankAccountNumber(rs.getString("BankAccountNumber")); } catch (SQLException ignore) {}
+        try { account.setBankName(rs.getString("BankName")); } catch (SQLException ignore) {}
         return account;
     }
 }

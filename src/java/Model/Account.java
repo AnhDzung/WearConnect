@@ -12,6 +12,8 @@ public class Account {
     private String phoneNumber;
     private String address;
     private String avatar;
+    private String bankAccountNumber; // Số tài khoản ngân hàng
+    private String bankName; // Tên ngân hàng
     private boolean status;
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
@@ -137,6 +139,22 @@ public class Account {
 
     public void setUpdatedDate(LocalDateTime updatedDate) {
         this.updatedDate = updatedDate;
+    }
+
+    public String getBankAccountNumber() {
+        return bankAccountNumber;
+    }
+
+    public void setBankAccountNumber(String bankAccountNumber) {
+        this.bankAccountNumber = bankAccountNumber;
+    }
+
+    public String getBankName() {
+        return bankName;
+    }
+
+    public void setBankName(String bankName) {
+        this.bankName = bankName;
     }
 
     @Override

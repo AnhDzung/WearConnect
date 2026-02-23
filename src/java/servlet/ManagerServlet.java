@@ -94,6 +94,183 @@ public class ManagerServlet extends HttpServlet {
                 }
                 return;
             }
+            
+            // Manager xác nhận đã nhận hàng trả về
+            if ("confirmReturnReceived".equals(action)) {
+                try {
+                    int rentalOrderID = Integer.parseInt(request.getParameter("rentalOrderID"));
+                    
+                    // Chuyển order sang RETURNED
+                    boolean updated = RentalOrderController.updateOrderStatus(rentalOrderID, "RETURNED");
+                    
+                    if (updated) {
+                        RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+                        if (order != null) {
+                            String orderCode = "WRC" + String.format("%05d", order.getRentalOrderID());
+                            String clothingInfo = order.getClothingName() != null ? order.getClothingName() : "ID: " + order.getClothingID();
+                            
+                            // Gửi thông báo cho user
+                            NotificationService.createNotification(
+                                order.getRenterUserID(),
+                                "Manager đã nhận hàng trả về",
+                                "Đơn hàng " + orderCode + " (" + clothingInfo + ") - Manager đã xác nhận nhận hàng trả về. Hệ thống đang xử lý hoàn tiền cọc và tiền thuê (nếu có). Vui lòng chờ admin xác nhận.",
+                                rentalOrderID
+                            );
+                            
+                            // Gửi thông báo cho admin để xử lý hoàn tiền
+                            List<Account> admins = AccountDAO.findByRole("Admin");
+                            for (Account admin : admins) {
+                                NotificationService.createNotification(
+                                    admin.getAccountID(),
+                                    "Đơn hàng đã trả về - Cần xử lý hoàn tiền",
+                                    "Đơn hàng " + orderCode + " (" + clothingInfo + ") đã được trả về. Vui lòng kiểm tra và xử lý hoàn tiền cọc cho khách hàng.",
+                                    rentalOrderID
+                                );
+                            }
+                        }
+                        response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&returnConfirmed=true");
+                    } else {
+                        response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&returnConfirmed=false");
+                    }
+                    return;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    response.sendRedirect(request.getContextPath() + "/manager?action=orders&error=true");
+                    return;
+                }
+            }
+            
+            // Manager chọn phương thức nhận hàng trả về
+            if ("setReturnMethod".equals(action)) {
+                try {
+                    int rentalOrderID = Integer.parseInt(request.getParameter("rentalOrderID"));
+                    String returnMethod = request.getParameter("returnMethod");
+                    
+                    boolean updated = RentalOrderDAO.updateReturnMethod(rentalOrderID, returnMethod);
+                    
+                    if (updated) {
+                        RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+                        if (order != null) {
+                            String orderCode = "WRC" + String.format("%05d", order.getRentalOrderID());
+                            String clothingInfo = order.getClothingName() != null ? order.getClothingName() : "ID: " + order.getClothingID();
+                            
+                            if ("MANAGER_PICKUP".equals(returnMethod)) {
+                                // Manager sẽ đến lấy hàng
+                                NotificationService.createNotification(
+                                    order.getRenterUserID(),
+                                    "Phương thức trả hàng",
+                                    "Đơn hàng " + orderCode + " (" + clothingInfo + ") - Manager sẽ đến lấy hàng trực tiếp. Vui lòng giữ liên lạc qua SĐT: " + (order.getRenterPhone() != null ? order.getRenterPhone() : ""),
+                                    rentalOrderID
+                                );
+                            } else if ("SHIP_TO_MANAGER".equals(returnMethod)) {
+                                // User gửi hàng về địa chỉ manager
+                                // Lấy thông tin manager
+                                Account managerAccount = AccountDAO.findById(order.getManagerID());
+                                if (managerAccount != null) {
+                                    String managerInfo = "📍 Địa chỉ: " + (managerAccount.getAddress() != null ? managerAccount.getAddress() : "Chưa cập nhật") + 
+                                                        "\n📞 SĐT: " + (managerAccount.getPhoneNumber() != null ? managerAccount.getPhoneNumber() : "Chưa cập nhật") +
+                                                        "\n👤 Người nhận: " + (managerAccount.getFullName() != null ? managerAccount.getFullName() : managerAccount.getUsername());
+                                    
+                                    NotificationService.createNotification(
+                                        order.getRenterUserID(),
+                                        "Vui lòng gửi hàng về địa chỉ",
+                                        "Đơn hàng " + orderCode + " (" + clothingInfo + ") - Vui lòng gửi hàng về địa chỉ sau:\n" + managerInfo + "\n\nSau khi gửi, vui lòng cập nhật mã vận đơn trong chi tiết đơn hàng.",
+                                        rentalOrderID
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID);
+                    return;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    response.sendRedirect(request.getContextPath() + "/manager?action=orders&error=true");
+                    return;
+                }
+            }
+
+            // Manager replaces item (đổi hàng)
+            if ("replaceItem".equals(action)) {
+                try {
+                    int rentalOrderID = Integer.parseInt(request.getParameter("rentalOrderID"));
+                    int issueID = Integer.parseInt(request.getParameter("issueID"));
+                    
+                    // Cập nhật issue status thành RESOLVED
+                    OrderIssueDAO.updateIssueStatus(issueID, "RESOLVED", "Đã xử lý: Đổi hàng mới cho khách hàng");
+                    
+                    // Chuyển order về PAYMENT_VERIFIED để manager có thể gửi hàng mới với tracking number
+                    boolean updated = RentalOrderController.updateOrderStatus(rentalOrderID, "PAYMENT_VERIFIED");
+                    
+                    if (updated) {
+                        RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+                        if (order != null) {
+                            String orderCode = "WRC" + String.format("%05d", order.getRentalOrderID());
+                            String clothingInfo = order.getClothingName() != null ? order.getClothingName() : "ID: " + order.getClothingID();
+                            NotificationService.createNotification(
+                                order.getRenterUserID(),
+                                "Đổi hàng mới",
+                                "Đơn hàng " + orderCode + " (" + clothingInfo + ") sẽ được đổi hàng mới. Sản phẩm mới sẽ được gửi đến bạn sớm. Vui lòng chờ và xác nhận khi nhận hàng.",
+                                rentalOrderID
+                            );
+                        }
+                    }
+                    response.sendRedirect(request.getContextPath() + "/manager?action=orders&replaced=true");
+                    return;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    response.sendRedirect(request.getContextPath() + "/manager?action=orders&error=true");
+                    return;
+                }
+            }
+            
+            // Manager cancels order due to issue (hủy đơn hàng - yêu cầu trả)
+            if ("cancelOrderIssue".equals(action)) {
+                try {
+                    int rentalOrderID = Integer.parseInt(request.getParameter("rentalOrderID"));
+                    int issueID = Integer.parseInt(request.getParameter("issueID"));
+                    
+                    // Cập nhật issue status thành REJECTED
+                    OrderIssueDAO.updateIssueStatus(issueID, "REJECTED", "Đơn hàng đã hủy - Hoàn tiền 100%");
+                    
+                    // Set returnMethod thành SHIP_TO_MANAGER (user phải gửi về)
+                    RentalOrderDAO.updateReturnMethod(rentalOrderID, "SHIP_TO_MANAGER");
+                    
+                    // Chuyển order sang RETURN_REQUESTED
+                    boolean updated = RentalOrderController.updateOrderStatus(rentalOrderID, "RETURN_REQUESTED");
+                    
+                    if (updated) {
+                        RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+                        if (order != null) {
+                            String orderCode = "WRC" + String.format("%05d", order.getRentalOrderID());
+                            String clothingInfo = order.getClothingName() != null ? order.getClothingName() : "ID: " + order.getClothingID();
+                            
+                            // Lấy thông tin manager để gửi địa chỉ
+                            Account managerAccount = AccountDAO.findById(order.getManagerID());
+                            String managerInfo = "";
+                            if (managerAccount != null) {
+                                managerInfo = "\n\n📦 Vui lòng gửi hàng về địa chỉ:\n" +
+                                             "📍 " + (managerAccount.getAddress() != null ? managerAccount.getAddress() : "Chưa cập nhật") + "\n" +
+                                             "📞 " + (managerAccount.getPhoneNumber() != null ? managerAccount.getPhoneNumber() : "Chưa cập nhật") + "\n" +
+                                             "👤 " + (managerAccount.getFullName() != null ? managerAccount.getFullName() : managerAccount.getUsername());
+                            }
+                            
+                            NotificationService.createNotification(
+                                order.getRenterUserID(),
+                                "Đơn hàng đã hủy - Hoàn tiền 100%",
+                                "Đơn hàng " + orderCode + " (" + clothingInfo + ") đã được hủy do sản phẩm có vấn đề. Bạn sẽ được hoàn lại 100% tiền thuê và tiền cọc." + managerInfo + "\n\nSau khi gửi, vui lòng cập nhật mã vận đơn.",
+                                rentalOrderID
+                            );
+                        }
+                    }
+                    response.sendRedirect(request.getContextPath() + "/manager?action=orders&cancelled=true");
+                    return;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    response.sendRedirect(request.getContextPath() + "/manager?action=orders&error=true");
+                    return;
+                }
+            }
 
             // Manager updates order status (e.g., mark as RENTED/RETURNED)
             if ("updateStatus".equals(action)) {
@@ -340,6 +517,8 @@ public class ManagerServlet extends HttpServlet {
             String email = request.getParameter("email");
             String phoneNumber = request.getParameter("phoneNumber");
             String address = request.getParameter("address");
+            String bankAccountNumber = request.getParameter("bankAccountNumber");
+            String bankName = request.getParameter("bankName");
             
             // Validate
             if (fullName == null || fullName.trim().isEmpty() || 
@@ -353,12 +532,18 @@ public class ManagerServlet extends HttpServlet {
             manager.setEmail(email);
             manager.setPhoneNumber(phoneNumber);
             manager.setAddress(address);
+            manager.setBankAccountNumber(bankAccountNumber);
+            manager.setBankName(bankName);
             
             // Gọi UserService để cập nhật
             if (Service.UserService.updateProfile(manager)) {
                 // Update session
                 HttpSession session = request.getSession();
                 session.setAttribute("account", manager);
+                
+                // Check if profile is now complete and mark notification as read
+                checkAndMarkProfileNotificationAsRead(manager);
+                
                 response.sendRedirect(request.getContextPath() + "/manager?action=profile&success=true");
             } else {
                 response.sendRedirect(request.getContextPath() + "/manager?action=profile&error=update");
@@ -413,4 +598,54 @@ public class ManagerServlet extends HttpServlet {
             e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/manager?action=profile&pwdError=exception");
         }
-    }}
+    }
+    
+    /**
+     * Check if profile is complete and mark profile completion notification as read
+     */
+    private void checkAndMarkProfileNotificationAsRead(Account manager) {
+        try {
+            // Check if profile is complete
+            boolean isComplete = true;
+            
+            if (manager.getPhoneNumber() == null || manager.getPhoneNumber().trim().isEmpty()) {
+                isComplete = false;
+            }
+            if (manager.getAddress() == null || manager.getAddress().trim().isEmpty()) {
+                isComplete = false;
+            }
+            
+            try {
+                if (manager.getBankAccountNumber() == null || manager.getBankAccountNumber().trim().isEmpty()) {
+                    isComplete = false;
+                }
+            } catch (Exception e) {
+                isComplete = false;
+            }
+            
+            try {
+                if (manager.getBankName() == null || manager.getBankName().trim().isEmpty()) {
+                    isComplete = false;
+                }
+            } catch (Exception e) {
+                isComplete = false;
+            }
+            
+            // If profile is complete, mark notification as read
+            if (isComplete) {
+                java.util.List<Model.Notification> unreadNotifs = Service.NotificationService.getUnreadNotifications(manager.getAccountID());
+                
+                if (unreadNotifs != null) {
+                    for (Model.Notification notif : unreadNotifs) {
+                        if ("Cập nhật thông tin Profile".equals(notif.getTitle())) {
+                            Service.NotificationService.markAsRead(notif.getNotificationID());
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error marking profile notification as read: " + e.getMessage());
+        }
+    }
+}

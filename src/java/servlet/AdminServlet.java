@@ -100,6 +100,9 @@ public class AdminServlet extends HttpServlet {
         } else if ("ratings".equals(action)) {
             showRatingsPage(request, response);
             return;
+        } else if ("payments".equals(action)) {
+            showPaymentsPage(request, response);
+            return;
         }
 
         // Admin home: danh sach san pham (default view)
@@ -430,9 +433,113 @@ public class AdminServlet extends HttpServlet {
         request.getRequestDispatcher("/WEB-INF/jsp/admin/dashboard.jsp").forward(request, response);
     }
     
+    private void showPaymentsPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            // Get all RETURNED orders that need payment processing
+            List<Model.RentalOrder> returnedOrders = Service.RentalOrderService.getOrdersByStatus("RETURNED");
+            
+            // Get user and manager account details for each order
+            Map<Integer, Account> accountMap = new HashMap<>();
+            Map<Integer, Clothing> clothingMap = new HashMap<>();
+            
+            for (Model.RentalOrder order : returnedOrders) {
+                // Get renter (user)
+                if (!accountMap.containsKey(order.getRenterUserID())) {
+                    Account renter = AccountDAO.findById(order.getRenterUserID());
+                    accountMap.put(order.getRenterUserID(), renter);
+                }
+                
+                // Get clothing and manager
+                if (!clothingMap.containsKey(order.getClothingID())) {
+                    Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
+                    clothingMap.put(order.getClothingID(), clothing);
+                    
+                    if (clothing != null && !accountMap.containsKey(clothing.getRenterID())) {
+                        Account manager = AccountDAO.findById(clothing.getRenterID());
+                        accountMap.put(clothing.getRenterID(), manager);
+                    }
+                }
+            }
+            
+            request.setAttribute("returnedOrders", returnedOrders);
+            request.setAttribute("accountMap", accountMap);
+            request.setAttribute("clothingMap", clothingMap);
+            request.setAttribute("view", "payments");
+            
+            // Thông báo đơn cần xác nhận
+            int pendingCount = RentalOrderService.countOrdersByStatus("PENDING_PAYMENT");
+            int verifyingCount = RentalOrderService.countOrdersByStatus("PAYMENT_SUBMITTED");
+            request.setAttribute("pendingCount", pendingCount);
+            request.setAttribute("verifyingCount", verifyingCount);
+            request.setAttribute("newOrdersCount", pendingCount + verifyingCount);
+            
+            request.getRequestDispatcher("/WEB-INF/jsp/admin/dashboard.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?error=true");
+        }
+    }
+    
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        
+        // Check authentication
+        if (session == null || session.getAttribute("account") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        
+        String action = request.getParameter("action");
+        
+        if ("confirmPayment".equals(action)) {
+            handleConfirmPayment(request, response);
+            return;
+        }
+        
         doGet(request, response);
+    }
+    
+    private void handleConfirmPayment(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            // Note: For now, we'll just mark the order as COMPLETED
+            // File upload handling will be added later
+            int orderID = Integer.parseInt(request.getParameter("orderID"));
+            
+            // Update order status to COMPLETED
+            boolean success = Service.RentalOrderService.updateOrderStatus(orderID, "COMPLETED");
+            
+            if (success) {
+                // Get order details for notifications
+                Model.RentalOrder order = Service.RentalOrderService.getRentalOrderDetails(orderID);
+                if (order != null) {
+                    // Notify user that deposit has been refunded
+                    Service.NotificationService.createNotification(
+                        order.getRenterUserID(),
+                        "Hoàn tiền cọc",
+                        "Tiền cọc " + String.format("%,.0f", order.getDepositAmount()) + " VND của đơn hàng #" + orderID + " đã được hoàn lại vào tài khoản ngân hàng của bạn. Cảm ơn bạn đã sử dụng WearConnect!"
+                    );
+                    
+                    // Notify manager that rental fee has been paid
+                    Model.Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
+                    if (clothing != null) {
+                        Service.NotificationService.createNotification(
+                            clothing.getRenterID(),
+                            "Thanh toán tiền thuê",
+                            "Tiền thuê " + String.format("%,.0f", order.getTotalPrice()) + " VND của đơn hàng #" + orderID + " đã được chuyển vào tài khoản ngân hàng của bạn. Cảm ơn bạn đã sử dụng WearConnect!"
+                        );
+                    }
+                }
+                response.sendRedirect(request.getContextPath() + "/admin?action=payments&success=true");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true");
+        }
     }
 }
