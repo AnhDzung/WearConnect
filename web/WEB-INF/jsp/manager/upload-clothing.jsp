@@ -36,7 +36,7 @@
 <div class="form-container">
     <h1>Đăng tải quần áo</h1>
     
-    <form method="POST" action="${pageContext.request.contextPath}/clothing" enctype="multipart/form-data" onsubmit="validateColors()">
+    <form method="POST" action="${pageContext.request.contextPath}/clothing" enctype="multipart/form-data" onsubmit="return validateForm()">
         <input type="hidden" name="action" value="upload">
         
         <div class="form-group">
@@ -313,6 +313,22 @@
         }
 
         return true;
+    }
+
+    function validateSizes() {
+        const selectedSizes = document.querySelectorAll('input[name="size"]:checked').length;
+        if (selectedSizes === 0) {
+            alert('Vui lòng chọn ít nhất một size cho sản phẩm!');
+            return false;
+        }
+        return true;
+    }
+
+    function validateForm() {
+        if (!validateSizes()) {
+            return false;
+        }
+        return validateColors();
     }
 
     function validateCosplayFields() {

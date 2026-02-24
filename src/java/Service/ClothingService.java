@@ -55,6 +55,10 @@ public class ClothingService {
         ClothingImageDAO.clearPrimary(clothingID);
     }
 
+    public static boolean deleteClothingImage(int imageID, int clothingID) {
+        return ClothingImageDAO.deleteImageByIdAndClothing(imageID, clothingID);
+    }
+
     public static boolean updateClothing(Clothing clothing) {
         return ClothingDAO.updateClothing(clothing);
     }

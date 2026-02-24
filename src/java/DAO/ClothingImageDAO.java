@@ -71,6 +71,19 @@ public class ClothingImageDAO {
         }
     }
 
+    public static boolean deleteImageByIdAndClothing(int imageID, int clothingID) {
+        String sql = "DELETE FROM ClothingImage WHERE ImageID = ? AND ClothingID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, imageID);
+            ps.setInt(2, clothingID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     private static ClothingImage mapRow(ResultSet rs) throws SQLException {
         ClothingImage img = new ClothingImage();
         img.setImageID(rs.getInt("ImageID"));

@@ -219,7 +219,11 @@ public class ClothingServlet extends HttpServlet {
             String category = request.getParameter("category");
             String style = request.getParameter("style");
             String[] sizeArray = request.getParameterValues("size");
-            String size = (sizeArray != null && sizeArray.length > 0) ? String.join(", ", sizeArray) : "M";
+            if (sizeArray == null || sizeArray.length == 0) {
+                response.sendRedirect(request.getContextPath() + "/clothing?action=upload&error=size");
+                return;
+            }
+            String size = String.join(", ", sizeArray);
             String occasion = request.getParameter("occasion");
             String description = request.getParameter("description");
             String hourlyPriceStr = request.getParameter("hourlyPrice");
@@ -427,7 +431,11 @@ public class ClothingServlet extends HttpServlet {
                 String category = request.getParameter("category");
                 String style = request.getParameter("style");
                 String[] sizeArray = request.getParameterValues("size");
-                String size = (sizeArray != null && sizeArray.length > 0) ? String.join(", ", sizeArray) : "M";
+                if (sizeArray == null || sizeArray.length == 0) {
+                    response.sendRedirect(request.getContextPath() + "/clothing?action=myClothing&error=size");
+                    return;
+                }
+                String size = String.join(", ", sizeArray);
                 String occasion = request.getParameter("occasion");
                 String description = request.getParameter("description");
                 String hourlyPriceStr = request.getParameter("hourlyPrice");
@@ -541,6 +549,19 @@ public class ClothingServlet extends HttpServlet {
                 clothing.setImageData(imageData);
 
                 if (ClothingController.updateClothing(clothing)) {
+                    // Handle deleting selected existing images
+                    String[] deleteImageIds = request.getParameterValues("deleteImageIds");
+                    if (deleteImageIds != null) {
+                        for (String imageIDStr : deleteImageIds) {
+                            try {
+                                int imageID = Integer.parseInt(imageIDStr);
+                                ClothingController.deleteClothingImage(imageID, clothingID);
+                            } catch (Exception ex) {
+                                System.out.println("Delete image error: " + ex.getMessage());
+                            }
+                        }
+                    }
+
                     // Handle cosplay-specific fields
                     if ("Cosplay".equals(category)) {
                         String characterName = request.getParameter("characterName");

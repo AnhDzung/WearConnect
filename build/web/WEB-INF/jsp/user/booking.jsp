@@ -10,13 +10,17 @@
     int clothingID = 0;
     Clothing clothing = null;
     boolean isCosplay = false;
+    String[] availableSizes = new String[0];
     try {
         clothingID = Integer.parseInt(request.getParameter("clothingID") != null ? request.getParameter("clothingID") : "0");
         if (clothingID > 0) {
             clothing = ClothingDAO.getClothingByID(clothingID);
             if (clothing != null) {
-                String status = clothing.getClothingStatus();
-                isCosplay = status != null && status.contains("COSPLAY");
+                isCosplay = "Cosplay".equalsIgnoreCase(clothing.getCategory());
+                String sizeStr = clothing.getSize();
+                if (sizeStr != null && !sizeStr.trim().isEmpty()) {
+                    availableSizes = sizeStr.split(",\\s*");
+                }
             }
         }
     } catch (Exception e) {}
@@ -117,26 +121,36 @@
         <% if (isCosplay) { %>
         <!-- Thông báo cho cosplay -->
         <div style="background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 5px; padding: 12px; margin-bottom: 20px; color: #0c5460;">
-            <strong>Sản phẩm Cosplay:</strong> Kích thước và màu sắc đã được thiết kế sẵn theo nhân vật.
+            <strong>Sản phẩm Cosplay:</strong> Vui lòng chọn size phù hợp. Sản phẩm cosplay không hỗ trợ chọn màu sắc.
         </div>
         <% } %>
-        
-        <% if (!isCosplay) { %>
+
         <!-- Chọn size -->
         <div class="form-group">
             <label for="selectedSize">Chọn size phù hợp: <span style="color: red;">*</span></label>
             <select id="selectedSize" name="selectedSize">
                 <option value="">-- Chọn size --</option>
-                <option value="XS">XS</option>
-                <option value="S">S</option>
-                <option value="M">M</option>
-                <option value="L">L</option>
-                <option value="XL">XL</option>
-                <option value="XXL">XXL</option>
-                <option value="One Size">One Size</option>
+                <% if (availableSizes != null && availableSizes.length > 0) { %>
+                    <% for (String sizeOption : availableSizes) { 
+                        String trimmedSize = sizeOption != null ? sizeOption.trim() : "";
+                        if (!trimmedSize.isEmpty()) {
+                    %>
+                    <option value="<%= trimmedSize %>"><%= trimmedSize %></option>
+                    <%  }
+                    } %>
+                <% } else { %>
+                    <option value="XS">XS</option>
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                    <option value="XXL">XXL</option>
+                    <option value="One Size">One Size</option>
+                <% } %>
             </select>
         </div>
-        
+
+        <% if (!isCosplay) { %>
         <!-- Chọn màu sắc -->
         <div class="form-group">
             <label for="selectedColor">Chọn màu sắc:</label>
@@ -233,15 +247,10 @@
     
     function validateForm() {
         const rentalType = document.querySelector('input[name="rentalType"]:checked').value;
-        const isCosplay = document.getElementById('isCosplayInput').value === 'true';
-        
-        // Check size for non-cosplay items
-        if (!isCosplay) {
-            const selectedSize = document.getElementById('selectedSize').value;
-            if (!selectedSize || selectedSize.trim() === '') {
-                alert('Vui lòng chọn size');
-                return false;
-            }
+        const selectedSize = document.getElementById('selectedSize').value;
+        if (!selectedSize || selectedSize.trim() === '') {
+            alert('Vui lòng chọn size');
+            return false;
         }
         
         // Validate datetime inputs

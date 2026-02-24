@@ -53,6 +53,10 @@ public class ClothingController {
         ClothingService.clearPrimaryImages(clothingID);
     }
 
+    public static boolean deleteClothingImage(int imageID, int clothingID) {
+        return ClothingService.deleteClothingImage(imageID, clothingID);
+    }
+
     public static boolean updateClothing(Clothing clothing) {
         return ClothingService.updateClothing(clothing);
     }

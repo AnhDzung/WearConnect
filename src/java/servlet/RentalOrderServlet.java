@@ -190,18 +190,9 @@ public class RentalOrderServlet extends HttpServlet {
                     return;
                 }
                 
-                // Check if this is a cosplay item (no size/color required)
-                String isCosplayParam = request.getParameter("isCosplay");
-                boolean isCosplay = "true".equalsIgnoreCase(isCosplayParam);
-                
-                // For non-cosplay items, size is required
-                if (!isCosplay && (selectedSize == null || selectedSize.trim().isEmpty())) {
+                // Size is required for all items (including Cosplay)
+                if (selectedSize == null || selectedSize.trim().isEmpty()) {
                     throw new IllegalArgumentException("Vui lòng chọn size phù hợp");
-                }
-                
-                // For cosplay, use placeholder size if not provided
-                if (isCosplay && (selectedSize == null || selectedSize.trim().isEmpty())) {
-                    selectedSize = "Cosplay";
                 }
                 
                 selectedSize = selectedSize.trim();

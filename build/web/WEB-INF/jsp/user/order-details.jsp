@@ -184,18 +184,11 @@
                         <div class="info-row">
                             <strong>Ngày tạo:</strong> ${order.createdAt}
                         </div>
-                        <c:choose>
-                            <c:when test="${not empty order.selectedSize && fn:toLowerCase(order.selectedSize) != 'cosplay'}">
-                                <div class="info-row">
-                                    <strong>Size đã chọn:</strong> ${order.selectedSize}
-                                </div>
-                            </c:when>
-                            <c:when test="${not empty clothing && clothing.category == 'Cosplay' && not empty clothing.size}">
-                                <div class="info-row">
-                                    <strong>Size đã chọn:</strong> ${clothing.size}
-                                </div>
-                            </c:when>
-                        </c:choose>
+                        <c:if test="${not empty order.selectedSize}">
+                            <div class="info-row">
+                                <strong>Size đã chọn:</strong> ${order.selectedSize}
+                            </div>
+                        </c:if>
                         <c:if test="${order.colorID != null}">
                             <%
                                 Integer colorID = (Integer) pageContext.getAttribute("order", PageContext.PAGE_SCOPE) != null ? 

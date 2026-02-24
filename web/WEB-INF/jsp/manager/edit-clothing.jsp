@@ -58,6 +58,10 @@
         .btn-cancel:hover { background-color: #5a6268; }
         .current-image { margin-bottom: 15px; }
         .current-image img { max-width: 200px; max-height: 200px; border-radius: 4px; }
+        .image-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-top: 10px; }
+        .image-item { border: 1px solid #ddd; border-radius: 6px; padding: 8px; background: #fff; }
+        .image-item img { width: 100%; height: 120px; object-fit: cover; border-radius: 4px; }
+        .image-actions { margin-top: 8px; font-size: 12px; color: #555; }
         .color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .color-option { padding: 10px; border: 2px solid #ddd; border-radius: 4px; cursor: pointer; text-align: center; transition: all 0.3s; }
         .color-option:hover { border-color: #28a745; background-color: #f0f0f0; }
@@ -76,7 +80,7 @@
 <div class="form-container">
     <h1>Chỉnh Sửa Quần Áo</h1>
     
-    <form method="POST" action="${pageContext.request.contextPath}/clothing" enctype="multipart/form-data" onsubmit="validateColors()">
+    <form method="POST" action="${pageContext.request.contextPath}/clothing" enctype="multipart/form-data" onsubmit="return validateForm()">
         <input type="hidden" name="action" value="update">
         <input type="hidden" name="clothingID" value="${clothing.clothingID}">
         
@@ -299,15 +303,37 @@
         
         <div class="form-group">
             <label>Hình ảnh hiện tại:</label>
-            <div class="current-image">
-                <img src="${pageContext.request.contextPath}/image?id=${clothing.clothingID}" alt="${clothing.clothingName}">
-            </div>
+            <c:choose>
+                <c:when test="${not empty images}">
+                    <div class="image-gallery">
+                        <c:forEach var="img" items="${images}">
+                            <div class="image-item">
+                                <img src="${pageContext.request.contextPath}/image?imageID=${img.imageID}" alt="${clothing.clothingName}">
+                                <div class="image-actions">
+                                    <label style="display:flex;align-items:center;gap:6px;font-weight:normal;margin:0;">
+                                        <input type="checkbox" name="deleteImageIds" value="${img.imageID}" style="width:auto;">
+                                        Xóa ảnh này
+                                    </label>
+                                    <c:if test="${img.primary}">
+                                        <small style="display:block;color:#28a745;margin-top:4px;">Ảnh chính</small>
+                                    </c:if>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <div class="current-image">
+                        <img src="${pageContext.request.contextPath}/image?id=${clothing.clothingID}" alt="${clothing.clothingName}">
+                    </div>
+                </c:otherwise>
+            </c:choose>
         </div>
         
         <div class="form-group">
             <label for="images">Thêm hình ảnh mới (có thể chọn nhiều):</label>
             <input type="file" id="images" name="images" accept="image/*" multiple>
-            <small style="color: #999;">Để trống nếu không thêm ảnh mới. Ảnh đầu tiên tải lên sẽ trở thành ảnh chính.</small>
+            <small style="color: #999;">Bạn có thể tick xóa ảnh cũ phía trên rồi tải ảnh mới để thay thế. Ảnh đầu tiên tải lên sẽ trở thành ảnh chính.</small>
         </div>
         
         <div class="form-group">
@@ -386,6 +412,22 @@
         }
 
         return true;
+    }
+
+    function validateSizes() {
+        const selectedSizes = document.querySelectorAll('input[name="size"]:checked').length;
+        if (selectedSizes === 0) {
+            alert('Vui lòng chọn ít nhất một size cho sản phẩm!');
+            return false;
+        }
+        return true;
+    }
+
+    function validateForm() {
+        if (!validateSizes()) {
+            return false;
+        }
+        return validateColors();
     }
 
     function validateCosplayFields() {
