@@ -8,218 +8,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WearConnect - Admin Dashboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: cursive;
-            background-color: #f5f5f5;
-        }
-        
-        .btn-logout {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: background-color 0.3s;
-            background-color: #dc3545;
-            color: white;
-        }
-        
-        .btn-logout:hover {
-            background-color: #c82333;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-        
-        .control-panel {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: background-color 0.3s;
-        }
-        
-        .btn-add {
-            background-color: #28a745;
-            color: white;
-        }
-        
-        .btn-add:hover {
-            background-color: #218838;
-        }
-        
-        .btn-refresh {
-            background-color: #17a2b8;
-            color: white;
-        }
-        
-        .btn-refresh:hover {
-            background-color: #138496;
-        }
-        
-        .btn-delete {
-            background-color: #dc3545;
-            color: white;
-            font-size: 12px;
-            padding: 6px 10px;
-        }
-        
-        .btn-delete:hover {
-            background-color: #c82333;
-        }
-        
-        .btn-toggle {
-            background-color: #ffc107;
-            color: black;
-            font-size: 12px;
-            padding: 5px 10px;
-        }
-        
-        .btn-toggle:hover {
-            background-color: #e0a800;
-        }
-        
-        .table-container {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        thead {
-            background-color: #667eea;
-            color: white;
-        }
-        
-        th, td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        tbody tr:hover {
-            background-color: #f9f9f9;
-        }
-        
-        .status-active {
-            color: #28a745;
-            font-weight: 600;
-        }
-        
-        .status-inactive {
-            color: #dc3545;
-            font-weight: 600;
-        }
-
-        .status-pending {
-            color: #ff9800;
-            font-weight: 600;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            align-items: center;
-            justify-content: center;
-        }
-        .modal.show { display: flex; }
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 520px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
-        .reason-list { display: grid; gap: 8px; margin-top: 8px; }
-        .reason-note { width: 100%; min-height: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
-        
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .empty-message {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-            font-size: 16px;
-        }
-
-        .tab-navigation {
-            display: flex;
-            gap: 0;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #ddd;
-        }
-
-        .tab-button {
-            padding: 12px 20px;
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-family: cursive;
-            font-weight: 600;
-            color: #666;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
-            margin-bottom: -2px;
-        }
-
-        .tab-button:hover {
-            color: #333;
-        }
-
-        .tab-button.active {
-            color: #1f8e74;
-            border-bottom-color: #1f8e74;
-        }
-    
-    </style>
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/css/admin-dashboard.css">
 </head>
 <body>
     <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
@@ -268,6 +57,10 @@
                     onclick="location.href='${pageContext.request.contextPath}/admin?action=payments'">
                  💰 Xử lý thanh toán
             </button>
+                <button type="button" class="tab-button ${view eq 'aiKnowledge' ? 'active' : ''}"
+                    onclick="location.href='${pageContext.request.contextPath}/admin?action=aiKnowledge'">
+                 🤖 Tri thức AI
+                </button>
         </div>
 
         <c:if test="${view eq 'products'}">
@@ -320,8 +113,9 @@
                                 </td>
                                 <td>
                                     <div class="action-buttons">
-                                        <button type="button" class="btn btn-add" onclick="viewProductDetails(<%= p.getClothingID() %>)">Chi tiết</button>
-                                        <button type="button" class="btn btn-delete" onclick="openDeactivateModal(<%= p.getClothingID() %>)">Xóa</button>
+                                        <button type="button" class="btn btn-add" onclick="viewProductDetailsFromButton(this)">Chi tiết</button>
+                                        <button type="button" class="btn btn-delete" onclick="openDeactivateModalFromButton(this)">Xóa</button>
+                                        <span class="clothing-id-data" style="display:none;"><%= p.getClothingID() %></span>
                                         <% if ("PENDING_REVIEW".equals(status) || "PENDING_COSPLAY_REVIEW".equals(status)) { %>
                                             <form method="GET" action="<%= request.getContextPath() %>/admin" style="display: inline;">
                                                 <input type="hidden" name="action" value="approveProduct">
@@ -489,9 +283,12 @@
                                 <td><%= String.format("%,.0f", order.getDepositAmount()) %> VND</td>
                                 <td><%= String.format("%,.0f", order.getTotalPrice()) %> VND</td>
                                 <td>
-                                    <button type="button" class="btn btn-add" onclick="openPaymentModal(<%= order.getRentalOrderID() %>, '<%= order.getDepositAmount() %>', '<%= order.getTotalPrice() %>')">
+                                    <button type="button" class="btn btn-add" onclick="openPaymentModalFromButton(this)">
                                         Xác nhận thanh toán
                                     </button>
+                                    <span class="payment-order-id" style="display:none;"><%= order.getRentalOrderID() %></span>
+                                    <span class="payment-deposit-amount" style="display:none;"><%= order.getDepositAmount() %></span>
+                                    <span class="payment-total-amount" style="display:none;"><%= order.getTotalPrice() %></span>
                                 </td>
                             </tr>
                         <%
@@ -506,6 +303,103 @@
             <%
                 }
             %>
+        </div>
+        </c:if>
+
+        <c:if test="${view eq 'aiKnowledge'}">
+        <div class="control-panel">
+            <div><strong>Quản lý tri thức nội bộ cho AI Chat</strong></div>
+            <div class="knowledge-tools">
+                <input type="text" id="knowledgeSearchInput" placeholder="Tìm theo tiêu đề/nội dung/tags..." style="min-width: 260px;">
+                <label style="display:flex; align-items:center; gap:6px; font-size:14px;">
+                    <input type="checkbox" id="knowledgeIncludeInactive"> Hiện cả bản đã ẩn
+                </label>
+                <button type="button" class="btn btn-refresh" onclick="loadKnowledgeDocs()">Tải lại</button>
+                <span id="knowledgeStatus" class="knowledge-status"></span>
+            </div>
+        </div>
+
+        <form id="knowledgeForm" class="knowledge-form">
+            <input type="hidden" id="knowledgeDocID">
+            <div class="knowledge-grid">
+                <div>
+                    <label for="knowledgeTitle"><strong>Tiêu đề</strong></label>
+                    <input type="text" id="knowledgeTitle" required style="width:100%;">
+                </div>
+                <div>
+                    <label for="knowledgeCategory"><strong>Danh mục</strong></label>
+                    <input type="text" id="knowledgeCategory" placeholder="VD: PAYMENT, RETURN_REFUND" style="width:100%;">
+                </div>
+                <div class="full">
+                    <label for="knowledgeTags"><strong>Tags</strong></label>
+                    <input type="text" id="knowledgeTags" placeholder="VD: cọc, thanh toán, hoàn tiền" style="width:100%;">
+                </div>
+                <div class="full">
+                    <label for="knowledgeContent"><strong>Nội dung</strong></label>
+                    <textarea id="knowledgeContent" required style="width:100%;"></textarea>
+                </div>
+            </div>
+            <div class="knowledge-tools">
+                <label style="display:flex; align-items:center; gap:6px; font-size:14px;">
+                    <input type="checkbox" id="knowledgeIsActive" checked> Đang kích hoạt
+                </label>
+                <button type="submit" class="btn btn-add" id="knowledgeSubmitBtn">Tạo mới</button>
+                <button type="button" class="btn btn-toggle" onclick="resetKnowledgeForm()">Làm sạch</button>
+            </div>
+        </form>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tiêu đề</th>
+                        <th>Danh mục</th>
+                        <th>Tags</th>
+                        <th>Trạng thái</th>
+                        <th>Cập nhật</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="knowledgeTableBody">
+                    <tr><td colspan="7" class="empty-message">Đang tải dữ liệu...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="control-panel" style="margin-top:20px;">
+            <div><strong>Lịch sử chỉnh sửa tri thức (Audit)</strong></div>
+            <div class="knowledge-tools">
+                <input type="number" id="auditDocIDInput" placeholder="DocID" style="width:100px;">
+                <input type="number" id="auditOperatorIDInput" placeholder="OperatorID" style="width:120px;">
+                <select id="auditActionInput">
+                    <option value="">Tất cả action</option>
+                    <option value="CREATE">CREATE</option>
+                    <option value="UPDATE">UPDATE</option>
+                    <option value="DEACTIVATE">DEACTIVATE</option>
+                </select>
+                <button type="button" class="btn btn-refresh" onclick="loadKnowledgeAuditLogs()">Tải audit</button>
+                <span id="knowledgeAuditStatus" class="knowledge-status"></span>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>AuditID</th>
+                        <th>DocID</th>
+                        <th>Action</th>
+                        <th>Operator</th>
+                        <th>Summary</th>
+                        <th>IP</th>
+                        <th>Thời gian</th>
+                    </tr>
+                </thead>
+                <tbody id="knowledgeAuditTableBody">
+                    <tr><td colspan="7" class="empty-message">Nhấn "Tải audit" để xem lịch sử.</td></tr>
+                </tbody>
+            </table>
         </div>
         </c:if>
     </div>
@@ -581,103 +475,8 @@
     </div>
 
     <script>
-        function openPaymentModal(orderID, depositAmount, totalAmount) {
-            document.getElementById('paymentOrderID').value = orderID;
-            document.getElementById('depositDisplay').textContent = parseFloat(depositAmount).toLocaleString('vi-VN');
-            document.getElementById('rentalDisplay').textContent = parseFloat(totalAmount).toLocaleString('vi-VN');
-            document.getElementById('paymentModal').classList.add('show');
-        }
-        function closePaymentModal() {
-            document.getElementById('paymentModal').classList.remove('show');
-        }
-        
-        function openDeactivateModal(id) {
-            document.getElementById('deactivateClothingID').value = id;
-            document.getElementById('deactivateModal').classList.add('show');
-        }
-        function closeDeactivateModal() {
-            document.getElementById('deactivateModal').classList.remove('show');
-        }
-
-        function viewProductDetails(clothingID) {
-            fetch('<%= request.getContextPath() %>/clothing?action=getDetails&id=' + clothingID)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const p = data.product;
-                        let html = '<div style="display: grid; gap: 12px;">';
-                        
-                        // Image
-                        if (p.imagePath) {
-                            html += '<div><img src="<%= request.getContextPath() %>/image?id=' + p.clothingID + '" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 6px;"></div>';
-                        }
-                        
-                        // Basic Info
-                        html += '<div style="border-bottom: 1px solid #eee; padding-bottom: 12px;">';
-                        html += '<p><strong>ID:</strong> ' + p.clothingID + '</p>';
-                        html += '<p><strong>Tên sản phẩm:</strong> ' + p.clothingName + '</p>';
-                        html += '<p><strong>Danh mục:</strong> ' + p.category + '</p>';
-                        // Show Style only for non-Cosplay items
-                        if (p.category !== 'Cosplay') {
-                            html += '<p><strong>Phong cách:</strong> ' + p.style + '</p>';
-                        }
-                        html += '<p><strong>Dịp:</strong> ' + p.occasion + '</p>';
-                        html += '</div>';
-                        
-                        // Pricing
-                        html += '<div style="border-bottom: 1px solid #eee; padding-bottom: 12px;">';
-                        html += '<p><strong>Giá theo giờ:</strong> ' + new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(p.hourlyPrice) + '</p>';
-                        html += '<p><strong>Giá theo ngày:</strong> ' + new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(p.dailyPrice) + '</p>';
-                        html += '<p><strong>Item value:</strong> ' + new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(p.itemValue) + '</p>';
-                        html += '</div>';
-                        
-                        // Details
-                        html += '<div style="border-bottom: 1px solid #eee; padding-bottom: 12px;">';
-                        html += '<p><strong>Size:</strong> ' + p.size + '</p>';
-                        // Show Accessories for Cosplay items
-                        if (p.category === 'Cosplay' && p.cosplayDetail && p.cosplayDetail.accessoryList) {
-                            html += '<p><strong>Phụ kiện đi kèm:</strong> ' + p.cosplayDetail.accessoryList + '</p>';
-                        }
-                        html += '<p><strong>Số lượng:</strong> ' + p.quantity + '</p>';
-                        html += '<p><strong>Mô tả:</strong> ' + (p.description || 'N/A') + '</p>';
-                        html += '</div>';
-                        
-                        // Availability
-                        html += '<div style="border-bottom: 1px solid #eee; padding-bottom: 12px;">';
-                        html += '<p><strong>Có sẵn từ:</strong> ' + p.availableFrom + '</p>';
-                        html += '<p><strong>Có sẵn đến:</strong> ' + p.availableTo + '</p>';
-                        html += '</div>';
-                        
-                        // Status
-                        html += '<div>';
-                        html += '<p><strong>Trạng thái:</strong> <span style="padding: 4px 8px; border-radius: 4px; ';
-                        if (p.clothingStatus === 'ACTIVE' || p.clothingStatus === 'APPROVED_COSPLAY') {
-                            html += 'background: #d4edda; color: #155724;';
-                        } else if (p.clothingStatus === 'INACTIVE') {
-                            html += 'background: #f8d7da; color: #721c24;';
-                        } else {
-                            html += 'background: #fff3cd; color: #856404;';
-                        }
-                        html += '">' + p.clothingStatus + '</span></p>';
-                        html += '<p><strong>Hoạt động:</strong> ' + (p.active ? 'Có' : 'Không') + '</p>';
-                        html += '</div>';
-                        
-                        html += '</div>';
-                        document.getElementById('detailsContent').innerHTML = html;
-                        document.getElementById('detailsModal').classList.add('show');
-                    } else {
-                        alert('Không thể tải chi tiết sản phẩm');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Lỗi khi tải chi tiết sản phẩm');
-                });
-        }
-
-        function closeDetailsModal() {
-            document.getElementById('detailsModal').classList.remove('show');
-        }
+        window.WEARCONNECT_CTX = '<%= request.getContextPath() %>';
     </script>
+    <script src="<%= request.getContextPath() %>/assets/js/admin-dashboard.js"></script>
 </body>
 </html>

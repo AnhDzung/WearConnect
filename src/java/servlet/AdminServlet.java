@@ -103,6 +103,9 @@ public class AdminServlet extends HttpServlet {
         } else if ("payments".equals(action)) {
             showPaymentsPage(request, response);
             return;
+        } else if ("aiKnowledge".equals(action)) {
+            showAIKnowledgePage(request, response);
+            return;
         }
 
         // Admin home: danh sach san pham (default view)
@@ -479,6 +482,19 @@ public class AdminServlet extends HttpServlet {
             e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/admin?error=true");
         }
+    }
+
+    private void showAIKnowledgePage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setAttribute("view", "aiKnowledge");
+
+        int pendingCount = RentalOrderService.countOrdersByStatus("PENDING_PAYMENT");
+        int verifyingCount = RentalOrderService.countOrdersByStatus("PAYMENT_SUBMITTED");
+        request.setAttribute("pendingCount", pendingCount);
+        request.setAttribute("verifyingCount", verifyingCount);
+        request.setAttribute("newOrdersCount", pendingCount + verifyingCount);
+
+        request.getRequestDispatcher("/WEB-INF/jsp/admin/dashboard.jsp").forward(request, response);
     }
     
     @Override

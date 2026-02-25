@@ -165,6 +165,36 @@
         <servlet-name>WebhookServlet</servlet-name>
         <url-pattern>/webhook</url-pattern>
     </servlet-mapping>
+
+    <!-- Servlet Mapping for AI Chat -->
+    <servlet>
+        <servlet-name>ChatServlet</servlet-name>
+        <servlet-class>servlet.ChatServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ChatServlet</servlet-name>
+        <url-pattern>/chat</url-pattern>
+    </servlet-mapping>
+
+    <!-- Servlet Mapping for AI Advisor page -->
+    <servlet>
+        <servlet-name>AdvisorChatServlet</servlet-name>
+        <servlet-class>servlet.AdvisorChatServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdvisorChatServlet</servlet-name>
+        <url-pattern>/advisor-chat</url-pattern>
+    </servlet-mapping>
+
+    <!-- Servlet Mapping for AI Knowledge Admin API -->
+    <servlet>
+        <servlet-name>AIKnowledgeAdminServlet</servlet-name>
+        <servlet-class>servlet.AIKnowledgeAdminServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AIKnowledgeAdminServlet</servlet-name>
+        <url-pattern>/admin/ai-knowledge</url-pattern>
+    </servlet-mapping>
     
     <!-- Servlet Mapping for Image -->
     <servlet>
