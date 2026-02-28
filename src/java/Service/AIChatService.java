@@ -7,10 +7,13 @@ import Model.AIKnowledgeDoc;
 import Model.AIMessage;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AIChatService {
 
@@ -67,7 +70,7 @@ public class AIChatService {
                 assistantMessage = llmReply;
                 responseSource = "LLM";
             } else {
-                assistantMessage = buildAssistantMessage(intentAnalysis.intent, false);
+                assistantMessage = buildRuleBasedAssistantMessage(intentAnalysis.intent, normalizedMessage);
                 responseSource = "RULE";
             }
         }
@@ -141,26 +144,27 @@ public class AIChatService {
     }
 
     private static IntentAnalysis analyzeIntent(String message) {
-        String lowerCaseMessage = message.toLowerCase(Locale.ROOT);
+        String normalizedMessage = normalizeForMatching(message);
 
-        if (containsAny(lowerCaseMessage,
-                "tư vấn", "tu van", "gợi ý", "goi y", "phối đồ", "phoi do", "phong cách", "style", "chọn đồ", "chon do")) {
+        if (containsAny(normalizedMessage,
+            "tu van", "goi y", "phoi do", "phong cach", "style", "chon do",
+            "di du tiec", "du tiec", "trang phuc", "outfit", "set do", "bo de thue", "thue di")) {
             return new IntentAnalysis("CONSULT_ADVICE", new BigDecimal("0.9000"));
         }
 
-        if (containsAny(lowerCaseMessage, "hoàn tiền", "refund", "trả hàng", "return", "khiếu nại")) {
+        if (containsAny(normalizedMessage, "hoan tien", "refund", "tra hang", "return", "khieu nai")) {
             return new IntentAnalysis("RETURN_REFUND", new BigDecimal("0.8600"));
         }
 
-        if (containsAny(lowerCaseMessage, "đơn hàng", "order", "trạng thái", "giao hàng")) {
+        if (containsAny(normalizedMessage, "don hang", "order", "trang thai", "giao hang")) {
             return new IntentAnalysis("ORDER_SUPPORT", new BigDecimal("0.8200"));
         }
 
-        if (containsAny(lowerCaseMessage, "size", "kích cỡ", "vòng", "cao", "nặng")) {
+        if (containsAny(normalizedMessage, "size", "kich co", "vong", "cao", "nang")) {
             return new IntentAnalysis("SIZE_ADVICE", new BigDecimal("0.7800"));
         }
 
-        if (containsAny(lowerCaseMessage, "thanh toán", "payment", "chuyển khoản", "cọc")) {
+        if (containsAny(normalizedMessage, "thanh toan", "payment", "chuyen khoan", "coc")) {
             return new IntentAnalysis("PAYMENT_SUPPORT", new BigDecimal("0.8000"));
         }
 
@@ -181,7 +185,7 @@ public class AIChatService {
         }
 
         if ("CONSULT_ADVICE".equals(intent)) {
-            return "Đây là câu hỏi tư vấn chuyên sâu, mình sẽ chuyển bạn sang trang tư vấn AI để hỗ trợ đầy đủ hơn.";
+            return "Mình có thể tư vấn ngay. Với đi dự tiệc, bạn cho mình thêm 4 thông tin: giới tính/phong cách mong muốn, tông màu bạn thích, vóc dáng (chiều cao-cân nặng), và ngân sách thuê. Dựa trên sản phẩm hiện có, mình sẽ gợi ý 2-3 bộ phù hợp nhất.";
         }
 
         if ("PAYMENT_SUPPORT".equals(intent)) {
@@ -193,6 +197,73 @@ public class AIChatService {
         }
 
         return "Mình có thể hỗ trợ về đơn hàng, size cosplay, thanh toán, trả hàng và hoàn tiền. Bạn nói rõ nhu cầu để mình hỗ trợ nhanh hơn nhé.";
+    }
+
+    private static String buildRuleBasedAssistantMessage(String intent, String message) {
+        if ("SIZE_ADVICE".equals(intent)) {
+            return buildSizeAdviceMessage(message);
+        }
+
+        if ("CONSULT_ADVICE".equals(intent)) {
+            return buildConsultAdviceMessage(message);
+        }
+
+        return buildAssistantMessage(intent, false);
+    }
+
+    private static String buildSizeAdviceMessage(String message) {
+        UserProfile profile = extractUserProfile(message);
+        if (profile.heightCm != null && profile.weightKg != null) {
+            String size = suggestGenericSize(profile.heightCm, profile.weightKg);
+            return "Mình đã ghi nhận số đo của bạn: cao " + profile.heightCm + "cm, nặng " + profile.weightKg
+                    + "kg. Với form phổ thông, bạn có thể bắt đầu thử size " + size
+                    + ". Nếu muốn mặc ôm hơn thì giảm 1 size, muốn thoải mái thì tăng 1 size. "
+                    + "Nếu bạn muốn, mình sẽ gợi ý luôn 2-3 kiểu outfit phù hợp cho dịp của bạn.";
+        }
+
+        if (profile.heightCm != null) {
+            return "Mình đã nhận chiều cao " + profile.heightCm
+                    + "cm. Bạn cho mình thêm cân nặng để mình chốt size chính xác hơn nhé.";
+        }
+
+        if (profile.weightKg != null) {
+            return "Mình đã nhận cân nặng " + profile.weightKg
+                    + "kg. Bạn cho mình thêm chiều cao để mình chốt size chính xác hơn nhé.";
+        }
+
+        return "Để tư vấn size chính xác, bạn cho mình chiều cao, cân nặng và số đo cơ bản. Mình sẽ gợi ý size phù hợp ngay.";
+    }
+
+    private static String buildConsultAdviceMessage(String message) {
+        UserProfile profile = extractUserProfile(message);
+        String normalizedMessage = normalizeForMatching(message);
+        boolean isParty = containsAny(normalizedMessage, "du tiec", "di tiec", "party", "su kien");
+
+        if (isParty && profile.heightCm != null && profile.weightKg != null && profile.budgetVnd != null) {
+            String size = suggestGenericSize(profile.heightCm, profile.weightKg);
+            String budgetText = formatBudgetVnd(profile.budgetVnd);
+            return "Dựa trên thông tin bạn cung cấp (" + profile.heightCm + "cm, " + profile.weightKg + "kg, ngân sách "
+                    + budgetText + "), mình gợi ý 3 hướng đồ dự tiệc dễ thuê:\n"
+                    + "1) Blazer tối màu + áo sơ mi sáng + quần tây, size tham khảo " + size + ".\n"
+                    + "2) Set vest basic tông đen/xanh navy, ưu tiên form vừa vai để lên dáng gọn.\n"
+                    + "3) Smart-casual: blazer + áo cổ lọ/áo thun trơn + quần tây ống đứng.\n"
+                    + "Nếu bạn chọn tông màu muốn mặc (đen, navy, be...), mình sẽ chốt phương án phù hợp nhất ngay.";
+        }
+
+        List<String> missing = new ArrayList<>();
+        if (profile.heightCm == null || profile.weightKg == null) {
+            missing.add("chiều cao-cân nặng");
+        }
+        if (profile.budgetVnd == null) {
+            missing.add("ngân sách thuê");
+        }
+
+        if (missing.isEmpty()) {
+            return "Mình đã có đủ thông tin cơ bản. Bạn cho mình thêm tông màu và phong cách mong muốn để mình chốt 2-3 bộ phù hợp nhất.";
+        }
+
+        return "Mình có thể tư vấn ngay. Bạn cho mình thêm " + String.join(" và ", missing)
+                + " để mình gợi ý 2-3 bộ phù hợp nhất theo sản phẩm hiện có.";
     }
 
     private static String buildSystemPrompt(String intent, String knowledgeContext) {
@@ -215,8 +286,8 @@ public class AIChatService {
     }
 
     private static boolean shouldHandoff(String message, IntentAnalysis intentAnalysis) {
-        String lowerCaseMessage = message.toLowerCase(Locale.ROOT);
-        if (containsAny(lowerCaseMessage, "gặp nhân viên", "nhân viên", "không hài lòng", "khẩn cấp", "lừa đảo")) {
+        String normalizedMessage = normalizeForMatching(message);
+        if (containsAny(normalizedMessage, "gap nhan vien", "nhan vien", "khong hai long", "khan cap", "lua dao")) {
             return true;
         }
         return intentAnalysis.confidence.setScale(4, RoundingMode.HALF_UP).compareTo(new BigDecimal("0.6000")) < 0;
@@ -247,6 +318,112 @@ public class AIChatService {
             builder.append(doc.getDocID());
         }
         return builder.length() == 0 ? null : builder.toString();
+    }
+
+    private static String normalizeForMatching(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+
+        String lower = text.toLowerCase(Locale.ROOT)
+                .replace('đ', 'd')
+                .replace('Đ', 'd');
+
+        String normalized = Normalizer.normalize(lower, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .replaceAll("\\s+", " ")
+                .trim();
+
+        return normalized;
+    }
+
+    private static UserProfile extractUserProfile(String message) {
+        String normalized = normalizeForMatching(message);
+        Integer heightCm = extractHeightCm(normalized);
+        Integer weightKg = extractWeightKg(normalized);
+        Long budgetVnd = extractBudgetVnd(normalized);
+        return new UserProfile(heightCm, weightKg, budgetVnd);
+    }
+
+    private static Integer extractHeightCm(String normalizedMessage) {
+        Matcher metricMatcher = Pattern.compile("\\b(1|2)\\s*(?:m|met)\\s*(\\d{1,2})?\\b").matcher(normalizedMessage);
+        if (metricMatcher.find()) {
+            int meter = Integer.parseInt(metricMatcher.group(1));
+            String centimeterPart = metricMatcher.group(2);
+            if (centimeterPart == null || centimeterPart.isBlank()) {
+                return meter * 100;
+            }
+
+            int centimeter = Integer.parseInt(centimeterPart);
+            if (centimeterPart.length() == 1) {
+                centimeter = centimeter * 10;
+            }
+            return meter * 100 + centimeter;
+        }
+
+        Matcher cmMatcher = Pattern.compile("\\b(1\\d{2}|2\\d{2})\\s*cm\\b").matcher(normalizedMessage);
+        if (cmMatcher.find()) {
+            return Integer.parseInt(cmMatcher.group(1));
+        }
+
+        return null;
+    }
+
+    private static Integer extractWeightKg(String normalizedMessage) {
+        Matcher weightMatcher = Pattern.compile("\\b(3\\d|[4-9]\\d|1\\d{2})\\s*(?:kg|kilogram|ky|can)\\b").matcher(normalizedMessage);
+        if (weightMatcher.find()) {
+            return Integer.parseInt(weightMatcher.group(1));
+        }
+        return null;
+    }
+
+    private static Long extractBudgetVnd(String normalizedMessage) {
+        Matcher millionAndThousandMatcher = Pattern.compile("\\b(\\d{1,2})\\s*trieu\\s*(\\d{1,3})\\s*nghin\\b").matcher(normalizedMessage);
+        if (millionAndThousandMatcher.find()) {
+            long million = Long.parseLong(millionAndThousandMatcher.group(1));
+            long thousand = Long.parseLong(millionAndThousandMatcher.group(2));
+            return million * 1_000_000L + thousand * 1_000L;
+        }
+
+        Matcher millionMatcher = Pattern.compile("\\b(\\d+(?:[\\.,]\\d+)?)\\s*trieu\\b").matcher(normalizedMessage);
+        if (millionMatcher.find()) {
+            double million = Double.parseDouble(millionMatcher.group(1).replace(',', '.'));
+            return Math.round(million * 1_000_000L);
+        }
+
+        Matcher thousandMatcher = Pattern.compile("\\b(\\d{2,4})\\s*nghin\\b").matcher(normalizedMessage);
+        if (thousandMatcher.find()) {
+            long thousand = Long.parseLong(thousandMatcher.group(1));
+            return thousand * 1_000L;
+        }
+
+        return null;
+    }
+
+    private static String suggestGenericSize(int heightCm, int weightKg) {
+        if (heightCm >= 175 && weightKg >= 75) {
+            return "L";
+        }
+        if (heightCm >= 170 && weightKg >= 68) {
+            return "M-L";
+        }
+        if (heightCm >= 165 && weightKg >= 58) {
+            return "M";
+        }
+        return "S-M";
+    }
+
+    private static String formatBudgetVnd(long budgetVnd) {
+        if (budgetVnd >= 1_000_000L) {
+            long million = budgetVnd / 1_000_000L;
+            long thousandPart = (budgetVnd % 1_000_000L) / 1_000L;
+            if (thousandPart == 0) {
+                return million + " triệu";
+            }
+            return million + " triệu " + thousandPart + " nghìn";
+        }
+
+        return (budgetVnd / 1_000L) + " nghìn";
     }
 
     private static String joinDocTitles(List<AIKnowledgeDoc> docs) {
@@ -292,6 +469,18 @@ public class AIChatService {
         private RedirectDecision(boolean redirectToAdvisor, String redirectReason) {
             this.redirectToAdvisor = redirectToAdvisor;
             this.redirectReason = redirectReason;
+        }
+    }
+
+    private static class UserProfile {
+        private final Integer heightCm;
+        private final Integer weightKg;
+        private final Long budgetVnd;
+
+        private UserProfile(Integer heightCm, Integer weightKg, Long budgetVnd) {
+            this.heightCm = heightCm;
+            this.weightKg = weightKg;
+            this.budgetVnd = budgetVnd;
         }
     }
 }
