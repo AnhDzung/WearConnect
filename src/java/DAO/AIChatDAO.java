@@ -65,6 +65,24 @@ public class AIChatDAO {
         return null;
     }
 
+    public static List<AIConversation> getRecentConversationsByUser(int userID, int limit) {
+        List<AIConversation> conversations = new ArrayList<>();
+        int safeLimit = limit <= 0 ? 20 : limit;
+        String sql = "SELECT TOP " + safeLimit + " ConversationID, UserID, Channel, Status, StartedAt, LastMessageAt, ClosedAt "
+                + "FROM AIConversations WHERE UserID = ? ORDER BY LastMessageAt DESC";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userID);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                conversations.add(mapConversation(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return conversations;
+    }
+
     public static int addMessage(int conversationID, String role, String content, String intent, BigDecimal confidence, String responseSource) {
         String sql = "INSERT INTO AIMessages(ConversationID, Role, Content, Intent, Confidence, ResponseSource, CreatedAt) VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
         try (Connection conn = DatabaseConnection.getConnection();

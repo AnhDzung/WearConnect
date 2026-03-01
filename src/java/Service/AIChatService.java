@@ -126,6 +126,20 @@ public class AIChatService {
         return AIChatDAO.getRecentMessages(conversationID, limit);
     }
 
+    public static List<AIConversation> getRecentConversations(int userID, int limit) {
+        if (userID <= 0) {
+            return Collections.emptyList();
+        }
+        return AIChatDAO.getRecentConversationsByUser(userID, limit);
+    }
+
+    public static Integer createNewConversation(int userID) {
+        if (userID <= 0) {
+            return null;
+        }
+        return AIChatDAO.createConversation(userID, "WEB");
+    }
+
     private static int resolveConversationID(int userID, Integer conversationID) {
         if (conversationID != null && conversationID > 0) {
             AIConversation conversation = AIChatDAO.getConversationByIdAndUser(conversationID, userID);
@@ -196,7 +210,7 @@ public class AIChatService {
             return "Mình có thể hỗ trợ quy trình trả đồ và hoàn tiền. Bạn cho mình mã đơn và tình trạng hiện tại để xử lý đúng chính sách.";
         }
 
-        return "Mình có thể hỗ trợ về đơn hàng, size cosplay, thanh toán, trả hàng và hoàn tiền. Bạn nói rõ nhu cầu để mình hỗ trợ nhanh hơn nhé.";
+        return "Mình có thể hỗ trợ về đơn hàng, tư vấn size/trang phục, thanh toán, trả hàng và hoàn tiền. Bạn nói rõ nhu cầu để mình hỗ trợ nhanh hơn nhé.";
     }
 
     private static String buildRuleBasedAssistantMessage(String intent, String message) {
@@ -269,7 +283,8 @@ public class AIChatService {
     private static String buildSystemPrompt(String intent, String knowledgeContext) {
         StringBuilder prompt = new StringBuilder();
         prompt.append("Bạn là trợ lý CSKH của WearConnect. ")
-                .append("Luôn trả lời bằng tiếng Việt, ngắn gọn, lịch sự, đúng chính sách thuê cosplay. ")
+            .append("Luôn trả lời bằng tiếng Việt, ngắn gọn, lịch sự, đúng chính sách thuê trang phục của hệ thống. ")
+            .append("Không được mặc định cửa hàng chỉ có cosplay; hãy tư vấn theo nhiều nhóm trang phục có sẵn, cosplay chỉ là một nhóm trong số đó. ")
                 .append("Không bịa thông tin về giá, khuyến mãi, thời gian, trạng thái đơn. ")
                 .append("Nếu thiếu dữ liệu, hãy hỏi tối đa 2 câu làm rõ. ")
                 .append("Nếu liên quan hoàn tiền/khiếu nại nhạy cảm, đề xuất chuyển nhân viên. ")

@@ -2,6 +2,7 @@ package servlet;
 
 import Controller.AIChatController;
 import Model.AIChatReply;
+import Model.AIConversation;
 import Model.AIMessage;
 import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
@@ -12,6 +13,8 @@ import jakarta.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +23,7 @@ import java.util.Map;
 public class ChatServlet extends HttpServlet {
 
     private static final Gson GSON = new Gson();
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -32,6 +36,31 @@ public class ChatServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             result.put("success", false);
             result.put("error", "UNAUTHORIZED");
+            response.getWriter().write(GSON.toJson(result));
+            return;
+        }
+
+        String action = request.getParameter("action") == null
+                ? "history"
+                : request.getParameter("action").trim().toLowerCase();
+
+        if ("conversations".equals(action)) {
+            int limit = parseInteger(request.getParameter("limit"), 20);
+            List<AIConversation> conversations = AIChatController.getRecentConversations(userID, limit);
+
+            List<Map<String, Object>> payloadConversations = new ArrayList<>();
+            for (AIConversation conversation : conversations) {
+                Map<String, Object> payloadConversation = new HashMap<>();
+                payloadConversation.put("conversationID", conversation.getConversationID());
+                payloadConversation.put("status", conversation.getStatus());
+                payloadConversation.put("channel", conversation.getChannel());
+                payloadConversation.put("startedAt", formatDateTime(conversation.getStartedAt()));
+                payloadConversation.put("lastMessageAt", formatDateTime(conversation.getLastMessageAt()));
+                payloadConversations.add(payloadConversation);
+            }
+
+            result.put("success", true);
+            result.put("conversations", payloadConversations);
             response.getWriter().write(GSON.toJson(result));
             return;
         }
@@ -88,6 +117,24 @@ public class ChatServlet extends HttpServlet {
 
         if ("feedback".equals(action)) {
             handleFeedback(userID, requestData, response);
+            return;
+        }
+
+        if ("new_conversation".equals(action)) {
+            Integer newConversationID = AIChatController.createNewConversation(userID);
+            if (newConversationID == null || newConversationID <= 0) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                result.put("success", false);
+                result.put("error", "CREATE_CONVERSATION_FAILED");
+                response.getWriter().write(GSON.toJson(result));
+                return;
+            }
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("conversationID", newConversationID);
+            result.put("success", true);
+            result.put("data", payload);
+            response.getWriter().write(GSON.toJson(result));
             return;
         }
 
@@ -218,5 +265,12 @@ public class ChatServlet extends HttpServlet {
             return false;
         }
         return null;
+    }
+
+    private String formatDateTime(LocalDateTime value) {
+        if (value == null) {
+            return "";
+        }
+        return value.format(DATE_TIME_FORMATTER);
     }
 }

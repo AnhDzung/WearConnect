@@ -14,7 +14,11 @@ public class AIProviderConfig {
     }
 
     public static String getApiKey() {
-        return getConfig("AI_API_KEY", "");
+        String provider = getProvider();
+        if ("gemini".equals(provider)) {
+            return getConfig("AI_GEMINI_API_KEY", getConfig("AI_API_KEY", ""));
+        }
+        return getConfig("AI_OPENAI_API_KEY", getConfig("AI_API_KEY", ""));
     }
 
     public static String getModel() {
