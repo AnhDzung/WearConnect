@@ -1,6 +1,7 @@
 package Model;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public class AIChatReply {
     private int conversationID;
@@ -14,6 +15,7 @@ public class AIChatReply {
     private String responseSource;
     private boolean redirectToAdvisor;
     private String redirectReason;
+    private List<AIProductSuggestion> productSuggestions;
 
     public int getConversationID() {
         return conversationID;
@@ -101,5 +103,13 @@ public class AIChatReply {
 
     public void setRedirectReason(String redirectReason) {
         this.redirectReason = redirectReason;
+    }
+
+    public List<AIProductSuggestion> getProductSuggestions() {
+        return productSuggestions;
+    }
+
+    public void setProductSuggestions(List<AIProductSuggestion> productSuggestions) {
+        this.productSuggestions = productSuggestions;
     }
 }

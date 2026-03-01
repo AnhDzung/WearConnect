@@ -155,6 +155,56 @@ public class ClothingDAO {
         return list;
     }
 
+    public static List<Clothing> searchProductsForAI(String keyword, int limit) {
+        return searchProductsForAI(keyword, limit, null);
+    }
+
+    public static List<Clothing> searchProductsForAI(String keyword, int limit, BigDecimal maxDailyPrice) {
+        List<Clothing> list = new ArrayList<>();
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return list;
+        }
+
+        int safeLimit = limit <= 0 ? 6 : Math.min(limit, 12);
+        String normalizedKeyword = keyword.trim();
+        String likeKeyword = "%" + normalizedKeyword + "%";
+
+        String sql = "SELECT TOP " + safeLimit + " * FROM Clothing "
+                + "WHERE IsActive = 1 AND ClothingStatus != 'PENDING_COSPLAY_REVIEW' "
+                + "AND (? IS NULL OR DailyPrice IS NULL OR DailyPrice <= ?) "
+                + "AND (ClothingName LIKE ? OR Category LIKE ? OR Style LIKE ? OR Occasion LIKE ? OR Description LIKE ?) "
+                + "ORDER BY CASE WHEN ClothingName LIKE ? THEN 0 WHEN Category LIKE ? THEN 1 ELSE 2 END, CreatedAt DESC";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (maxDailyPrice == null) {
+                ps.setNull(1, java.sql.Types.DECIMAL);
+                ps.setNull(2, java.sql.Types.DECIMAL);
+            } else {
+                ps.setBigDecimal(1, maxDailyPrice);
+                ps.setBigDecimal(2, maxDailyPrice);
+            }
+
+            ps.setString(3, likeKeyword);
+            ps.setString(4, likeKeyword);
+            ps.setString(5, likeKeyword);
+            ps.setString(6, likeKeyword);
+            ps.setString(7, likeKeyword);
+            ps.setString(8, likeKeyword);
+            ps.setString(9, likeKeyword);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRowToClothing(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
     public static List<Clothing> getClothingByRenter(int renterID) {
         List<Clothing> list = new ArrayList<>();
         String sql = "SELECT * FROM Clothing WHERE RenterID = ? AND IsActive = 1";

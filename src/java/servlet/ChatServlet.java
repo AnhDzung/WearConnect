@@ -4,6 +4,7 @@ import Controller.AIChatController;
 import Model.AIChatReply;
 import Model.AIConversation;
 import Model.AIMessage;
+import Model.AIProductSuggestion;
 import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -155,6 +156,7 @@ public class ChatServlet extends HttpServlet {
         payload.put("handoffReason", reply.getHandoffReason());
         payload.put("redirectToAdvisor", reply.isRedirectToAdvisor());
         payload.put("redirectReason", reply.getRedirectReason());
+        payload.put("productSuggestions", mapProductSuggestions(reply.getProductSuggestions()));
 
         result.put("success", true);
         result.put("data", payload);
@@ -272,5 +274,28 @@ public class ChatServlet extends HttpServlet {
             return "";
         }
         return value.format(DATE_TIME_FORMATTER);
+    }
+
+    private List<Map<String, Object>> mapProductSuggestions(List<AIProductSuggestion> suggestions) {
+        List<Map<String, Object>> payload = new ArrayList<>();
+        if (suggestions == null || suggestions.isEmpty()) {
+            return payload;
+        }
+
+        for (AIProductSuggestion suggestion : suggestions) {
+            if (suggestion == null) {
+                continue;
+            }
+
+            Map<String, Object> product = new HashMap<>();
+            product.put("clothingID", suggestion.getClothingID());
+            product.put("clothingName", suggestion.getClothingName());
+            product.put("category", suggestion.getCategory());
+            product.put("style", suggestion.getStyle());
+            product.put("dailyPrice", suggestion.getDailyPrice() == null ? "" : suggestion.getDailyPrice().toPlainString());
+            payload.add(product);
+        }
+
+        return payload;
     }
 }

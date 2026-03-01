@@ -84,7 +84,6 @@
                 <option value="Đám cưới">Đám cưới</option>
                 <option value="Gala / Sự kiện công ty">Gala / Sự kiện công ty</option>
                 <option value="Biểu diễn">Biểu diễn</option>
-                <option value="Fes / Cosplay">Fes / Cosplay</option>
                 <option value="Chụp ảnh">Chụp ảnh</option>
                 <option value="Quay video / Content">Quay video / Content</option>
                 <option value="Du lịch">Du lịch</option>

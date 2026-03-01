@@ -30,6 +30,15 @@
         .advisor-bubble { max-width: 75%; padding: 10px 12px; border-radius: 12px; line-height: 1.35; white-space: pre-wrap; }
         .advisor-item.user .advisor-bubble { background: #5c7cfa; color: white; border-bottom-right-radius: 4px; }
         .advisor-item.bot .advisor-bubble { background: #eceff8; color: #222; border-bottom-left-radius: 4px; }
+        .advisor-product-wrap { margin: 6px 0 14px 0; }
+        .advisor-products-title { font-size: 12px; color: #4b5563; margin: 0 0 8px 2px; font-weight: 700; }
+        .advisor-products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .advisor-product-card { border: 1px solid #dbe1f5; border-radius: 10px; overflow: hidden; background: #fff; text-decoration: none; color: #1f2937; }
+        .advisor-product-thumb { width: 100%; height: 110px; object-fit: cover; display: block; background: #edf2ff; }
+        .advisor-product-body { padding: 8px; }
+        .advisor-product-name { font-size: 12px; font-weight: 700; line-height: 1.35; min-height: 32px; }
+        .advisor-product-meta { font-size: 11px; color: #6b7280; margin-top: 5px; }
+        .advisor-product-price { margin-top: 6px; color: #1d4ed8; font-size: 12px; font-weight: 700; }
         .advisor-actions { padding: 12px; border-top: 1px solid #eee; display: flex; gap: 8px; }
         .advisor-input { flex: 1; border: 1px solid #d8dbe8; border-radius: 8px; padding: 10px 12px; font-family: cursive; }
         .advisor-send { border: none; background: #5c7cfa; color: white; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
@@ -39,6 +48,7 @@
         @media (max-width: 960px) {
             .advisor-layout { grid-template-columns: 1fr; }
             .advisor-history-list { max-height: 220px; }
+            .advisor-products { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -102,6 +112,75 @@
         bubble.textContent = text;
         item.appendChild(bubble);
         messagesEl.appendChild(item);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function addProductSuggestions(products) {
+        if (!products || !products.length) {
+            return;
+        }
+
+        const wrap = document.createElement('div');
+        wrap.className = 'advisor-product-wrap';
+
+        const title = document.createElement('div');
+        title.className = 'advisor-products-title';
+        title.textContent = 'Sản phẩm liên quan:';
+        wrap.appendChild(title);
+
+        const grid = document.createElement('div');
+        grid.className = 'advisor-products';
+
+        products.forEach(function(product){
+            const card = document.createElement('a');
+            card.className = 'advisor-product-card';
+            card.href = contextPath + '/clothing?action=view&id=' + product.clothingID;
+            card.target = '_blank';
+            card.rel = 'noopener noreferrer';
+
+            const image = document.createElement('img');
+            image.className = 'advisor-product-thumb';
+            image.src = contextPath + '/image?id=' + product.clothingID;
+            image.alt = product.clothingName || 'Sản phẩm';
+            image.onerror = function(){
+                this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="220" height="110"%3E%3Crect width="220" height="110" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%236b7280" font-size="14"%3EKh%C3%B4ng%20c%C3%B3%20%E1%BA%A3nh%3C/text%3E%3C/svg%3E';
+            };
+
+            const body = document.createElement('div');
+            body.className = 'advisor-product-body';
+
+            const name = document.createElement('div');
+            name.className = 'advisor-product-name';
+            name.textContent = product.clothingName || ('Sản phẩm #' + product.clothingID);
+
+            const meta = document.createElement('div');
+            meta.className = 'advisor-product-meta';
+            meta.textContent = (product.category || 'Khác') + ' • ' + (product.style || 'Không rõ style');
+
+            const price = document.createElement('div');
+            price.className = 'advisor-product-price';
+            if (product.dailyPrice) {
+                const value = Number(product.dailyPrice);
+                if (!Number.isNaN(value)) {
+                    price.textContent = 'Giá/ngày: ' + new Intl.NumberFormat('vi-VN').format(value) + 'đ';
+                } else {
+                    price.textContent = 'Giá/ngày: ' + product.dailyPrice + 'đ';
+                }
+            } else {
+                price.textContent = 'Xem chi tiết giá';
+            }
+
+            body.appendChild(name);
+            body.appendChild(meta);
+            body.appendChild(price);
+
+            card.appendChild(image);
+            card.appendChild(body);
+            grid.appendChild(card);
+        });
+
+        wrap.appendChild(grid);
+        messagesEl.appendChild(wrap);
         messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
@@ -249,6 +328,7 @@
             currentConversationID = payload.conversationID || currentConversationID;
             syncConversationInUrl();
             addMessage('bot', payload.assistantMessage || 'Mình đang xử lý, bạn thử lại nhé.');
+            addProductSuggestions(payload.productSuggestions || []);
             loadConversations(false);
         })
         .catch(error => {
