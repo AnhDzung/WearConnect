@@ -124,13 +124,18 @@
             <label for="occasion">Mục đích sử dụng:</label>
             <select id="occasion" name="occasion" required>
                 <option value="">-- Chọn mục đích --</option>
-                <option value="Tiệc cưới" <c:if test="${clothing.occasion == 'Tiệc cưới'}">selected</c:if>>Dự tiệc</option>
+                <option value="Dự tiệc" <c:if test="${clothing.occasion == 'Dự tiệc'}">selected</c:if>>Dự tiệc</option>
                 <option value="Tốt nghiệp" <c:if test="${clothing.occasion == 'Tốt nghiệp'}">selected</c:if>>Tốt nghiệp</option>
+                <option value="Đám cưới" <c:if test="${clothing.occasion == 'Đám cưới' || clothing.occasion == 'Tiệc cưới'}">selected</c:if>>Đám cưới</option>
+                <option value="Gala / Sự kiện công ty" <c:if test="${clothing.occasion == 'Gala / Sự kiện công ty'}">selected</c:if>>Gala / Sự kiện công ty</option>
+                <option value="Biểu diễn" <c:if test="${clothing.occasion == 'Biểu diễn'}">selected</c:if>>Biểu diễn</option>
                 <option value="Fes / Cosplay" <c:if test="${clothing.occasion == 'Fes / Cosplay'}">selected</c:if>>Fes / Cosplay</option>
                 <option value="Chụp ảnh" <c:if test="${clothing.occasion == 'Chụp ảnh'}">selected</c:if>>Chụp ảnh</option>
-                <option value="Biểu diễn" <c:if test="${clothing.occasion == 'Biểu diễn'}">selected</c:if>>Biểu diễn</option>
-                <option value="Hẹn hò" <c:if test="${clothing.occasion == 'Hẹn hò'}">selected</c:if>>Hẹn hò</option>
+                <option value="Quay video / Content" <c:if test="${clothing.occasion == 'Quay video / Content'}">selected</c:if>>Quay video / Content</option>
                 <option value="Du lịch" <c:if test="${clothing.occasion == 'Du lịch'}">selected</c:if>>Du lịch</option>
+                <option value="Hẹn hò" <c:if test="${clothing.occasion == 'Hẹn hò'}">selected</c:if>>Hẹn hò</option>
+                <option value="Đi biển" <c:if test="${clothing.occasion == 'Đi biển'}">selected</c:if>>Đi biển</option>
+                <option value="Street style / Đi chơi concept" <c:if test="${clothing.occasion == 'Street style / Đi chơi concept'}">selected</c:if>>Street style / Đi chơi concept</option>
             </select>
         </div>
         
