@@ -79,13 +79,18 @@
             <label for="occasion">Mục đích sử dụng:</label>
             <select id="occasion" name="occasion" required>
                 <option value="">-- Chọn mục đích --</option>
-                <option value="Tiệc cưới">Dự Tiệc</option>
+                <option value="Dự tiệc">Dự tiệc</option>
                 <option value="Tốt nghiệp">Tốt nghiệp</option>
+                <option value="Đám cưới">Đám cưới</option>
+                <option value="Gala / Sự kiện công ty">Gala / Sự kiện công ty</option>
+                <option value="Biểu diễn">Biểu diễn</option>
                 <option value="Fes / Cosplay">Fes / Cosplay</option>
                 <option value="Chụp ảnh">Chụp ảnh</option>
-                <option value="Biểu diễn">Biểu diễn</option>
-                <option value="Hẹn hò">Hẹn hò</option>
+                <option value="Quay video / Content">Quay video / Content</option>
                 <option value="Du lịch">Du lịch</option>
+                <option value="Hẹn hò">Hẹn hò</option>
+                <option value="Đi biển">Đi biển</option>
+                <option value="Street style / Đi chơi concept">Street style / Đi chơi concept</option>
             </select>
         </div>
         
