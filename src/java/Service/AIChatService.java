@@ -22,7 +22,7 @@ public class AIChatService {
 
     private static final int LLM_CONTEXT_MESSAGE_LIMIT = 8;
 
-    public static AIChatReply handleUserMessage(int userID, Integer conversationID, String userMessage) {
+    public static AIChatReply handleUserMessage(int userID, String userRole, Integer conversationID, String userMessage) {
         String normalizedMessage = userMessage == null ? "" : userMessage.trim();
         if (normalizedMessage.isEmpty()) {
             AIChatReply invalidReply = new AIChatReply();
@@ -30,6 +30,19 @@ public class AIChatService {
             invalidReply.setIntent("INVALID");
             invalidReply.setConfidence(new BigDecimal("0.0000"));
             return invalidReply;
+        }
+
+        String normalizedRole = normalizeRole(userRole);
+        RoleRestriction roleRestriction = evaluateRoleRestriction(normalizeForMatching(normalizedMessage), normalizedRole);
+        if (roleRestriction.blocked) {
+            AIChatReply blockedReply = new AIChatReply();
+            blockedReply.setAssistantMessage(roleRestriction.message);
+            blockedReply.setIntent("ROLE_RESTRICTED");
+            blockedReply.setConfidence(new BigDecimal("1.0000"));
+            blockedReply.setResponseSource("RULE");
+            blockedReply.setHandedOff(false);
+            blockedReply.setRedirectToAdvisor(false);
+            return blockedReply;
         }
 
         int resolvedConversationID = resolveConversationID(userID, conversationID);
@@ -200,7 +213,9 @@ public class AIChatService {
             return new IntentAnalysis("RETURN_REFUND", new BigDecimal("0.8600"));
         }
 
-        if (containsAny(normalizedMessage, "don hang", "order", "trang thai", "giao hang")) {
+        if (containsAny(normalizedMessage,
+                "don hang", "order", "trang thai", "giao hang",
+                "quy trinh", "dat thue", "quy trinh thue", "quy trinh dat thue", "thu tuc thue")) {
             return new IntentAnalysis("ORDER_SUPPORT", new BigDecimal("0.8200"));
         }
 
@@ -364,6 +379,13 @@ public class AIChatService {
         if (containsAny(normalizedMessage, "gap nhan vien", "nhan vien", "khong hai long", "khan cap", "lua dao")) {
             return true;
         }
+
+        if (containsAny(normalizedMessage,
+                "quy trinh", "dat thue", "quy trinh thue", "quy trinh dat thue", "thu tuc thue",
+                "don hang", "trang thai", "thanh toan", "hoan tien", "tra hang", "size")) {
+            return false;
+        }
+
         return intentAnalysis.confidence.setScale(4, RoundingMode.HALF_UP).compareTo(new BigDecimal("0.6000")) < 0;
     }
 
@@ -409,6 +431,34 @@ public class AIChatService {
                 .trim();
 
         return normalized;
+    }
+
+    private static String normalizeRole(String userRole) {
+        if (userRole == null || userRole.isBlank()) {
+            return "";
+        }
+        return userRole.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static RoleRestriction evaluateRoleRestriction(String normalizedMessage, String normalizedRole) {
+        if (normalizedMessage == null || normalizedMessage.isBlank()) {
+            return RoleRestriction.allow();
+        }
+
+        boolean asksUploadProcess = containsAny(normalizedMessage,
+                "quy trinh dang tai", "dang tai quan ao", "dang san pham", "them trang phuc", "listing", "quan ly trang phuc");
+        boolean asksRentalProcess = containsAny(normalizedMessage,
+                "quy trinh thue", "quy trinh dat thue", "thu tuc thue", "dat thue", "thue trang phuc");
+
+        if ("user".equals(normalizedRole) && asksUploadProcess) {
+            return RoleRestriction.block("Nội dung quy trình đăng tải trang phục dành cho tài khoản Manager/Admin. Bạn có thể hỏi mình về quy trình thuê, thanh toán, theo dõi đơn hoặc hoàn tiền.");
+        }
+
+        if ("manager".equals(normalizedRole) && asksRentalProcess) {
+            return RoleRestriction.block("Nội dung quy trình thuê dành cho khách thuê (User). Với tài khoản Manager, mình có thể hỗ trợ quy trình đăng tải/trạng thái duyệt trang phục và quản lý đơn liên quan.");
+        }
+
+        return RoleRestriction.allow();
     }
 
     private static UserProfile extractUserProfile(String message) {
@@ -793,6 +843,24 @@ public class AIChatService {
                     && (occasion == null || occasion.isBlank())
                     && (style == null || style.isBlank())
                     && (category == null || category.isBlank());
+        }
+    }
+
+    private static class RoleRestriction {
+        private final boolean blocked;
+        private final String message;
+
+        private RoleRestriction(boolean blocked, String message) {
+            this.blocked = blocked;
+            this.message = message;
+        }
+
+        private static RoleRestriction allow() {
+            return new RoleRestriction(false, null);
+        }
+
+        private static RoleRestriction block(String message) {
+            return new RoleRestriction(true, message);
         }
     }
 }

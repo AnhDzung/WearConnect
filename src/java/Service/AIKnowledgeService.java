@@ -26,6 +26,7 @@ public class AIKnowledgeService {
     private static final int MAX_CATEGORY_LENGTH = 50;
     private static final int MAX_TAGS_LENGTH = 300;
     private static final int MAX_CONTENT_LENGTH = 10000;
+    private static final String DEFAULT_CATEGORY = "GENERAL";
     private static final int RETRIEVAL_CANDIDATE_LIMIT = 300;
     private static final int RETRIEVAL_MIN_TOKEN_LENGTH = 2;
     private static final Gson GSON = new Gson();
@@ -41,7 +42,10 @@ public class AIKnowledgeService {
         INTENT_CATEGORY_MAP.put("PAYMENT_SUPPORT", new HashSet<>(Arrays.asList("payment", "deposit", "bank", "thanh toán", "cọc")));
         INTENT_CATEGORY_MAP.put("RETURN_REFUND", new HashSet<>(Arrays.asList("return_refund", "refund", "trả hàng", "hoàn tiền")));
         INTENT_CATEGORY_MAP.put("SIZE_ADVICE", new HashSet<>(Arrays.asList("size_advice", "size", "kích cỡ")));
-        INTENT_CATEGORY_MAP.put("ORDER_SUPPORT", new HashSet<>(Arrays.asList("order_support", "order", "đơn hàng", "tracking")));
+        INTENT_CATEGORY_MAP.put("ORDER_SUPPORT", new HashSet<>(Arrays.asList(
+            "order_support", "order", "đơn hàng", "tracking",
+            "booking_process", "booking", "quy trình", "đặt thuê"
+        )));
     }
 
     public static String buildKnowledgeContext(String userQuery) {
@@ -388,15 +392,24 @@ public class AIKnowledgeService {
         String normalizedContent = normalizeNullable(content);
         String normalizedTags = normalizeNullable(tags);
 
+        if (isBlank(normalizedCategory)) {
+            normalizedCategory = DEFAULT_CATEGORY;
+        }
+
         if (isBlank(normalizedTitle) || isBlank(normalizedContent)) {
             return null;
         }
 
-        if (normalizedTitle.length() > MAX_TITLE_LENGTH
-                || (normalizedCategory != null && normalizedCategory.length() > MAX_CATEGORY_LENGTH)
-                || (normalizedTags != null && normalizedTags.length() > MAX_TAGS_LENGTH)
-                || normalizedContent.length() > MAX_CONTENT_LENGTH) {
+        if (normalizedTitle.length() > MAX_TITLE_LENGTH || normalizedContent.length() > MAX_CONTENT_LENGTH) {
             return null;
+        }
+
+        if (normalizedCategory != null && normalizedCategory.length() > MAX_CATEGORY_LENGTH) {
+            normalizedCategory = normalizedCategory.substring(0, MAX_CATEGORY_LENGTH).trim();
+        }
+
+        if (normalizedTags != null && normalizedTags.length() > MAX_TAGS_LENGTH) {
+            normalizedTags = normalizedTags.substring(0, MAX_TAGS_LENGTH).trim();
         }
 
         AIKnowledgeDoc doc = new AIKnowledgeDoc();

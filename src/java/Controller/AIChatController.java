@@ -8,8 +8,8 @@ import java.util.List;
 
 public class AIChatController {
 
-    public static AIChatReply sendUserMessage(int userID, Integer conversationID, String userMessage) {
-        return AIChatService.handleUserMessage(userID, conversationID, userMessage);
+    public static AIChatReply sendUserMessage(int userID, String userRole, Integer conversationID, String userMessage) {
+        return AIChatService.handleUserMessage(userID, userRole, conversationID, userMessage);
     }
 
     public static List<AIMessage> getConversationHistory(int userID, int conversationID, int limit) {

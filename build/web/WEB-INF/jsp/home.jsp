@@ -28,18 +28,19 @@
         }
         .container { max-width: 1200px; margin: 0 auto; padding: 28px 20px 70px; }
         
-        .page-title {
+        .hero-slider {
             position: relative;
             overflow: hidden;
             background: linear-gradient(135deg, #1f8e74 0%, #1b5d49 100%);
             color: white;
-            padding: 40px 32px;
-            text-align: left;
             margin-bottom: 26px;
             border-radius: 20px;
             box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 1200px;
+            aspect-ratio: 1200 / 675;
         }
-        .page-title::before {
+        .hero-slider::before {
             content: "";
             position: absolute;
             top: -120px;
@@ -49,7 +50,7 @@
             background: rgba(255, 255, 255, 0.12);
             border-radius: 50%;
         }
-        .page-title::after {
+        .hero-slider::after {
             content: "";
             position: absolute;
             bottom: -100px;
@@ -59,19 +60,95 @@
             background: rgba(0, 0, 0, 0.12);
             border-radius: 50%;
         }
+        .slider-track {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .hero-slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1.2s ease;
+        }
+        .hero-slide.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .hero-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .hero-overlay {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 22px 24px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.62));
+            display: grid;
+            gap: 8px;
+            z-index: 2;
+        }
         .hero-tag {
             display: inline-flex;
             align-items: center;
             gap: 8px;
             padding: 6px 12px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.22);
             font-size: 12px;
             letter-spacing: 0.4px;
             text-transform: uppercase;
+            width: fit-content;
         }
-        .page-title h1 { margin: 14px 0 6px; font-size: clamp(30px, 4vw, 40px); }
-        .page-title p { margin: 0; opacity: 0.9; font-size: 15px; }
+        .hero-overlay h1 { margin: 0; font-size: clamp(24px, 3.2vw, 34px); }
+        .hero-overlay p { margin: 0; opacity: 0.95; font-size: 15px; }
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 42px;
+            height: 42px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+            z-index: 3;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .slider-btn:hover { background: rgba(0, 0, 0, 0.6); }
+        .slider-btn.prev { left: 12px; }
+        .slider-btn.next { right: 12px; }
+        .slider-dots {
+            position: absolute;
+            left: 50%;
+            bottom: 14px;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 4;
+        }
+        .slider-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.55);
+            cursor: pointer;
+        }
+        .slider-dot.active {
+            background: #fff;
+            transform: scale(1.15);
+        }
         
         .search-bar {
             margin-bottom: 30px;
@@ -200,7 +277,9 @@
         
         @media (max-width: 900px) {
             .search-bar form { grid-template-columns: 1fr; }
-            .page-title { text-align: left; }
+            .hero-slider { aspect-ratio: 16 / 9; }
+            .hero-overlay { padding: 16px 16px 28px; }
+            .slider-btn { width: 36px; height: 36px; font-size: 20px; }
             .products-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
         @media (max-width: 1200px) {
@@ -222,10 +301,60 @@
         <a href="${pageContext.request.contextPath}/">WearConnect</a> > Cửa Hàng
     </div>
     
-    <div class="page-title">
-        <span class="hero-tag">San giao thue trang phuc</span>
-        <h1>WearConnect</h1>
-        <p>Wear once – Connect forever</p>
+    <div class="hero-slider" id="homeHeroSlider">
+        <div class="slider-track">
+            <div class="hero-slide active">
+                <img src="${pageContext.request.contextPath}/uploads/slider/slide-1.jpg" alt="WearConnect banner 1" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+                <div class="hero-overlay">
+                    <span class="hero-tag">San giao thue trang phuc</span>
+                    <h1>WearConnect</h1>
+                    <p>Wear once – Connect forever</p>
+                </div>
+            </div>
+            <div class="hero-slide">
+                <img src="${pageContext.request.contextPath}/uploads/slider/slide-2.jpg" alt="WearConnect banner 2" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+                <div class="hero-overlay">
+                    <span class="hero-tag">San giao thue trang phuc</span>
+                    <h1>WearConnect</h1>
+                    <p>Wear once – Connect forever</p>
+                </div>
+            </div>
+            <div class="hero-slide">
+                <img src="${pageContext.request.contextPath}/uploads/slider/slide-3.jpg" alt="WearConnect banner 3" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+                <div class="hero-overlay">
+                    <span class="hero-tag">San giao thue trang phuc</span>
+                    <h1>WearConnect</h1>
+                    <p>Wear once – Connect forever</p>
+                </div>
+            </div>
+            <div class="hero-slide">
+                <img src="${pageContext.request.contextPath}/uploads/slider/slide-4.jpg" alt="WearConnect banner 4" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+                <div class="hero-overlay">
+                    <span class="hero-tag">San giao thue trang phuc</span>
+                    <h1>WearConnect</h1>
+                    <p>Wear once – Connect forever</p>
+                </div>
+            </div>
+            <div class="hero-slide">
+                <img src="${pageContext.request.contextPath}/uploads/slider/slide-5.jpg" alt="WearConnect banner 5" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+                <div class="hero-overlay">
+                    <span class="hero-tag">San giao thue trang phuc</span>
+                    <h1>WearConnect</h1>
+                    <p>Wear once – Connect forever</p>
+                </div>
+            </div>
+            <div class="hero-slide">
+                <img src="${pageContext.request.contextPath}/uploads/slider/slide-6.jpg" alt="WearConnect banner 5" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+                <div class="hero-overlay">
+                    <span class="hero-tag">San giao thue trang phuc</span>
+                    <h1>WearConnect</h1>
+                    <p>Wear once – Connect forever</p>
+                </div>
+            </div>
+        </div>
+        <button type="button" class="slider-btn prev" aria-label="Slide trước">‹</button>
+        <button type="button" class="slider-btn next" aria-label="Slide sau">›</button>
+        <div class="slider-dots" aria-label="Điều hướng slide"></div>
     </div>
     
     <div class="search-bar">
@@ -317,5 +446,76 @@
     </c:if>
 </div>
 <jsp:include page="/WEB-INF/jsp/components/footer.jsp" />
+<script>
+    (function () {
+        const slider = document.getElementById('homeHeroSlider');
+        if (!slider) return;
+
+        const slides = Array.from(slider.querySelectorAll('.hero-slide'));
+        const dotsContainer = slider.querySelector('.slider-dots');
+        const prevBtn = slider.querySelector('.slider-btn.prev');
+        const nextBtn = slider.querySelector('.slider-btn.next');
+        let currentIndex = 0;
+        let autoTimer;
+
+        if (slides.length <= 1) {
+            if (prevBtn) prevBtn.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'none';
+            if (dotsContainer) dotsContainer.style.display = 'none';
+            return;
+        }
+
+        slides.forEach((_, index) => {
+            const dot = document.createElement('button');
+            dot.type = 'button';
+            dot.className = 'slider-dot' + (index === 0 ? ' active' : '');
+            dot.setAttribute('aria-label', 'Chuyển đến slide ' + (index + 1));
+            dot.addEventListener('click', () => {
+                showSlide(index);
+                restartAutoPlay();
+            });
+            dotsContainer.appendChild(dot);
+        });
+
+        const dots = Array.from(dotsContainer.querySelectorAll('.slider-dot'));
+
+        function showSlide(index) {
+            currentIndex = (index + slides.length) % slides.length;
+            slides.forEach((slide, i) => slide.classList.toggle('active', i === currentIndex));
+            dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+        }
+
+        function nextSlide() {
+            showSlide(currentIndex + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentIndex - 1);
+        }
+
+        function startAutoPlay() {
+            autoTimer = setInterval(nextSlide, 7000);
+        }
+
+        function restartAutoPlay() {
+            clearInterval(autoTimer);
+            startAutoPlay();
+        }
+
+        prevBtn.addEventListener('click', () => {
+            prevSlide();
+            restartAutoPlay();
+        });
+        nextBtn.addEventListener('click', () => {
+            nextSlide();
+            restartAutoPlay();
+        });
+
+        slider.addEventListener('mouseenter', () => clearInterval(autoTimer));
+        slider.addEventListener('mouseleave', startAutoPlay);
+
+        startAutoPlay();
+    })();
+</script>
 </body>
 </html>

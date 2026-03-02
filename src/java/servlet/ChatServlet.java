@@ -141,8 +141,9 @@ public class ChatServlet extends HttpServlet {
 
         String message = requestData.get("message") == null ? null : requestData.get("message").toString();
         Integer conversationID = parseNullableInteger(requestData.get("conversationID"));
+        String userRole = getSessionUserRole(request.getSession(false));
 
-        AIChatReply reply = AIChatController.sendUserMessage(userID, conversationID, message);
+        AIChatReply reply = AIChatController.sendUserMessage(userID, userRole, conversationID, message);
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("conversationID", reply.getConversationID());
@@ -201,6 +202,15 @@ public class ChatServlet extends HttpServlet {
             return (Integer) accountID;
         }
         return parseNullableInteger(accountID);
+    }
+
+    private String getSessionUserRole(HttpSession session) {
+        if (session == null || session.getAttribute("userRole") == null) {
+            return "";
+        }
+
+        String role = session.getAttribute("userRole").toString().trim();
+        return role.isEmpty() ? "" : role;
     }
 
     private Map<String, Object> parseRequestBody(HttpServletRequest request) throws IOException {

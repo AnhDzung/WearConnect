@@ -239,7 +239,7 @@
         
         <!-- Top Managers Section -->
         <div class="section">
-            <h2>🏆 Top Manager được đánh giá cao nhất</h2>
+            <h2>Top Manager được đánh giá cao nhất</h2>
             <c:choose>
                 <c:when test="${not empty topManagers}">
                     <div class="cards-grid">
@@ -319,14 +319,14 @@
         
         <!-- Most Rented Products Section -->
         <div class="section">
-            <h2>🔥 Sản phẩm được thuê nhiều nhất</h2>
+            <h2>Sản phẩm được thuê nhiều nhất</h2>
             <c:choose>
                 <c:when test="${not empty topProducts}">
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Hạng</th>
+                                    <th>Hạng</th> 
                                     <th>Tên sản phẩm</th>
                                     <th>Danh mục</th>
                                     <th>Manager</th>

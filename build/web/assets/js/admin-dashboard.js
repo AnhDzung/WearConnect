@@ -311,17 +311,23 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.error || 'Lưu thất bại');
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    const serverMessage = (data && (data.message || data.error))
+                        ? (data.message || data.error)
+                        : 'Lưu thất bại';
+                    throw new Error(serverMessage);
                 }
+                return data;
+            })
+            .then(data => {
                 resetKnowledgeForm();
                 loadKnowledgeDocs();
             })
             .catch(error => {
                 console.error(error);
-                alert('Không thể lưu tài liệu tri thức.');
+                alert('Không thể lưu tài liệu tri thức.\nChi tiết: ' + (error.message || 'Lỗi không xác định'));
             });
     }
 

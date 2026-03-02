@@ -15,7 +15,9 @@ Tài liệu này hướng dẫn bật gọi LLM thật cho endpoint `/chat` đã
 Đọc từ **System Property** hoặc **Environment Variable**:
 
 - `AI_PROVIDER`: `openai` hoặc `gemini` (mặc định `openai`)
-- `AI_API_KEY`: API key của provider (bắt buộc để bật LLM)
+- `AI_API_KEY`: API key dùng chung (backward-compatible)
+- `AI_OPENAI_API_KEY`: API key riêng cho OpenAI (ưu tiên khi `AI_PROVIDER=openai`)
+- `AI_GEMINI_API_KEY`: API key riêng cho Gemini (ưu tiên khi `AI_PROVIDER=gemini`)
 - `AI_MODEL`: model name
   - OpenAI mặc định: `gpt-4o-mini`
   - Gemini mặc định: `gemini-1.5-flash`
@@ -30,7 +32,7 @@ Tài liệu này hướng dẫn bật gọi LLM thật cho endpoint `/chat` đã
 
 ```cmd
 set AI_PROVIDER=openai
-set AI_API_KEY=sk-xxxxx
+set AI_OPENAI_API_KEY=sk-xxxxx
 set AI_MODEL=gpt-4o-mini
 ```
 
@@ -38,7 +40,7 @@ set AI_MODEL=gpt-4o-mini
 
 ```cmd
 set AI_PROVIDER=gemini
-set AI_API_KEY=AIzaSyxxxxx
+set AI_GEMINI_API_KEY=AIzaSyxxxxx
 set AI_MODEL=gemini-1.5-flash
 ```
 

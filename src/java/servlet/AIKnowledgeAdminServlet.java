@@ -164,6 +164,7 @@ public class AIKnowledgeAdminServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             result.put("success", false);
             result.put("error", "INVALID_INPUT_OR_CREATE_FAILED");
+            result.put("message", "Vui lòng kiểm tra Tiêu đề/Nội dung và thử lại. Danh mục để trống sẽ tự gán GENERAL.");
             response.getWriter().write(GSON.toJson(result));
             return;
         }
@@ -198,6 +199,7 @@ public class AIKnowledgeAdminServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             result.put("success", false);
             result.put("error", "UPDATE_FAILED");
+            result.put("message", "Không thể cập nhật tài liệu. Vui lòng kiểm tra dữ liệu đầu vào.");
             response.getWriter().write(GSON.toJson(result));
             return;
         }
