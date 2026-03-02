@@ -174,7 +174,7 @@
                 </div>
             </div>
             
-            <c:if test="${issue.status != 'RESOLVED' && issue.status != 'REJECTED'}">
+            <c:if test="${(sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Admin') && issue.status != 'RESOLVED' && issue.status != 'REJECTED'}">
                 <div class="action-section">
                     <h3>Xử lý vấn đề</h3>
                     <form method="POST" action="${pageContext.request.contextPath}/manager">
@@ -235,6 +235,14 @@
                             <input type="hidden" name="issueID" value="${issue.issueID}" />
                             <button type="submit" class="btn btn-danger" onclick="return confirm('Xác nhận hủy đơn hàng và hoàn tiền 100% cho khách hàng?')">❌ Hủy đơn hàng (yêu cầu trả)</button>
                         </form>
+                    </div>
+                </div>
+            </c:if>
+
+            <c:if test="${sessionScope.userRole != 'Manager' && sessionScope.userRole != 'Admin' && issue.status != 'RESOLVED' && issue.status != 'REJECTED'}">
+                <div class="action-section">
+                    <div style="text-align: center; color: #666; padding: 20px;">
+                        <p>Vấn đề đang được manager xử lý. Bạn sẽ nhận được thông báo khi có cập nhật.</p>
                     </div>
                 </div>
             </c:if>

@@ -38,6 +38,25 @@ public class OrderIssueServlet extends HttpServlet {
                 RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
                 
                 if (issue != null && order != null) {
+                    int currentUserID = (int) session.getAttribute("accountID");
+                    String userRole = (String) session.getAttribute("userRole");
+                    boolean isAdmin = "Admin".equals(userRole);
+                    boolean isManager = "Manager".equals(userRole);
+                    boolean canView = false;
+
+                    if (isAdmin) {
+                        canView = true;
+                    } else if (isManager) {
+                        canView = order.getManagerID() == currentUserID;
+                    } else {
+                        canView = order.getRenterUserID() == currentUserID;
+                    }
+
+                    if (!canView) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+
                     // Lấy thông tin clothing
                     Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
                     
@@ -46,7 +65,6 @@ public class OrderIssueServlet extends HttpServlet {
                     request.setAttribute("clothing", clothing);
                     
                     // Forward to view-issue.jsp based on user role
-                    String userRole = (String) session.getAttribute("userRole");
                     if ("Manager".equals(userRole) || "Admin".equals(userRole)) {
                         request.getRequestDispatcher("/WEB-INF/jsp/manager/view-issue.jsp").forward(request, response);
                     } else {

@@ -414,6 +414,34 @@ public class ManagerServlet extends HttpServlet {
                     // Get the issue to get rentalOrderID for redirect
                     OrderIssue issue = OrderIssueDAO.getIssueByID(issueID);
                     int rentalOrderID = issue != null ? issue.getRentalOrderID() : 0;
+
+                    RentalOrder issueOrder = rentalOrderID > 0 ? RentalOrderDAO.getRentalOrderByID(rentalOrderID) : null;
+                    if (issueOrder != null) {
+                        String orderCode = "WRC" + String.format("%05d", issueOrder.getRentalOrderID());
+                        String clothingInfo = issueOrder.getClothingName() != null ? issueOrder.getClothingName() : ("ID: " + issueOrder.getClothingID());
+
+                        String statusText;
+                        if ("ACKNOWLEDGED".equals(issueStatus)) {
+                            statusText = "đã xác nhận vấn đề";
+                        } else if ("RESOLVED".equals(issueStatus)) {
+                            statusText = "đã giải quyết vấn đề";
+                        } else if ("REJECTED".equals(issueStatus)) {
+                            statusText = "đã từ chối vấn đề";
+                        } else {
+                            statusText = "đã cập nhật vấn đề";
+                        }
+
+                        String noteText = (notes != null && !notes.trim().isEmpty())
+                                ? "\n\nCách xử lý từ manager:\n" + notes.trim()
+                                : "\n\nManager chưa thêm ghi chú xử lý.";
+
+                        NotificationService.createNotification(
+                            issueOrder.getRenterUserID(),
+                            "Cập nhật xử lý vấn đề đơn hàng",
+                            "Đơn hàng " + orderCode + " (" + clothingInfo + ") " + statusText + "." + noteText,
+                            rentalOrderID
+                        );
+                    }
                     
                     // If resolved, update order status to COMPLETED
                     if ("RESOLVED".equals(issueStatus)) {
