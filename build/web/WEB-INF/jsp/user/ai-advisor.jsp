@@ -39,6 +39,7 @@
         .advisor-product-name { font-size: 12px; font-weight: 700; line-height: 1.35; min-height: 32px; }
         .advisor-product-meta { font-size: 11px; color: #6b7280; margin-top: 5px; }
         .advisor-product-price { margin-top: 6px; color: #1d4ed8; font-size: 12px; font-weight: 700; }
+        .advisor-product-cta { margin-top: 8px; display: inline-block; font-size: 11px; font-weight: 700; color: #374151; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 4px 8px; }
         .advisor-actions { padding: 12px; border-top: 1px solid #eee; display: flex; gap: 8px; }
         .advisor-input { flex: 1; border: 1px solid #d8dbe8; border-radius: 8px; padding: 10px 12px; font-family: cursive; }
         .advisor-send { border: none; background: #5c7cfa; color: white; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
@@ -170,9 +171,14 @@
                 price.textContent = 'Xem chi tiết giá';
             }
 
+            const cta = document.createElement('span');
+            cta.className = 'advisor-product-cta';
+            cta.textContent = 'Xem chi tiết';
+
             body.appendChild(name);
             body.appendChild(meta);
             body.appendChild(price);
+            body.appendChild(cta);
 
             card.appendChild(image);
             card.appendChild(body);

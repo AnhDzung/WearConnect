@@ -3,7 +3,6 @@ package DAO;
 import config.DatabaseConnection;
 import Model.Clothing;
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.math.BigDecimal;
@@ -160,20 +159,47 @@ public class ClothingDAO {
     }
 
     public static List<Clothing> searchProductsForAI(String keyword, int limit, BigDecimal maxDailyPrice) {
+        return searchProductsForAI(keyword, null, null, null, limit, maxDailyPrice);
+    }
+
+    public static List<Clothing> searchProductsForAI(String keyword,
+                                                     String occasion,
+                                                     String style,
+                                                     String category,
+                                                     int limit,
+                                                     BigDecimal maxDailyPrice) {
         List<Clothing> list = new ArrayList<>();
-        if (keyword == null || keyword.trim().isEmpty()) {
+        if ((keyword == null || keyword.trim().isEmpty())
+                && (occasion == null || occasion.trim().isEmpty())
+                && (style == null || style.trim().isEmpty())
+                && (category == null || category.trim().isEmpty())) {
             return list;
         }
 
         int safeLimit = limit <= 0 ? 6 : Math.min(limit, 12);
-        String normalizedKeyword = keyword.trim();
-        String likeKeyword = "%" + normalizedKeyword + "%";
+        String likeKeyword = keyword == null || keyword.trim().isEmpty() ? null : "%" + keyword.trim() + "%";
+        String likeOccasion = occasion == null || occasion.trim().isEmpty() ? null : "%" + occasion.trim() + "%";
+        String likeStyle = style == null || style.trim().isEmpty() ? null : "%" + style.trim() + "%";
+        String likeCategory = category == null || category.trim().isEmpty() ? null : "%" + category.trim() + "%";
 
         String sql = "SELECT TOP " + safeLimit + " * FROM Clothing "
                 + "WHERE IsActive = 1 AND ClothingStatus != 'PENDING_COSPLAY_REVIEW' "
                 + "AND (? IS NULL OR DailyPrice IS NULL OR DailyPrice <= ?) "
-                + "AND (ClothingName LIKE ? OR Category LIKE ? OR Style LIKE ? OR Occasion LIKE ? OR Description LIKE ?) "
-                + "ORDER BY CASE WHEN ClothingName LIKE ? THEN 0 WHEN Category LIKE ? THEN 1 ELSE 2 END, CreatedAt DESC";
+            + "AND (? IS NULL OR Occasion COLLATE Latin1_General_CI_AI LIKE ? COLLATE Latin1_General_CI_AI) "
+            + "AND (? IS NULL OR Style COLLATE Latin1_General_CI_AI LIKE ? COLLATE Latin1_General_CI_AI) "
+            + "AND (? IS NULL OR Category COLLATE Latin1_General_CI_AI LIKE ? COLLATE Latin1_General_CI_AI) "
+            + "AND (? IS NULL OR ClothingName COLLATE Latin1_General_CI_AI LIKE ? COLLATE Latin1_General_CI_AI "
+            + "OR Category COLLATE Latin1_General_CI_AI LIKE ? COLLATE Latin1_General_CI_AI "
+            + "OR Style COLLATE Latin1_General_CI_AI LIKE ? COLLATE Latin1_General_CI_AI "
+            + "OR Occasion COLLATE Latin1_General_CI_AI LIKE ? COLLATE Latin1_General_CI_AI "
+            + "OR Description COLLATE Latin1_General_CI_AI LIKE ? COLLATE Latin1_General_CI_AI) "
+                + "ORDER BY "
+                + "CASE "
+            + "WHEN (? IS NOT NULL AND Occasion COLLATE Latin1_General_CI_AI LIKE ? COLLATE Latin1_General_CI_AI) THEN 0 "
+            + "WHEN (? IS NOT NULL AND Category COLLATE Latin1_General_CI_AI LIKE ? COLLATE Latin1_General_CI_AI) THEN 1 "
+            + "WHEN (? IS NOT NULL AND Style COLLATE Latin1_General_CI_AI LIKE ? COLLATE Latin1_General_CI_AI) THEN 2 "
+            + "WHEN (? IS NOT NULL AND ClothingName COLLATE Latin1_General_CI_AI LIKE ? COLLATE Latin1_General_CI_AI) THEN 3 "
+                + "ELSE 4 END, CreatedAt DESC";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -185,13 +211,59 @@ public class ClothingDAO {
                 ps.setBigDecimal(2, maxDailyPrice);
             }
 
-            ps.setString(3, likeKeyword);
-            ps.setString(4, likeKeyword);
-            ps.setString(5, likeKeyword);
-            ps.setString(6, likeKeyword);
-            ps.setString(7, likeKeyword);
-            ps.setString(8, likeKeyword);
+            ps.setString(3, likeOccasion);
+            ps.setString(4, likeOccasion);
+            ps.setString(5, likeStyle);
+            ps.setString(6, likeStyle);
+            ps.setString(7, likeCategory);
+            ps.setString(8, likeCategory);
+
             ps.setString(9, likeKeyword);
+            ps.setString(10, likeKeyword);
+            ps.setString(11, likeKeyword);
+            ps.setString(12, likeKeyword);
+            ps.setString(13, likeKeyword);
+            ps.setString(14, likeKeyword);
+
+            ps.setString(15, likeOccasion);
+            ps.setString(16, likeOccasion);
+            ps.setString(17, likeCategory);
+            ps.setString(18, likeCategory);
+            ps.setString(19, likeStyle);
+            ps.setString(20, likeStyle);
+            ps.setString(21, likeKeyword);
+            ps.setString(22, likeKeyword);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRowToClothing(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    public static List<Clothing> getLatestActiveProductsForAI(int limit, BigDecimal maxDailyPrice) {
+        List<Clothing> list = new ArrayList<>();
+        int safeLimit = limit <= 0 ? 6 : Math.min(limit, 12);
+
+        String sql = "SELECT TOP " + safeLimit + " * FROM Clothing "
+                + "WHERE IsActive = 1 AND ClothingStatus != 'PENDING_COSPLAY_REVIEW' "
+                + "AND (? IS NULL OR DailyPrice IS NULL OR DailyPrice <= ?) "
+                + "ORDER BY CreatedAt DESC";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (maxDailyPrice == null) {
+                ps.setNull(1, java.sql.Types.DECIMAL);
+                ps.setNull(2, java.sql.Types.DECIMAL);
+            } else {
+                ps.setBigDecimal(1, maxDailyPrice);
+                ps.setBigDecimal(2, maxDailyPrice);
+            }
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

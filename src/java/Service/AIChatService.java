@@ -43,6 +43,7 @@ public class AIChatService {
 
         IntentAnalysis intentAnalysis = analyzeIntent(normalizedMessage);
         RedirectDecision redirectDecision = determineRedirect(normalizedMessage, intentAnalysis.intent);
+        List<AIProductSuggestion> productSuggestions = buildProductSuggestions(normalizedMessage, intentAnalysis.intent);
         int userMessageID = AIChatDAO.addMessage(resolvedConversationID, "USER", normalizedMessage, intentAnalysis.intent, intentAnalysis.confidence, "USER_INPUT");
 
         boolean needsHandoff = shouldHandoff(normalizedMessage, intentAnalysis);
@@ -61,21 +62,39 @@ public class AIChatService {
             }
         } else {
             List<AIMessage> contextMessages = AIChatDAO.getRecentMessages(resolvedConversationID, LLM_CONTEXT_MESSAGE_LIMIT);
-            retrievedDocs = AIKnowledgeService.getTopDocsForChat(normalizedMessage, intentAnalysis.intent, 3);
-            String knowledgeContext = AIKnowledgeService.buildKnowledgeContextFromDocs(retrievedDocs);
-            String llmReply = LLMClientService.generateReply(
-                buildSystemPrompt(intentAnalysis.intent, knowledgeContext),
-                    contextMessages,
-                    normalizedMessage
-            );
+            boolean hasConsultPurposeFromHistory = hasConsultPurposeFromHistory(contextMessages);
 
-            if (llmReply != null && !llmReply.isBlank()) {
-                assistantMessage = llmReply;
-                responseSource = "LLM";
-            } else {
-                assistantMessage = buildRuleBasedAssistantMessage(intentAnalysis.intent, normalizedMessage);
+            if ("CONSULT_ADVICE".equals(intentAnalysis.intent)
+                    && shouldAskConsultPurposeFirst(normalizedMessage)
+                    && !hasConsultPurposeFromHistory) {
+                assistantMessage = buildConsultPurposeFirstMessage();
                 responseSource = "RULE";
+            } else {
+                retrievedDocs = AIKnowledgeService.getTopDocsForChat(normalizedMessage, intentAnalysis.intent, 3);
+                String knowledgeContext = AIKnowledgeService.buildKnowledgeContextFromDocs(retrievedDocs);
+                String llmReply = LLMClientService.generateReply(
+                    buildSystemPrompt(intentAnalysis.intent, knowledgeContext),
+                        contextMessages,
+                        normalizedMessage
+                );
+
+                if (llmReply != null && !llmReply.isBlank()) {
+                    assistantMessage = llmReply;
+                    responseSource = "LLM";
+                } else {
+                    assistantMessage = buildRuleBasedAssistantMessage(intentAnalysis.intent, normalizedMessage, hasConsultPurposeFromHistory);
+                    responseSource = "RULE";
+                }
             }
+        }
+
+        if (needsHandoff) {
+            productSuggestions = Collections.emptyList();
+        }
+
+        if (!productSuggestions.isEmpty() && looksLikeNoProductInfoResponse(assistantMessage)) {
+            assistantMessage = buildProductAvailabilityMessage(productSuggestions);
+            responseSource = "RULE";
         }
 
         int assistantMessageID = AIChatDAO.addMessage(resolvedConversationID, "ASSISTANT", assistantMessage, intentAnalysis.intent, intentAnalysis.confidence, responseSource);
@@ -105,7 +124,7 @@ public class AIChatService {
         reply.setResponseSource(responseSource);
         reply.setRedirectToAdvisor(redirectDecision.redirectToAdvisor);
         reply.setRedirectReason(redirectDecision.redirectReason);
-        reply.setProductSuggestions(buildProductSuggestions(normalizedMessage));
+        reply.setProductSuggestions(productSuggestions);
         return reply;
     }
 
@@ -165,13 +184,15 @@ public class AIChatService {
         String normalizedMessage = normalizeForMatching(message);
 
         if (containsAny(normalizedMessage,
-            "ao dai", "thue ao dai", "thue trang phuc", "tim trang phuc", "can thue do", "muon thue do")) {
+            "ao dai", "thue ao dai", "ao dai truyen thong", "ao dai cach tan")) {
             return new IntentAnalysis("RENTAL_ADVICE", new BigDecimal("0.8600"));
         }
 
         if (containsAny(normalizedMessage,
             "tu van", "goi y", "phoi do", "phong cach", "style", "chon do",
-            "di du tiec", "du tiec", "trang phuc", "outfit", "set do", "bo de thue", "thue di")) {
+            "di du tiec", "du tiec", "tiec", "tiec sang trong", "sang trong", "thanh lich", "ca tinh", "vui nhon",
+            "tiec sinh nhat", "tiec cong ty", "chup anh", "di chup anh", "quay phim", "concept",
+            "trang phuc", "outfit", "set do", "bo de thue", "thue di")) {
             return new IntentAnalysis("CONSULT_ADVICE", new BigDecimal("0.9000"));
         }
 
@@ -208,7 +229,7 @@ public class AIChatService {
         }
 
         if ("RENTAL_ADVICE".equals(intent)) {
-            return "Mình hỗ trợ thuê áo dài nhé. Bạn cho mình thêm 3 thông tin: giới tính/mẫu mong muốn, chiều cao-cân nặng, và ngân sách thuê. Mình sẽ gợi ý các mẫu phù hợp đang có.";
+            return "Mình hỗ trợ thuê trang phục theo nhu cầu của bạn. Bạn cho mình thêm 3 thông tin: dịp sử dụng, chiều cao-cân nặng, và ngân sách thuê. Mình sẽ gợi ý các mẫu phù hợp đang có.";
         }
 
         if ("CONSULT_ADVICE".equals(intent)) {
@@ -226,7 +247,7 @@ public class AIChatService {
         return "Mình có thể hỗ trợ về đơn hàng, tư vấn size/trang phục, thanh toán, trả hàng và hoàn tiền. Bạn nói rõ nhu cầu để mình hỗ trợ nhanh hơn nhé.";
     }
 
-    private static String buildRuleBasedAssistantMessage(String intent, String message) {
+    private static String buildRuleBasedAssistantMessage(String intent, String message, boolean hasConsultPurposeFromHistory) {
         if ("SIZE_ADVICE".equals(intent)) {
             return buildSizeAdviceMessage(message);
         }
@@ -236,7 +257,7 @@ public class AIChatService {
         }
 
         if ("CONSULT_ADVICE".equals(intent)) {
-            return buildConsultAdviceMessage(message);
+            return buildConsultAdviceMessage(message, hasConsultPurposeFromHistory);
         }
 
         return buildAssistantMessage(intent, false);
@@ -265,9 +286,18 @@ public class AIChatService {
         return "Để tư vấn size chính xác, bạn cho mình chiều cao, cân nặng và số đo cơ bản. Mình sẽ gợi ý size phù hợp ngay.";
     }
 
-    private static String buildConsultAdviceMessage(String message) {
+    private static String buildConsultAdviceMessage(String message, boolean hasConsultPurposeFromHistory) {
         UserProfile profile = extractUserProfile(message);
         String normalizedMessage = normalizeForMatching(message);
+        if (shouldAskConsultPurposeFirst(normalizedMessage) && !hasConsultPurposeFromHistory) {
+            return buildConsultPurposeFirstMessage();
+        }
+
+        if (profile.heightCm == null || profile.weightKg == null) {
+            return "Cảm ơn bạn! Mình đã ghi nhận nhu cầu về dịp/phong cách. "
+                    + "Bây giờ bạn cho mình chiều cao và cân nặng để mình gợi ý size và sản phẩm phù hợp nhé.";
+        }
+
         boolean isParty = containsAny(normalizedMessage, "du tiec", "di tiec", "party", "su kien");
 
         if (isParty && profile.heightCm != null && profile.weightKg != null && profile.budgetVnd != null) {
@@ -281,20 +311,11 @@ public class AIChatService {
                     + "Nếu bạn chọn tông màu muốn mặc (đen, navy, be...), mình sẽ chốt phương án phù hợp nhất ngay.";
         }
 
-        List<String> missing = new ArrayList<>();
-        if (profile.heightCm == null || profile.weightKg == null) {
-            missing.add("chiều cao-cân nặng");
-        }
         if (profile.budgetVnd == null) {
-            missing.add("ngân sách thuê");
+            return "Mình đã có chiều cao/cân nặng của bạn. Bạn cho mình thêm ngân sách thuê để mình lọc đúng các sản phẩm phù hợp nhé.";
         }
 
-        if (missing.isEmpty()) {
-            return "Mình đã có đủ thông tin cơ bản. Bạn cho mình thêm tông màu và phong cách mong muốn để mình chốt 2-3 bộ phù hợp nhất.";
-        }
-
-        return "Mình có thể tư vấn ngay. Bạn cho mình thêm " + String.join(" và ", missing)
-                + " để mình gợi ý 2-3 bộ phù hợp nhất theo sản phẩm hiện có.";
+        return "Mình đã có đủ thông tin cơ bản. Bạn cho mình thêm tông màu và phong cách mong muốn để mình chốt 2-3 bộ phù hợp nhất.";
     }
 
     private static String buildRentalAdviceMessage(String message) {
@@ -315,7 +336,7 @@ public class AIChatService {
                     + ". Bạn cho mình thêm ngân sách thuê và màu sắc mong muốn để mình gợi ý mẫu phù hợp nhất.";
         }
 
-        return "Mình hỗ trợ thuê áo dài nhé. Bạn cho mình thêm chiều cao-cân nặng, ngân sách thuê và kiểu mong muốn (truyền thống/cách tân) để mình gợi ý mẫu phù hợp.";
+        return "Mình hỗ trợ thuê trang phục theo nhu cầu của bạn. Bạn cho mình thêm dịp sử dụng, chiều cao-cân nặng và ngân sách thuê để mình gợi ý mẫu phù hợp nhất.";
     }
 
     private static String buildSystemPrompt(String intent, String knowledgeContext) {
@@ -497,21 +518,33 @@ public class AIChatService {
         return builder.length() == 0 ? null : builder.toString();
     }
 
-    private static List<AIProductSuggestion> buildProductSuggestions(String message) {
+    private static List<AIProductSuggestion> buildProductSuggestions(String message, String intent) {
         String normalizedMessage = normalizeForMatching(message);
-        if (!shouldSuggestProducts(normalizedMessage)) {
+        if (!shouldSuggestProducts(normalizedMessage, intent)) {
             return Collections.emptyList();
         }
 
-        String keyword = extractProductKeyword(normalizedMessage);
-        if (keyword == null || keyword.isBlank()) {
+        ProductSearchContext context = extractProductSearchContext(normalizedMessage);
+        if (context.isEmpty()) {
             return Collections.emptyList();
         }
 
         UserProfile profile = extractUserProfile(message);
         BigDecimal maxDailyPrice = profile.budgetVnd == null ? null : BigDecimal.valueOf(profile.budgetVnd);
 
-        List<Clothing> products = ClothingDAO.searchProductsForAI(keyword, 6, maxDailyPrice);
+        List<Clothing> products = ClothingDAO.searchProductsForAI(
+                context.keyword,
+                context.occasion,
+                context.style,
+                context.category,
+                6,
+                maxDailyPrice
+        );
+        if ((products == null || products.isEmpty())
+            && shouldSuggestProducts(normalizedMessage, intent)
+            && context.isEmpty()) {
+            products = ClothingDAO.getLatestActiveProductsForAI(6, maxDailyPrice);
+        }
         if (products == null || products.isEmpty()) {
             return Collections.emptyList();
         }
@@ -533,9 +566,20 @@ public class AIChatService {
         return suggestions;
     }
 
-    private static boolean shouldSuggestProducts(String normalizedMessage) {
+    private static boolean shouldSuggestProducts(String normalizedMessage, String intent) {
+        if ("CONSULT_ADVICE".equals(intent) || "RENTAL_ADVICE".equals(intent)) {
+            return true;
+        }
         return containsAny(normalizedMessage,
-                "xem", "goi y", "de xuat", "san pham", "mau", "lien quan", "co san");
+                "xem", "goi y", "de xuat", "san pham", "mau", "lien quan", "co san", "phu hop");
+    }
+
+    private static ProductSearchContext extractProductSearchContext(String normalizedMessage) {
+        String keyword = extractProductKeyword(normalizedMessage);
+        String occasion = extractOccasionHint(normalizedMessage);
+        String style = extractStyleHint(normalizedMessage);
+        String category = extractCategoryHint(normalizedMessage);
+        return new ProductSearchContext(keyword, occasion, style, category);
     }
 
     private static String extractProductKeyword(String normalizedMessage) {
@@ -575,6 +619,122 @@ public class AIChatService {
         return builder.toString().trim();
     }
 
+    private static String extractOccasionHint(String normalizedMessage) {
+        if (containsAny(normalizedMessage, "du tiec", "party", "tiec", "su kien", "dam cuoi")) {
+            return "du tiec";
+        }
+        if (containsAny(normalizedMessage, "halloween")) {
+            return "halloween";
+        }
+        if (containsAny(normalizedMessage, "giang sinh", "christmas", "noel")) {
+            return "giang sinh";
+        }
+        if (containsAny(normalizedMessage, "chup anh", "quay phim", "concept")) {
+            return "chup anh";
+        }
+        return null;
+    }
+
+    private static String extractStyleHint(String normalizedMessage) {
+        if (containsAny(normalizedMessage, "sang trong", "thanh lich", "quy phai")) {
+            return "sang";
+        }
+        if (containsAny(normalizedMessage, "ca tinh", "cool", "ngau")) {
+            return "ca tinh";
+        }
+        if (containsAny(normalizedMessage, "truyen thong")) {
+            return "truyen thong";
+        }
+        if (containsAny(normalizedMessage, "cach tan")) {
+            return "cach tan";
+        }
+        return null;
+    }
+
+    private static String extractCategoryHint(String normalizedMessage) {
+        if (containsAny(normalizedMessage, "ao dai")) {
+            return "ao dai";
+        }
+        if (containsAny(normalizedMessage, "cosplay")) {
+            return "cosplay";
+        }
+        if (containsAny(normalizedMessage, "vest", "blazer")) {
+            return "vest";
+        }
+        return null;
+    }
+
+    private static boolean looksLikeNoProductInfoResponse(String text) {
+        if (text == null || text.isBlank()) {
+            return true;
+        }
+
+        String normalized = normalizeForMatching(text);
+        boolean genericNoInfo = containsAny(normalized,
+            "khong co thong tin", "khong co du lieu", "khong the de xuat", "khong biet san pham");
+        boolean cannotDisplayProducts = containsAny(normalized, "khong the", "khong co the")
+            && containsAny(normalized, "hien thi", "xem")
+            && containsAny(normalized, "san pham", "hinh anh", "anh");
+        return genericNoInfo || cannotDisplayProducts;
+    }
+
+    private static String buildProductAvailabilityMessage(List<AIProductSuggestion> suggestions) {
+        StringBuilder builder = new StringBuilder("Mình đã tìm thấy một số sản phẩm phù hợp hiện có trên WearConnect: ");
+        int count = Math.min(3, suggestions.size());
+        for (int i = 0; i < count; i++) {
+            AIProductSuggestion suggestion = suggestions.get(i);
+            if (suggestion == null || suggestion.getClothingName() == null || suggestion.getClothingName().isBlank()) {
+                continue;
+            }
+            if (builder.charAt(builder.length() - 1) != ' ') {
+                builder.append(", ");
+            }
+            builder.append(suggestion.getClothingName());
+        }
+        builder.append(". Bạn xem danh sách sản phẩm ngay bên dưới để chọn mẫu phù hợp nhé.");
+        return builder.toString();
+    }
+
+    private static boolean shouldAskConsultPurposeFirst(String message) {
+        String normalizedMessage = normalizeForMatching(message);
+        String occasion = extractOccasionHint(normalizedMessage);
+        String style = extractStyleHint(normalizedMessage);
+        String category = extractCategoryHint(normalizedMessage);
+        return occasion == null && style == null && category == null;
+    }
+
+    private static String buildConsultPurposeFirstMessage() {
+        return "Chào bạn, để WearConnect có thể tư vấn trang phục phù hợp nhất, bạn vui lòng cho biết:\n\n"
+                + "1. Bạn đang tìm trang phục cho dịp nào (ví dụ: sự kiện, tiệc tùng, chụp ảnh, biểu diễn, Halloween, cosplay)?\n"
+                + "2. Bạn có phong cách hoặc chủ đề nào muốn hướng tới không (ví dụ: cổ trang, hiện đại, nhân vật cụ thể, trang phục dạ hội)?\n\n"
+                + "Sau khi có thông tin này, WearConnect sẽ gợi ý những lựa chọn phù hợp cho bạn.";
+    }
+
+    private static boolean hasConsultPurposeFromHistory(List<AIMessage> contextMessages) {
+        if (contextMessages == null || contextMessages.isEmpty()) {
+            return false;
+        }
+
+        for (AIMessage message : contextMessages) {
+            if (message == null || message.getContent() == null || message.getContent().isBlank()) {
+                continue;
+            }
+
+            if (!"USER".equalsIgnoreCase(message.getRole())) {
+                continue;
+            }
+
+            String normalized = normalizeForMatching(message.getContent());
+            if (extractOccasionHint(normalized) != null
+                    || extractStyleHint(normalized) != null
+                    || extractCategoryHint(normalized) != null) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static RedirectDecision determineRedirect(String message, String intent) {
         if ("CONSULT_ADVICE".equals(intent)) {
             return new RedirectDecision(true, "CONSULT_ADVICE");
@@ -612,6 +772,27 @@ public class AIChatService {
             this.heightCm = heightCm;
             this.weightKg = weightKg;
             this.budgetVnd = budgetVnd;
+        }
+    }
+
+    private static class ProductSearchContext {
+        private final String keyword;
+        private final String occasion;
+        private final String style;
+        private final String category;
+
+        private ProductSearchContext(String keyword, String occasion, String style, String category) {
+            this.keyword = keyword;
+            this.occasion = occasion;
+            this.style = style;
+            this.category = category;
+        }
+
+        private boolean isEmpty() {
+            return (keyword == null || keyword.isBlank())
+                    && (occasion == null || occasion.isBlank())
+                    && (style == null || style.isBlank())
+                    && (category == null || category.isBlank());
         }
     }
 }
