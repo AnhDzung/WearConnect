@@ -21,6 +21,8 @@ import java.util.regex.Pattern;
 public class AIChatService {
 
     private static final int LLM_CONTEXT_MESSAGE_LIMIT = 8;
+    private static final String USER_ROLE_RESTRICTION_NOTIFICATION_TITLE = "Giới hạn nội dung tư vấn theo vai trò";
+    private static final String USER_ROLE_RESTRICTION_NOTIFICATION_MESSAGE = "Tài khoản User không có quyền truy cập quy trình đăng tải trang phục. Bạn có thể hỏi về quy trình thuê, thanh toán, theo dõi đơn hoặc hoàn tiền.";
 
     public static AIChatReply handleUserMessage(int userID, String userRole, Integer conversationID, String userMessage) {
         String normalizedMessage = userMessage == null ? "" : userMessage.trim();
@@ -35,6 +37,14 @@ public class AIChatService {
         String normalizedRole = normalizeRole(userRole);
         RoleRestriction roleRestriction = evaluateRoleRestriction(normalizeForMatching(normalizedMessage), normalizedRole);
         if (roleRestriction.blocked) {
+            if ("USER_UPLOAD_PROCESS_BLOCKED".equals(roleRestriction.code)) {
+                NotificationService.createNotificationOnceByTitle(
+                        userID,
+                        USER_ROLE_RESTRICTION_NOTIFICATION_TITLE,
+                        USER_ROLE_RESTRICTION_NOTIFICATION_MESSAGE
+                );
+            }
+
             AIChatReply blockedReply = new AIChatReply();
             blockedReply.setAssistantMessage(roleRestriction.message);
             blockedReply.setIntent("ROLE_RESTRICTED");
@@ -76,6 +86,7 @@ public class AIChatService {
         } else {
             List<AIMessage> contextMessages = AIChatDAO.getRecentMessages(resolvedConversationID, LLM_CONTEXT_MESSAGE_LIMIT);
             boolean hasConsultPurposeFromHistory = hasConsultPurposeFromHistory(contextMessages);
+            UserProfile profileFromHistory = extractUserProfileFromHistory(contextMessages);
 
             if ("CONSULT_ADVICE".equals(intentAnalysis.intent)
                     && shouldAskConsultPurposeFirst(normalizedMessage)
@@ -95,7 +106,7 @@ public class AIChatService {
                     assistantMessage = llmReply;
                     responseSource = "LLM";
                 } else {
-                    assistantMessage = buildRuleBasedAssistantMessage(intentAnalysis.intent, normalizedMessage, hasConsultPurposeFromHistory);
+                    assistantMessage = buildRuleBasedAssistantMessage(intentAnalysis.intent, normalizedMessage, hasConsultPurposeFromHistory, profileFromHistory);
                     responseSource = "RULE";
                 }
             }
@@ -176,6 +187,20 @@ public class AIChatService {
         return AIChatDAO.createConversation(userID, "WEB");
     }
 
+    public static boolean clearUserHistory(int userID) {
+        if (userID <= 0) {
+            return false;
+        }
+        return AIChatDAO.clearUserHistory(userID);
+    }
+
+    public static boolean deleteConversation(int userID, int conversationID) {
+        if (userID <= 0 || conversationID <= 0) {
+            return false;
+        }
+        return AIChatDAO.deleteConversationForUser(userID, conversationID);
+    }
+
     private static int resolveConversationID(int userID, Integer conversationID) {
         if (conversationID != null && conversationID > 0) {
             AIConversation conversation = AIChatDAO.getConversationByIdAndUser(conversationID, userID);
@@ -209,13 +234,22 @@ public class AIChatService {
             return new IntentAnalysis("CONSULT_ADVICE", new BigDecimal("0.9000"));
         }
 
+        if (containsAny(normalizedMessage,
+                "ngan sach", "budget", "trieu", "nghin", "khoang", "tam", "duoi", "tren")) {
+            return new IntentAnalysis("CONSULT_ADVICE", new BigDecimal("0.7600"));
+        }
+
         if (containsAny(normalizedMessage, "hoan tien", "refund", "tra hang", "return", "khieu nai")) {
             return new IntentAnalysis("RETURN_REFUND", new BigDecimal("0.8600"));
         }
 
         if (containsAny(normalizedMessage,
-                "don hang", "order", "trang thai", "giao hang",
-                "quy trinh", "dat thue", "quy trinh thue", "quy trinh dat thue", "thu tuc thue")) {
+            "quy trinh", "dat thue", "quy trinh thue", "quy trinh dat thue", "thu tuc thue", "thue do")) {
+            return new IntentAnalysis("BOOKING_SUPPORT", new BigDecimal("0.8600"));
+        }
+
+        if (containsAny(normalizedMessage,
+            "don hang", "order", "trang thai", "giao hang")) {
             return new IntentAnalysis("ORDER_SUPPORT", new BigDecimal("0.8200"));
         }
 
@@ -237,6 +271,10 @@ public class AIChatService {
 
         if ("ORDER_SUPPORT".equals(intent)) {
             return "Bạn có thể kiểm tra trạng thái đơn tại mục Đơn thuê của tôi. Nếu cần, hãy gửi mã đơn để mình hỗ trợ nhanh hơn.";
+        }
+
+        if ("BOOKING_SUPPORT".equals(intent)) {
+            return "Mình có thể hướng dẫn quy trình đặt thuê chi tiết theo từng bước để bạn thao tác nhanh hơn.";
         }
 
         if ("SIZE_ADVICE".equals(intent)) {
@@ -262,20 +300,45 @@ public class AIChatService {
         return "Mình có thể hỗ trợ về đơn hàng, tư vấn size/trang phục, thanh toán, trả hàng và hoàn tiền. Bạn nói rõ nhu cầu để mình hỗ trợ nhanh hơn nhé.";
     }
 
-    private static String buildRuleBasedAssistantMessage(String intent, String message, boolean hasConsultPurposeFromHistory) {
+    private static String buildRuleBasedAssistantMessage(String intent, String message,
+                                                         boolean hasConsultPurposeFromHistory,
+                                                         UserProfile profileFromHistory) {
         if ("SIZE_ADVICE".equals(intent)) {
             return buildSizeAdviceMessage(message);
         }
 
+        if ("ORDER_SUPPORT".equals(intent)) {
+            return buildOrderSupportMessage(message);
+        }
+
+        if ("BOOKING_SUPPORT".equals(intent)) {
+            return buildBookingSupportMessage();
+        }
+
         if ("RENTAL_ADVICE".equals(intent)) {
-            return buildRentalAdviceMessage(message);
+            return buildRentalAdviceMessage(message, profileFromHistory);
         }
 
         if ("CONSULT_ADVICE".equals(intent)) {
-            return buildConsultAdviceMessage(message, hasConsultPurposeFromHistory);
+            return buildConsultAdviceMessage(message, hasConsultPurposeFromHistory, profileFromHistory);
         }
 
         return buildAssistantMessage(intent, false);
+    }
+
+    private static String buildOrderSupportMessage(String message) {
+        return "Bạn có thể kiểm tra trạng thái đơn tại mục Đơn thuê của tôi. Nếu cần, hãy gửi mã đơn để mình hỗ trợ nhanh hơn.";
+    }
+
+    private static String buildBookingSupportMessage() {
+        return "Quy trình đặt thuê tại WearConnect gồm 6 bước: "
+                + "(1) Tìm trang phục phù hợp theo dịp/phong cách, "
+                + "(2) Xem chi tiết và chọn kích cỡ, "
+                + "(3) Chọn thời gian thuê và xác nhận thông tin đơn, "
+                + "(4) Thanh toán/đặt cọc theo hướng dẫn hệ thống, "
+                + "(5) Chờ shop xác nhận và theo dõi trạng thái tại mục Đơn thuê của tôi, "
+                + "(6) Nhận trang phục và trả đúng hạn để hoàn cọc nhanh chóng. "
+                + "Nếu bạn cần, mình có thể hướng dẫn chi tiết từng bước theo màn hình hiện tại của bạn.";
     }
 
     private static String buildSizeAdviceMessage(String message) {
@@ -301,8 +364,10 @@ public class AIChatService {
         return "Để tư vấn size chính xác, bạn cho mình chiều cao, cân nặng và số đo cơ bản. Mình sẽ gợi ý size phù hợp ngay.";
     }
 
-    private static String buildConsultAdviceMessage(String message, boolean hasConsultPurposeFromHistory) {
-        UserProfile profile = extractUserProfile(message);
+    private static String buildConsultAdviceMessage(String message,
+                                                    boolean hasConsultPurposeFromHistory,
+                                                    UserProfile profileFromHistory) {
+        UserProfile profile = mergeUserProfile(extractUserProfile(message), profileFromHistory);
         String normalizedMessage = normalizeForMatching(message);
         if (shouldAskConsultPurposeFirst(normalizedMessage) && !hasConsultPurposeFromHistory) {
             return buildConsultPurposeFirstMessage();
@@ -333,10 +398,40 @@ public class AIChatService {
         return "Mình đã có đủ thông tin cơ bản. Bạn cho mình thêm tông màu và phong cách mong muốn để mình chốt 2-3 bộ phù hợp nhất.";
     }
 
-    private static String buildRentalAdviceMessage(String message) {
-        UserProfile profile = extractUserProfile(message);
+    private static UserProfile mergeUserProfile(UserProfile primary, UserProfile fallback) {
+        if (primary == null && fallback == null) {
+            return new UserProfile(null, null, null);
+        }
+        if (primary == null) {
+            return fallback;
+        }
+        if (fallback == null) {
+            return primary;
+        }
+
+        Integer mergedHeight = primary.heightCm != null ? primary.heightCm : fallback.heightCm;
+        Integer mergedWeight = primary.weightKg != null ? primary.weightKg : fallback.weightKg;
+        Long mergedBudget = primary.budgetVnd != null ? primary.budgetVnd : fallback.budgetVnd;
+        return new UserProfile(mergedHeight, mergedWeight, mergedBudget);
+    }
+
+    private static String buildRentalAdviceMessage(String message, UserProfile profileFromHistory) {
+        UserProfile profile = mergeUserProfile(extractUserProfile(message), profileFromHistory);
         String normalizedMessage = normalizeForMatching(message);
         boolean isAoDai = containsAny(normalizedMessage, "ao dai");
+        boolean asksViewProducts = containsAny(normalizedMessage, "xem", "goi y", "san pham", "mau", "cho toi xem");
+
+        if (isAoDai && asksViewProducts) {
+            if (profile.heightCm != null && profile.weightKg != null && profile.budgetVnd != null) {
+                String size = suggestGenericSize(profile.heightCm, profile.weightKg);
+                return "Mình đã lọc sản phẩm áo dài theo thông tin của bạn ("
+                        + profile.heightCm + "cm, " + profile.weightKg + "kg, ngân sách " + formatBudgetVnd(profile.budgetVnd)
+                        + "). Bạn xem các sản phẩm ngay bên dưới, nếu muốn mình sẽ chốt 2-3 mẫu nổi bật nhất theo phong cách bạn thích.";
+            }
+
+            return "Mình đã tìm các sản phẩm áo dài liên quan để bạn tham khảo ngay bên dưới. "
+                    + "Nếu bạn muốn lọc chuẩn hơn, bạn cho mình thêm chiều cao-cân nặng và ngân sách thuê nhé.";
+        }
 
         if (isAoDai && profile.heightCm != null && profile.weightKg != null) {
             String size = suggestGenericSize(profile.heightCm, profile.weightKg);
@@ -382,7 +477,8 @@ public class AIChatService {
 
         if (containsAny(normalizedMessage,
                 "quy trinh", "dat thue", "quy trinh thue", "quy trinh dat thue", "thu tuc thue",
-                "don hang", "trang thai", "thanh toan", "hoan tien", "tra hang", "size")) {
+                "don hang", "trang thai", "thanh toan", "hoan tien", "tra hang", "size",
+                "ngan sach", "budget", "trieu", "nghin", "ao dai", "xem san pham", "goi y") ) {
             return false;
         }
 
@@ -451,11 +547,17 @@ public class AIChatService {
                 "quy trinh thue", "quy trinh dat thue", "thu tuc thue", "dat thue", "thue trang phuc");
 
         if ("user".equals(normalizedRole) && asksUploadProcess) {
-            return RoleRestriction.block("Nội dung quy trình đăng tải trang phục dành cho tài khoản Manager/Admin. Bạn có thể hỏi mình về quy trình thuê, thanh toán, theo dõi đơn hoặc hoàn tiền.");
+            return RoleRestriction.block(
+                    "USER_UPLOAD_PROCESS_BLOCKED",
+                    "Nội dung quy trình đăng tải trang phục dành cho tài khoản Manager/Admin. Bạn có thể hỏi mình về quy trình thuê, thanh toán, theo dõi đơn hoặc hoàn tiền."
+            );
         }
 
         if ("manager".equals(normalizedRole) && asksRentalProcess) {
-            return RoleRestriction.block("Nội dung quy trình thuê dành cho khách thuê (User). Với tài khoản Manager, mình có thể hỗ trợ quy trình đăng tải/trạng thái duyệt trang phục và quản lý đơn liên quan.");
+            return RoleRestriction.block(
+                    "MANAGER_RENTAL_PROCESS_BLOCKED",
+                    "Nội dung quy trình thuê dành cho khách thuê (User). Với tài khoản Manager, mình có thể hỗ trợ quy trình đăng tải/trạng thái duyệt trang phục và quản lý đơn liên quan."
+            );
         }
 
         return RoleRestriction.allow();
@@ -670,6 +772,9 @@ public class AIChatService {
     }
 
     private static String extractOccasionHint(String normalizedMessage) {
+        if (containsAny(normalizedMessage, "tet", "tet nguyen dan", "nam moi", "xuan")) {
+            return "tet";
+        }
         if (containsAny(normalizedMessage, "du tiec", "party", "tiec", "su kien", "dam cuoi")) {
             return "du tiec";
         }
@@ -785,6 +890,39 @@ public class AIChatService {
         return false;
     }
 
+    private static UserProfile extractUserProfileFromHistory(List<AIMessage> contextMessages) {
+        if (contextMessages == null || contextMessages.isEmpty()) {
+            return new UserProfile(null, null, null);
+        }
+
+        Integer heightCm = null;
+        Integer weightKg = null;
+        Long budgetVnd = null;
+
+        for (AIMessage message : contextMessages) {
+            if (message == null || message.getContent() == null || message.getContent().isBlank()) {
+                continue;
+            }
+
+            if (!"USER".equalsIgnoreCase(message.getRole())) {
+                continue;
+            }
+
+            UserProfile profile = extractUserProfile(message.getContent());
+            if (profile.heightCm != null) {
+                heightCm = profile.heightCm;
+            }
+            if (profile.weightKg != null) {
+                weightKg = profile.weightKg;
+            }
+            if (profile.budgetVnd != null) {
+                budgetVnd = profile.budgetVnd;
+            }
+        }
+
+        return new UserProfile(heightCm, weightKg, budgetVnd);
+    }
+
     private static RedirectDecision determineRedirect(String message, String intent) {
         if ("CONSULT_ADVICE".equals(intent)) {
             return new RedirectDecision(true, "CONSULT_ADVICE");
@@ -848,19 +986,21 @@ public class AIChatService {
 
     private static class RoleRestriction {
         private final boolean blocked;
+        private final String code;
         private final String message;
 
-        private RoleRestriction(boolean blocked, String message) {
+        private RoleRestriction(boolean blocked, String code, String message) {
             this.blocked = blocked;
+            this.code = code;
             this.message = message;
         }
 
         private static RoleRestriction allow() {
-            return new RoleRestriction(false, null);
+            return new RoleRestriction(false, null, null);
         }
 
-        private static RoleRestriction block(String message) {
-            return new RoleRestriction(true, message);
+        private static RoleRestriction block(String code, String message) {
+            return new RoleRestriction(true, code, message);
         }
     }
 }

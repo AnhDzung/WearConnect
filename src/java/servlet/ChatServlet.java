@@ -139,6 +139,31 @@ public class ChatServlet extends HttpServlet {
             return;
         }
 
+        if ("delete_conversation".equals(action)) {
+            Integer conversationIDToDelete = parseNullableInteger(requestData.get("conversationID"));
+            if (conversationIDToDelete == null || conversationIDToDelete <= 0) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                result.put("success", false);
+                result.put("error", "conversationID is required");
+                response.getWriter().write(GSON.toJson(result));
+                return;
+            }
+
+            boolean deleted = AIChatController.deleteConversation(userID, conversationIDToDelete);
+            if (!deleted) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                result.put("success", false);
+                result.put("error", "DELETE_CONVERSATION_FAILED");
+                response.getWriter().write(GSON.toJson(result));
+                return;
+            }
+
+            result.put("success", true);
+            result.put("message", "CONVERSATION_DELETED");
+            response.getWriter().write(GSON.toJson(result));
+            return;
+        }
+
         String message = requestData.get("message") == null ? null : requestData.get("message").toString();
         Integer conversationID = parseNullableInteger(requestData.get("conversationID"));
         String userRole = getSessionUserRole(request.getSession(false));

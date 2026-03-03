@@ -24,6 +24,14 @@ public class AIChatController {
         return AIChatService.createNewConversation(userID);
     }
 
+    public static boolean clearUserHistory(int userID) {
+        return AIChatService.clearUserHistory(userID);
+    }
+
+    public static boolean deleteConversation(int userID, int conversationID) {
+        return AIChatService.deleteConversation(userID, conversationID);
+    }
+
     public static boolean submitAssistantFeedback(int userID, int assistantMessageID, int rating, boolean isHelpful, String note) {
         return AIChatService.submitAssistantFeedback(userID, assistantMessageID, rating, isHelpful, note);
     }

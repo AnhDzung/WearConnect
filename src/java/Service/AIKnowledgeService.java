@@ -42,9 +42,11 @@ public class AIKnowledgeService {
         INTENT_CATEGORY_MAP.put("PAYMENT_SUPPORT", new HashSet<>(Arrays.asList("payment", "deposit", "bank", "thanh toán", "cọc")));
         INTENT_CATEGORY_MAP.put("RETURN_REFUND", new HashSet<>(Arrays.asList("return_refund", "refund", "trả hàng", "hoàn tiền")));
         INTENT_CATEGORY_MAP.put("SIZE_ADVICE", new HashSet<>(Arrays.asList("size_advice", "size", "kích cỡ")));
+        INTENT_CATEGORY_MAP.put("BOOKING_SUPPORT", new HashSet<>(Arrays.asList(
+            "booking_support", "booking_process", "booking", "quy trình", "đặt thuê", "thuê đồ"
+        )));
         INTENT_CATEGORY_MAP.put("ORDER_SUPPORT", new HashSet<>(Arrays.asList(
-            "order_support", "order", "đơn hàng", "tracking",
-            "booking_process", "booking", "quy trình", "đặt thuê"
+            "order_support", "order", "đơn hàng", "tracking", "trạng thái đơn"
         )));
     }
 

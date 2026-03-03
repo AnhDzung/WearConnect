@@ -117,4 +117,20 @@ public class NotificationDAO {
         }
         return false;
     }
+
+    public static boolean existsByUserAndTitle(int userID, String title) {
+        String sql = "SELECT TOP 1 1 FROM Notifications WHERE UserID = ? AND Title = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userID);
+            ps.setString(2, title);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            System.err.println("[NotificationDAO] Error checking existing notification by title: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

@@ -110,30 +110,25 @@ public class LoginServlet extends HttpServlet {
             
             // If profile is incomplete, create notification
             if (isIncomplete && missingFields.length() > 0) {
-                // Check if similar notification already exists
-                java.util.List<Model.Notification> unreadNotifs = Service.NotificationService.getUnreadNotifications(account.getAccountID());
-                boolean alreadyNotified = false;
-                
-                if (unreadNotifs != null) {
-                    for (Model.Notification notif : unreadNotifs) {
-                        if ("Cập nhật thông tin Profile".equals(notif.getTitle())) {
-                            alreadyNotified = true;
-                            break;
-                        }
-                    }
+                String fields = missingFields.substring(0, missingFields.length() - 2); // Remove last ", "
+                String role = account.getUserRole() == null ? "" : account.getUserRole().trim();
+
+                String chatbotGuidance;
+                if ("Manager".equals(role)) {
+                    chatbotGuidance = "Bên cạnh đó nếu bạn muốn tìm hiểu về quy trình đăng tải quần áo lên website thì có thể vào phần chatbot và hỏi về quy trình đăng tải quần áo.";
+                } else {
+                    chatbotGuidance = "Bên cạnh đó nếu bạn muốn tìm hiểu về quy trình thuê hàng thì có thể vào phần chatbot và hỏi về quy trình đặt thuê.";
                 }
-                
-                // Only create notification if not already notified
-                if (!alreadyNotified) {
-                    String fields = missingFields.substring(0, missingFields.length() - 2); // Remove last ", "
-                    String message = "Cảm ơn bạn đã tin tưởng và sử dụng WearConnect. Hãy cập nhật đầy đủ thông tin của bạn trong profile để trải nghiệm tốt hơn!\n\nThông tin chưa đầy đủ: " + fields;
-                    
-                    Service.NotificationService.createNotification(
-                        account.getAccountID(),
-                        "Cập nhật thông tin Profile",
-                        message
-                    );
-                }
+
+                String message = "Cảm ơn bạn đã tin tưởng và sử dụng WearConnect. Hãy cập nhật đầy đủ thông tin của bạn trong profile để trải nghiệm tốt hơn!"
+                        + "\n\nThông tin chưa đầy đủ: " + fields
+                        + "\n\n" + chatbotGuidance;
+
+                Service.NotificationService.createNotificationOnceByTitle(
+                    account.getAccountID(),
+                    "Cập nhật thông tin Profile",
+                    message
+                );
             }
         } catch (Exception e) {
             System.err.println("Error checking profile completion: " + e.getMessage());

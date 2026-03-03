@@ -3,7 +3,7 @@
 
 <style>
     .wearconnect-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #f5fbff 0%, #0cc0df 100%);
         color: white;
         padding: 12px 20px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.15);
@@ -30,8 +30,9 @@
         gap: 10px;
     }
     .header-logo img.logo-img {
-        height: 36px;
-        width: auto;
+        width: 185px;
+        height: 117px;
+        object-fit: contain;
         display: block;
     }
     .header-logo .brand-name {

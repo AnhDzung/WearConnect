@@ -249,6 +249,116 @@ public class AIChatDAO {
         return false;
     }
 
+    public static boolean clearUserHistory(int userID) {
+        String deleteFeedbackSql = "DELETE FROM AIMessageFeedback WHERE MessageID IN ("
+                + "SELECT MessageID FROM AIMessages WHERE ConversationID IN ("
+                + "SELECT ConversationID FROM AIConversations WHERE UserID = ?))";
+        String deleteRetrievalSql = "DELETE FROM AIRetrievalLogs WHERE ConversationID IN ("
+                + "SELECT ConversationID FROM AIConversations WHERE UserID = ?)";
+        String deleteHandoffSql = "DELETE FROM AIHandoffTickets WHERE ConversationID IN ("
+                + "SELECT ConversationID FROM AIConversations WHERE UserID = ?)";
+        String deleteMessagesSql = "DELETE FROM AIMessages WHERE ConversationID IN ("
+                + "SELECT ConversationID FROM AIConversations WHERE UserID = ?)";
+        String deleteConversationsSql = "DELETE FROM AIConversations WHERE UserID = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            boolean previousAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement(deleteFeedbackSql)) {
+                    ps.setInt(1, userID);
+                    ps.executeUpdate();
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(deleteRetrievalSql)) {
+                    ps.setInt(1, userID);
+                    ps.executeUpdate();
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(deleteHandoffSql)) {
+                    ps.setInt(1, userID);
+                    ps.executeUpdate();
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(deleteMessagesSql)) {
+                    ps.setInt(1, userID);
+                    ps.executeUpdate();
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(deleteConversationsSql)) {
+                    ps.setInt(1, userID);
+                    ps.executeUpdate();
+                }
+
+                conn.commit();
+                conn.setAutoCommit(previousAutoCommit);
+                return true;
+            } catch (SQLException ex) {
+                conn.rollback();
+                conn.setAutoCommit(previousAutoCommit);
+                throw ex;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public static boolean deleteConversationForUser(int userID, int conversationID) {
+        String deleteFeedbackSql = "DELETE FROM AIMessageFeedback WHERE MessageID IN ("
+                + "SELECT MessageID FROM AIMessages WHERE ConversationID = ?)";
+        String deleteRetrievalSql = "DELETE FROM AIRetrievalLogs WHERE ConversationID = ?";
+        String deleteHandoffSql = "DELETE FROM AIHandoffTickets WHERE ConversationID = ?";
+        String deleteMessagesSql = "DELETE FROM AIMessages WHERE ConversationID = ?";
+        String deleteConversationSql = "DELETE FROM AIConversations WHERE ConversationID = ? AND UserID = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            boolean previousAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement(deleteFeedbackSql)) {
+                    ps.setInt(1, conversationID);
+                    ps.executeUpdate();
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(deleteRetrievalSql)) {
+                    ps.setInt(1, conversationID);
+                    ps.executeUpdate();
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(deleteHandoffSql)) {
+                    ps.setInt(1, conversationID);
+                    ps.executeUpdate();
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(deleteMessagesSql)) {
+                    ps.setInt(1, conversationID);
+                    ps.executeUpdate();
+                }
+
+                int deletedConversations;
+                try (PreparedStatement ps = conn.prepareStatement(deleteConversationSql)) {
+                    ps.setInt(1, conversationID);
+                    ps.setInt(2, userID);
+                    deletedConversations = ps.executeUpdate();
+                }
+
+                conn.commit();
+                conn.setAutoCommit(previousAutoCommit);
+                return deletedConversations > 0;
+            } catch (SQLException ex) {
+                conn.rollback();
+                conn.setAutoCommit(previousAutoCommit);
+                throw ex;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
     private static AIConversation mapConversation(ResultSet rs) throws SQLException {
         AIConversation conversation = new AIConversation();
         conversation.setConversationID(rs.getInt("ConversationID"));

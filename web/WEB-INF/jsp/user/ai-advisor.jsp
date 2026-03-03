@@ -13,8 +13,11 @@
         .advisor-card { background: white; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); overflow: hidden; }
         .advisor-side-head { padding: 14px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 10px; }
         .advisor-side-title { font-size: 15px; font-weight: 700; color: #2d2d2d; }
+        .advisor-side-actions { display: flex; gap: 8px; }
         .advisor-new-btn { border: none; border-radius: 8px; background: #5c7cfa; color: #fff; padding: 9px 12px; cursor: pointer; font-size: 13px; }
         .advisor-new-btn:hover { background: #4c6ef5; }
+        .advisor-clear-btn { border: 1px solid #d9534f; border-radius: 8px; background: #fff; color: #d9534f; padding: 9px 12px; cursor: pointer; font-size: 13px; }
+        .advisor-clear-btn:hover { background: #fff5f5; }
         .advisor-history-list { max-height: 600px; overflow-y: auto; padding: 8px; }
         .advisor-history-item { border: 1px solid #e6e9f5; border-radius: 10px; padding: 10px; margin-bottom: 8px; cursor: pointer; background: #fff; }
         .advisor-history-item.active { border-color: #5c7cfa; background: #eef1ff; }
@@ -61,7 +64,10 @@
         <aside class="advisor-sidebar">
             <div class="advisor-side-head">
                 <div class="advisor-side-title">Lịch sử tư vấn</div>
-                <button id="newConversationBtn" class="advisor-new-btn" type="button">+ Tư vấn mới</button>
+                <div class="advisor-side-actions">
+                    <button id="newConversationBtn" class="advisor-new-btn" type="button">+ Tư vấn mới</button>
+                    <button id="deleteConversationBtn" class="advisor-clear-btn" type="button">Xóa hội thoại</button>
+                </div>
             </div>
             <div id="advisorHistoryList" class="advisor-history-list"></div>
         </aside>
@@ -89,6 +95,7 @@
     const messagesEl = document.getElementById('advisorMessages');
     const historyListEl = document.getElementById('advisorHistoryList');
     const newConversationBtn = document.getElementById('newConversationBtn');
+    const deleteConversationBtn = document.getElementById('deleteConversationBtn');
 
     const params = new URLSearchParams(window.location.search);
     let currentConversationID = params.get('conversationID') ? parseInt(params.get('conversationID'), 10) : null;
@@ -304,6 +311,41 @@
         });
     }
 
+    function deleteCurrentConversation() {
+        if (!currentConversationID) {
+            addMessage('bot', 'Bạn cần chọn một hội thoại để xóa.');
+            return;
+        }
+
+        const targetConversationID = currentConversationID;
+        const confirmed = window.confirm('Bạn có chắc muốn xóa hội thoại #' + targetConversationID + ' không?');
+        if (!confirmed) {
+            return;
+        }
+
+        fetch(contextPath + '/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete_conversation', conversationID: targetConversationID })
+        })
+        .then(async function(response){
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error((data && data.error) ? data.error : 'DELETE_CONVERSATION_FAILED');
+            }
+
+            currentConversationID = null;
+            syncConversationInUrl();
+            clearMessages();
+            addMessage('bot', 'Mình đã xóa hội thoại #' + targetConversationID + '. Bạn có thể chọn hội thoại khác hoặc tạo tư vấn mới.');
+            loadConversations(true);
+        })
+        .catch(function(error){
+            console.error(error);
+            addMessage('bot', 'Chưa thể xóa hội thoại lúc này, bạn thử lại sau nhé.');
+        });
+    }
+
     function sendMessage(text) {
         if (!text || !text.trim()) return;
         addMessage('user', text);
@@ -356,6 +398,10 @@
 
     newConversationBtn.addEventListener('click', function(){
         createNewConversation();
+    });
+
+    deleteConversationBtn.addEventListener('click', function(){
+        deleteCurrentConversation();
     });
 
     addMessage('bot', 'Chào bạn! Mình là trợ lý tư vấn AI của WearConnect. Bạn muốn tư vấn theo phong cách nào?');
