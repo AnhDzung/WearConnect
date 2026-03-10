@@ -232,6 +232,13 @@
     }
     .wc-chat-item.user .wc-chat-bubble { background:#5c7cfa; color:#fff; border-bottom-right-radius: 4px; }
     .wc-chat-item.bot .wc-chat-bubble { background:#eceff8; color:#222; border-bottom-left-radius: 4px; }
+    .wc-chat-products { display:grid; grid-template-columns: 1fr; gap:8px; margin: 6px 0 10px; }
+    .wc-chat-product { display:flex; gap:8px; border:1px solid #dbe1f5; border-radius:8px; padding:8px; background:#fff; text-decoration:none; color:#1f2937; }
+    .wc-chat-product:hover { background:#f8faff; }
+    .wc-chat-product img { width:52px; height:52px; object-fit:cover; border-radius:6px; background:#eef2ff; flex-shrink:0; }
+    .wc-chat-product-name { font-size:12px; font-weight:700; line-height:1.3; }
+    .wc-chat-product-meta { font-size:11px; color:#6b7280; margin-top:3px; }
+    .wc-chat-product-price { font-size:11px; color:#1d4ed8; font-weight:700; margin-top:4px; }
     .wc-chat-foot {
         padding: 10px;
         border-top: 1px solid #eee;
@@ -502,6 +509,63 @@
             messages.scrollTop = messages.scrollHeight;
         }
 
+        function addProductSuggestions(products) {
+            if (!products || !products.length) return;
+
+            const wrap = document.createElement('div');
+            wrap.className = 'wc-chat-products';
+
+            products.slice(0, 3).forEach(function(product){
+                if (!product || !product.clothingID) return;
+
+                const card = document.createElement('a');
+                card.className = 'wc-chat-product';
+                card.href = contextPath + '/clothing?action=view&id=' + product.clothingID;
+                card.target = '_blank';
+                card.rel = 'noopener noreferrer';
+
+                const img = document.createElement('img');
+                img.src = contextPath + '/image?id=' + product.clothingID;
+                img.alt = product.clothingName || 'Sản phẩm';
+                img.onerror = function() {
+                    this.onerror = null;
+                    this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="52" height="52"%3E%3Crect width="52" height="52" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%236b7280" font-size="9"%3ENo%20Img%3C/text%3E%3C/svg%3E';
+                };
+
+                const body = document.createElement('div');
+                const name = document.createElement('div');
+                name.className = 'wc-chat-product-name';
+                name.textContent = product.clothingName || ('Sản phẩm #' + product.clothingID);
+
+                const meta = document.createElement('div');
+                meta.className = 'wc-chat-product-meta';
+                meta.textContent = (product.category || 'Khác') + (product.style ? (' • ' + product.style) : '');
+
+                const price = document.createElement('div');
+                price.className = 'wc-chat-product-price';
+                if (product.dailyPrice) {
+                    const parsed = Number(product.dailyPrice);
+                    price.textContent = Number.isNaN(parsed)
+                        ? ('Giá/ngày: ' + product.dailyPrice + 'đ')
+                        : ('Giá/ngày: ' + new Intl.NumberFormat('vi-VN').format(parsed) + 'đ');
+                } else {
+                    price.textContent = 'Xem chi tiết giá';
+                }
+
+                body.appendChild(name);
+                body.appendChild(meta);
+                body.appendChild(price);
+                card.appendChild(img);
+                card.appendChild(body);
+                wrap.appendChild(card);
+            });
+
+            if (wrap.childElementCount > 0) {
+                messages.appendChild(wrap);
+                messages.scrollTop = messages.scrollHeight;
+            }
+        }
+
         function openAdvisorPage(seedQuestion) {
             let target = contextPath + '/advisor-chat';
             const params = new URLSearchParams();
@@ -546,6 +610,7 @@
                 const payload = data.data || {};
                 conversationID = payload.conversationID || conversationID;
                 addMessage('bot', payload.assistantMessage || 'Mình chưa thể trả lời lúc này.');
+                addProductSuggestions(payload.productSuggestions || []);
 
                 if (payload.redirectToAdvisor) {
                     if (payload.redirectReason === 'CONSULT_ADVICE') {

@@ -45,6 +45,9 @@ public class AIKnowledgeService {
         INTENT_CATEGORY_MAP.put("BOOKING_SUPPORT", new HashSet<>(Arrays.asList(
             "booking_support", "booking_process", "booking", "quy trình", "đặt thuê", "thuê đồ"
         )));
+        INTENT_CATEGORY_MAP.put("LISTING_SUPPORT", new HashSet<>(Arrays.asList(
+            "listing_support", "listing", "đăng tải", "đăng sản phẩm", "quản lý trang phục", "thêm trang phục"
+        )));
         INTENT_CATEGORY_MAP.put("ORDER_SUPPORT", new HashSet<>(Arrays.asList(
             "order_support", "order", "đơn hàng", "tracking", "trạng thái đơn"
         )));
