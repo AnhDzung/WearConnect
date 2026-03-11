@@ -288,7 +288,7 @@
     
     <!-- Charts Section -->
     <div class="charts-section">
-        <h2 class="section-title"> Biểu Đồ Doanh Thu (30 ngày gần nhất)</h2>
+        <h2 class="section-title"> Biểu Đồ Doanh Thu (Toàn Thời Gian)</h2>
         <div class="chart-container">
             <canvas id="revenueChart"></canvas>
         </div>
@@ -353,63 +353,138 @@
         <c:forEach var="item" items="${revenueByDate}" varStatus="status">
         {
             date: '${item.date}',
-            revenue: ${item.revenue}
-        }${!status.last ? ',' : ''}
+            revenue: Number('${item.revenue}')
+        }<c:if test="${not status.last}">,</c:if>
         </c:forEach>
-    ];
-    
-    if (revenueData.length > 0) {
+    ].filter(item => item.date && !Number.isNaN(item.revenue));
+
+    function renderEmptyRevenueState() {
+        const canvas = document.getElementById('revenueChart');
+        if (!canvas || !canvas.parentElement) return;
+        canvas.parentElement.innerHTML = '<div class="empty-state"><p>Chua co du lieu doanh thu</p></div>';
+    }
+
+    function renderRevenueFallback(canvas, labels, values) {
+        const ctx = canvas.getContext('2d');
+        const w = canvas.clientWidth || 800;
+        const h = canvas.clientHeight || 300;
+        canvas.width = w;
+        canvas.height = h;
+
+        const pad = { top: 20, right: 20, bottom: 36, left: 56 };
+        const chartW = w - pad.left - pad.right;
+        const chartH = h - pad.top - pad.bottom;
+        const maxVal = Math.max(...values, 1);
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.strokeStyle = '#d1d5db';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, pad.top);
+        ctx.lineTo(pad.left, h - pad.bottom);
+        ctx.lineTo(w - pad.right, h - pad.bottom);
+        ctx.stroke();
+
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '12px sans-serif';
+        for (let i = 0; i <= 4; i++) {
+            const y = pad.top + (chartH * i / 4);
+            const val = Math.round(maxVal * (1 - i / 4));
+            ctx.fillText(val.toLocaleString('vi-VN'), 6, y + 4);
+            ctx.strokeStyle = 'rgba(209,213,219,0.35)';
+            ctx.beginPath();
+            ctx.moveTo(pad.left, y);
+            ctx.lineTo(w - pad.right, y);
+            ctx.stroke();
+        }
+
+        const stepX = labels.length > 1 ? chartW / (labels.length - 1) : chartW;
+        const points = values.map((v, i) => {
+            const x = pad.left + (labels.length > 1 ? stepX * i : chartW / 2);
+            const y = pad.top + (1 - v / maxVal) * chartH;
+            return { x, y };
+        });
+
+        ctx.strokeStyle = '#667eea';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        points.forEach((p, i) => {
+            if (i === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+        });
+        ctx.stroke();
+
+        ctx.fillStyle = '#667eea';
+        points.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        });
+    }
+
+    (function initRevenueChart() {
+        const canvas = document.getElementById('revenueChart');
+        if (!canvas) return;
+        if (revenueData.length === 0) {
+            renderEmptyRevenueState();
+            return;
+        }
+
         const labels = revenueData.map(d => d.date);
         const revenues = revenueData.map(d => d.revenue);
-        
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Doanh Thu (VNĐ)',
-                    data: revenues,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 5,
-                    pointBackgroundColor: '#667eea',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointHoverRadius: 7
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: {
-                            font: { size: 14 },
-                            padding: 20
-                        }
-                    }
+
+        if (window.Chart) {
+            const ctx = canvas.getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh Thu (VNĐ)',
+                        data: revenues,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 7
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return value.toLocaleString('vi-VN') + ' VNĐ';
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: { size: 14 },
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('vi-VN') + ' VNĐ';
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
-    } else {
-        document.getElementById('revenueChart').parentElement.innerHTML = 
-            '<div class="empty-state"><p>Chưa có dữ liệu doanh thu</p></div>';
-    }
+            });
+        } else {
+            renderRevenueFallback(canvas, labels, revenues);
+        }
+    })();
 </script>
 <jsp:include page="/WEB-INF/jsp/components/footer.jsp" />
 </body>

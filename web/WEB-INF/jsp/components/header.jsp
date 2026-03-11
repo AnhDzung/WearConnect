@@ -4,34 +4,51 @@
 <style>
     .wearconnect-header {
         background: linear-gradient(135deg, #f5fbff 0%, #0cc0df 100%);
-        color: white;
-        padding: 12px 20px;
+        color: #111;
+        padding: 10px 0;
         box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         margin-bottom: 20px;
         min-height: 64px;
+        overflow: visible;
+        position: relative;
+        z-index: 20;
     }
     
     .header-container {
-        max-width: 1200px;
+        width: 100%;
+        max-width: 1320px;
+        padding: 0 16px;
+        box-sizing: border-box;
         margin: 0 auto;
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
         align-items: center;
+        gap: 12px;
         min-height: 40px;
+        overflow: visible;
+    }
+
+    .header-right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
     }
     
     .header-logo {
         font-size: 24px;
         font-weight: bold;
         text-decoration: none;
-        color: white;
+        color: #111;
         display: flex;
         align-items: center;
         gap: 10px;
     }
     .header-logo img.logo-img {
-        width: 185px;
-        height: 117px;
+        width: 150px;
+        height: 92px;
         object-fit: contain;
         display: block;
     }
@@ -47,12 +64,15 @@
     
     .header-nav {
         display: flex;
-        gap: 0;
+        gap: 10px;
         align-items: center;
+        justify-content: flex-start;
+        flex: 1;
+        min-width: 0;
         list-style: none;
         margin: 0;
         padding: 0;
-        flex-wrap: nowrap; /* keep single row on desktop */
+        flex-wrap: nowrap;
         overflow-x: visible;  /* allow dropdown to overflow without adding scrollbar */
         white-space: nowrap;
         -webkit-overflow-scrolling: touch;
@@ -61,35 +81,82 @@
     .header-nav li {
         margin: 0;
         flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+    }
+
+    .header-auth-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        margin-left: auto;
     }
     
     .header-nav a, .header-nav button {
         display: block;
-        padding: 15px 20px;
-        color: white;
+        padding: 10px 12px;
+        color: #111;
         text-decoration: none;
         transition: background-color 0.3s;
         border: none;
         background: none;
         cursor: pointer;
-        font-size: 14px;
+        font-size: 12.5px;
         font-weight: 500;
+        border-radius: 8px;
+    }
+
+    .header-nav > li > a {
+        background: rgba(0,0,0,0.08);
+    }
+
+    @media (max-width: 1200px) {
+        .header-container {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+        }
+
+        .header-logo {
+            justify-content: center;
+        }
+
+        .header-right {
+            margin-left: 0;
+            width: 100%;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .header-nav {
+            margin-left: 0;
+            justify-content: center;
+            flex-wrap: wrap;
+            white-space: normal;
+        }
+
+        .header-auth-actions { justify-content: center; }
     }
     
     .header-nav a:hover, .header-nav button:hover {
-        background-color: rgba(255,255,255,0.2);
+        background-color: rgba(0,0,0,0.14);
     }
     
     .header-nav .active {
-        background-color: rgba(255,255,255,0.3);
-        border-bottom: 3px solid white;
+        background-color: rgba(0,0,0,0.2);
+        border-bottom: none;
     }
     
     .header-user-info {
         display: flex;
         align-items: center;
-        gap: 15px;
-        white-space: nowrap; /* avoid wrapping user info */
+        gap: 10px;
+        white-space: normal;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        max-width: 100%;
     }
     
     .header-user-name {
@@ -110,6 +177,20 @@
         border-radius: 4px;
         font-size: 13px !important;
     }
+
+    .header-auth-link {
+        display: inline-block;
+        padding: 8px 12px;
+        background: rgba(0,0,0,0.08);
+        color: #111;
+        text-decoration: none;
+        border-radius: 8px;
+        line-height: 1;
+    }
+
+    .header-auth-link:hover {
+        background: rgba(0,0,0,0.14);
+    }
     
     .logout-btn:hover {
         background-color: #ff3838 !important;
@@ -119,12 +200,14 @@
         .header-container {
             flex-direction: column;
             gap: 15px;
+            padding: 0 12px;
         }
         
         .header-nav {
             width: 100%;
-            flex-wrap: wrap; /* allow wrap on mobile */
+            margin-left: 0;
             justify-content: center;
+            flex-wrap: wrap; /* allow wrap on mobile */
             overflow: visible;
             white-space: normal;
         }
@@ -136,6 +219,14 @@
     }
     /* Notifications dropdown styles (match provided screenshot) */
     .notif-wrapper { position: relative; }
+    .notif-wrapper > a {
+        display: inline-block;
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: rgba(0,0,0,0.08);
+        color: #111;
+    }
+    .notif-wrapper > a:hover { background: rgba(0,0,0,0.14); }
     .notif-dropdown {
         display: none;
         position: absolute;
@@ -304,6 +395,7 @@
             <span class="brand-name">Wear Connect</span>
         </a>
         
+        <div class="header-right">
         <!-- Navigation Menu -->
         <ul class="header-nav">
             
@@ -340,10 +432,11 @@
                 <li><a href="${pageContext.request.contextPath}/admin?action=statistics">Thống Kê</a></li>
             <% } %>
             
+        </ul>
+
             <!-- User Info -->
             <% if (userRole != null && !userRole.isEmpty()) { %>
-                <li style="margin-left: auto;">
-                            <div class="header-user-info">
+                            <div class="header-user-info header-auth-actions">
                                 <div style="display:flex; align-items:center; gap:12px;">
                                     <%-- Unread notifications --%>
                                     <%
@@ -361,7 +454,7 @@
                                         int unreadCount = (unreadNotes == null) ? 0 : unreadNotes.size();
                                     %>
                                     <div class="notif-wrapper" style="position:relative; display:inline-block;">
-                                        <a href="${pageContext.request.contextPath}/user?action=notifications" style="color:white; text-decoration:none;">
+                                        <a href="${pageContext.request.contextPath}/user?action=notifications" style="text-decoration:none;">
                                             Thông báo 🔔
                                             <% if (unreadCount > 0) { %>
                                                 <span style="position:absolute; top:-6px; right:-8px; background:#ff4757; color:white; border-radius:50%; padding:2px 6px; font-size:12px; font-weight:700;"><%= unreadCount %></span>
@@ -404,7 +497,7 @@
                                 }
                             %>
                             <% if ("Manager".equals(userRole)) { %>
-                                <a href="${pageContext.request.contextPath}/manager?action=profile" style="color: white; text-decoration: none; display:inline-flex; align-items:center; gap:8px;">
+                                <a href="${pageContext.request.contextPath}/manager?action=profile" class="header-auth-link" style="display:inline-flex; align-items:center; gap:8px;">
                                     <span><%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %></span>
                                     <%
                                         if (badge != null && badge.get("label") != null) {
@@ -418,7 +511,7 @@
                                     %>
                                 </a>
                             <% } else { %>
-                                <a href="${pageContext.request.contextPath}/user?action=profile" style="color: white; text-decoration: none; display:inline-flex; align-items:center; gap:8px;">
+                                <a href="${pageContext.request.contextPath}/user?action=profile" class="header-auth-link" style="display:inline-flex; align-items:center; gap:8px;">
                                     <span><%= (fullName != null && !fullName.trim().isEmpty()) ? fullName : username %></span>
                                     <%
                                         if (badge != null && badge.get("label") != null) {
@@ -435,16 +528,13 @@
                         </div>
                         <a href="${pageContext.request.contextPath}/logout" class="logout-btn"> Đăng Xuất</a>
                     </div>
-                </li>
             <% } else { %>
-                <li style="margin-left: auto;">
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <a href="${pageContext.request.contextPath}/login" style="display:inline-block; padding:8px 12px; background:transparent; border:1px solid rgba(255,255,255,0.15); color:white; text-decoration:none; border-radius:6px;">Đăng Nhập</a>
-                        <a href="${pageContext.request.contextPath}/register" style="display:inline-block; padding:8px 12px; background:rgba(255,255,255,0.15); color:white; text-decoration:none; border-radius:6px;">Đăng Ký</a>
-                    </div>
-                </li>
+                <div class="header-auth-actions">
+                    <a href="${pageContext.request.contextPath}/login" class="header-auth-link">Đăng Nhập</a>
+                    <a href="${pageContext.request.contextPath}/register" class="header-auth-link">Đăng Ký</a>
+                </div>
             <% } %>
-        </ul>
+        </div>
     </div>
 </header>
 

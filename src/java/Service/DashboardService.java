@@ -12,11 +12,12 @@ import java.util.*;
 
 public class DashboardService {
     
-    // Lấy doanh thu tổng cộng của manager
+    // Lấy doanh thu tổng cộng của manager (toàn thời gian, chỉ tính giao dịch đã thanh toán thành công)
     public static double getTotalRevenue(int renterID) {
-        String sql = "SELECT SUM(ro.TotalPrice) as TotalRevenue FROM RentalOrder ro " +
+        String sql = "SELECT SUM(p.Amount) as TotalRevenue FROM Payment p " +
+                     "JOIN RentalOrder ro ON p.RentalOrderID = ro.RentalOrderID " +
                      "JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
-                     "WHERE c.RenterID = ? AND ro.Status = 'RETURNED'";
+                     "WHERE c.RenterID = ? AND p.PaymentStatus = 'Completed'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, renterID);
@@ -169,21 +170,24 @@ public class DashboardService {
         return result;
     }
     
-    // Lấy doanh thu theo ngày (30 ngày gần nhất) cho biểu đồ
+    // Lấy doanh thu theo ngày cho biểu đồ. Nếu days <= 0 thì lấy toàn bộ lịch sử.
     public static List<Map<String, Object>> getRevenueByDate(int renterID, int days) {
         List<Map<String, Object>> result = new ArrayList<>();
-        String sql = "SELECT CAST(p.PaymentDate AS DATE) as PaymentDate, " +
+        StringBuilder sql = new StringBuilder("SELECT CAST(p.PaymentDate AS DATE) as PaymentDate, " +
                      "SUM(p.Amount) as DailyRevenue " +
                      "FROM Payment p " +
                      "JOIN RentalOrder ro ON p.RentalOrderID = ro.RentalOrderID " +
                      "JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
-                     "WHERE c.RenterID = ? AND p.PaymentStatus = 'Completed' " +
-                     "AND p.PaymentDate >= DATEADD(DAY, -" + days + ", GETDATE()) " +
-                     "GROUP BY CAST(p.PaymentDate AS DATE) " +
-                     "ORDER BY PaymentDate ASC";
+                     "WHERE c.RenterID = ? AND p.PaymentStatus = 'Completed' ");
+
+        if (days > 0) {
+            sql.append("AND p.PaymentDate >= DATEADD(DAY, -").append(days).append(", GETDATE()) ");
+        }
+
+        sql.append("GROUP BY CAST(p.PaymentDate AS DATE) ORDER BY PaymentDate ASC");
         
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             ps.setInt(1, renterID);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

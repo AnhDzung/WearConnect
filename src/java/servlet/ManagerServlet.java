@@ -504,7 +504,7 @@ public class ManagerServlet extends HttpServlet {
                 int activeProducts = DashboardService.getActiveProductCount(managerId);
                 List<Map<String, Object>> topRatedProducts = DashboardService.getTopRatedProducts(managerId, 3);
                 List<Map<String, Object>> topRevenueProducts = DashboardService.getTopRevenueProducts(managerId, 3);
-                List<Map<String, Object>> revenueByDate = DashboardService.getRevenueByDate(managerId, 30);
+                List<Map<String, Object>> revenueByDate = DashboardService.getRevenueByDate(managerId, 0);
                 
                 request.setAttribute("totalRevenue", totalRevenue);
                 request.setAttribute("completedOrders", completedOrders);
