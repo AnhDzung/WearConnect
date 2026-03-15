@@ -318,12 +318,14 @@ public class RentalOrderServlet extends HttpServlet {
             try {
                 Part filePart = request.getPart("receivedImage");
                 String proofPath = null;
+                byte[] proofData = null;
                 if (filePart != null && filePart.getSize() > 0) {
-                    proofPath = handleReceiptUpload(request, rentalOrderID, filePart);
+                    proofPath = buildReceiptProofKey(rentalOrderID, filePart);
+                    proofData = readPartBytes(filePart);
                 }
 
                 // store received proof and update status to RENTED
-                boolean stored = RentalOrderController.setReceivedProofPath(rentalOrderID, proofPath);
+                boolean stored = RentalOrderController.setReceivedProofPath(rentalOrderID, proofPath, proofData);
                 boolean ok = RentalOrderController.updateOrderStatus(rentalOrderID, "RENTED");
                 
                 // Gửi thông báo cho manager và user
@@ -360,7 +362,7 @@ public class RentalOrderServlet extends HttpServlet {
         }
     }
 
-    private String handleReceiptUpload(HttpServletRequest request, int rentalOrderID, Part filePart) {
+    private String buildReceiptProofKey(int rentalOrderID, Part filePart) {
         try {
             String fileName = java.nio.file.Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
             String fileExtension = getFileExtension(fileName);
@@ -374,19 +376,23 @@ public class RentalOrderServlet extends HttpServlet {
                 return null;
             }
 
-            String appPath = request.getServletContext().getRealPath("");
-            String uploadPath = appPath + java.io.File.separator + "uploads" + java.io.File.separator + "received-proof";
-            java.io.File uploadDir = new java.io.File(uploadPath);
-            if (!uploadDir.exists()) uploadDir.mkdirs();
-
-            String uniqueFileName = "received_" + rentalOrderID + "_" + System.currentTimeMillis() + "." + fileExtension;
-            String filePath = uploadPath + java.io.File.separator + uniqueFileName;
-
-            filePart.write(filePath);
-
-            return "uploads/received-proof/" + uniqueFileName;
+            return "received_" + rentalOrderID + "_" + System.currentTimeMillis() + "." + fileExtension;
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
+        }
+    }
+
+    private byte[] readPartBytes(Part filePart) {
+        try (java.io.InputStream is = filePart.getInputStream();
+             java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream()) {
+            byte[] chunk = new byte[8192];
+            int read;
+            while ((read = is.read(chunk)) != -1) {
+                buffer.write(chunk, 0, read);
+            }
+            return buffer.toByteArray();
+        } catch (Exception e) {
             return null;
         }
     }

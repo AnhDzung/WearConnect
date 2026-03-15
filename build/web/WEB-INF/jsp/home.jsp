@@ -7,6 +7,8 @@
     <title>Cửa Hàng - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
+
         :root {
             --ink: #15110f;
             --muted: #6f6a64;
@@ -19,12 +21,15 @@
             --radius: 18px;
         }
         body {
-            font-family: cursive;
+            font-family: 'Inter', sans-serif;
             background: radial-gradient(circle at 8% 12%, #efe2d0, transparent 40%),
                         radial-gradient(circle at 90% 20%, #dff1ea, transparent 45%),
                         var(--paper);
             margin: 0;
             color: var(--ink);
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
         }
         .container { max-width: 1200px; margin: 0 auto; padding: 28px 20px 70px; }
         

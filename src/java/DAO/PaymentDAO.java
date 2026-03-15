@@ -119,6 +119,10 @@ public class PaymentDAO {
             if (proofImage != null) {
                 payment.setPaymentProofImage(proofImage);
             }
+            try {
+                payment.setPaymentProofImageData(rs.getBytes("PaymentProofImageData"));
+            } catch (SQLException ignore) {
+            }
         } catch (SQLException e) {
             // Column doesn't exist yet - will be added in migration
         }
@@ -139,4 +143,44 @@ public class PaymentDAO {
         }
         return false;
     }
-}
+
+    public static boolean updatePaymentProof(int paymentID, String proofImagePath, byte[] proofImageData) {
+        String sql = "UPDATE Payment SET PaymentProofImage = ?, PaymentProofImageData = ? WHERE PaymentID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, proofImagePath);
+            ps.setBytes(2, proofImageData);
+            ps.setInt(3, paymentID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            // Backward compatibility when PaymentProofImageData column is not yet migrated
+            String fallbackSql = "UPDATE Payment SET PaymentProofImage = ? WHERE PaymentID = ?";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(fallbackSql)) {
+                ps.setString(1, proofImagePath);
+                ps.setInt(2, paymentID);
+                return ps.executeUpdate() > 0;
+            } catch (SQLException ex) {
+                System.err.println("[PaymentDAO] Error updating payment proof: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    public static byte[] getPaymentProofDataByPath(String proofImagePath) {
+        String sql = "SELECT TOP 1 PaymentProofImageData FROM Payment WHERE PaymentProofImage = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, proofImagePath);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBytes("PaymentProofImageData");
+                }
+            }
+        } catch (SQLException e) {
+            // Ignore for backward compatibility if column does not exist
+        }
+        return null;
+    }
+    }

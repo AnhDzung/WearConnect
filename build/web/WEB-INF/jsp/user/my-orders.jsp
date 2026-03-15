@@ -7,7 +7,10 @@
     <title>Đơn thuê của tôi - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
-        body { margin: 0; background-color: #f5f5f5; font-family: cursive; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
+
+        body { margin: 0; background-color: #f5f5f5; font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
         .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
         h1 { color: #333; margin-bottom: 20px; }
         
@@ -72,7 +75,6 @@
         .btn:hover { opacity: 0.9; }
         .btn-info { background-color: #0dcaf0; }
     </style>
-</head>
 <body>
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
 

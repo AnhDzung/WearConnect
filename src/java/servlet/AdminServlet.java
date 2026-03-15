@@ -15,6 +15,8 @@ import Service.DashboardService;
 import Service.RentalOrderService;
 import java.util.HashMap;
 import java.io.IOException;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import jakarta.servlet.ServletException;
@@ -22,8 +24,16 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.http.Part;
 
+@MultipartConfig(
+    fileSizeThreshold = 1024 * 1024,
+    maxFileSize = 10 * 1024 * 1024,
+    maxRequestSize = 20 * 1024 * 1024
+)
 public class AdminServlet extends HttpServlet {
+    private static final double SYSTEM_FEE_RATE = 0.10;
     
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
@@ -521,31 +531,66 @@ public class AdminServlet extends HttpServlet {
     private void handleConfirmPayment(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            // Note: For now, we'll just mark the order as COMPLETED
-            // File upload handling will be added later
             int orderID = Integer.parseInt(request.getParameter("orderID"));
+
+            Part refundProofPart = request.getPart("refundProof");
+            Part managerProofPart = request.getPart("managerPaymentProof");
+            if (refundProofPart == null || refundProofPart.getSize() <= 0
+                    || managerProofPart == null || managerProofPart.getSize() <= 0) {
+                response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true&missingProof=true");
+                return;
+            }
+
+            String refundProofPath = buildProofKey(refundProofPart, "refund", orderID);
+            String managerProofPath = buildProofKey(managerProofPart, "manager", orderID);
+            byte[] refundProofData = readPartBytes(refundProofPart);
+            byte[] managerProofData = readPartBytes(managerProofPart);
+            if (refundProofPath == null || managerProofPath == null || refundProofData == null || managerProofData == null) {
+                response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true&uploadFailed=true");
+                return;
+            }
+
+            boolean savedRefundProof = Service.RentalOrderService.setRefundProofImagePath(orderID, refundProofPath, refundProofData);
+            boolean savedManagerProof = Service.RentalOrderService.setManagerPaymentProofImagePath(orderID, managerProofPath, managerProofData);
+            if (!savedRefundProof || !savedManagerProof) {
+                response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true&saveProofFailed=true");
+                return;
+            }
             
             // Update order status to COMPLETED
             boolean success = Service.RentalOrderService.updateOrderStatus(orderID, "COMPLETED");
             
             if (success) {
+                Service.RentalOrderService.markPaymentProcessed(orderID);
                 // Get order details for notifications
                 Model.RentalOrder order = Service.RentalOrderService.getRentalOrderDetails(orderID);
                 if (order != null) {
+                    double depositRefundAmount = order.getAdjustedDepositAmount() > 0
+                            ? order.getAdjustedDepositAmount()
+                            : order.getDepositAmount();
+
+                    double rentalAmount = order.getTotalPrice();
+                    double systemFeeAmount = rentalAmount * SYSTEM_FEE_RATE;
+                    double managerReceiveAmount = rentalAmount - systemFeeAmount;
+
                     // Notify user that deposit has been refunded
                     Service.NotificationService.createNotification(
                         order.getRenterUserID(),
                         "Hoàn tiền cọc",
-                        "Tiền cọc " + String.format("%,.0f", order.getDepositAmount()) + " VND của đơn hàng #" + orderID + " đã được hoàn lại vào tài khoản ngân hàng của bạn. Cảm ơn bạn đã sử dụng WearConnect!"
+                        "Tiền cọc " + String.format("%,.0f", depositRefundAmount) + " VND của đơn hàng #" + orderID + " đã được hoàn lại vào tài khoản ngân hàng của bạn. Cảm ơn bạn đã sử dụng WearConnect!"
                     );
                     
-                    // Notify manager that rental fee has been paid
+                    // Notify manager with system fee breakdown
                     Model.Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
                     if (clothing != null) {
                         Service.NotificationService.createNotification(
                             clothing.getRenterID(),
-                            "Thanh toán tiền thuê",
-                            "Tiền thuê " + String.format("%,.0f", order.getTotalPrice()) + " VND của đơn hàng #" + orderID + " đã được chuyển vào tài khoản ngân hàng của bạn. Cảm ơn bạn đã sử dụng WearConnect!"
+                            "Thanh toán tiền thuê đã hoàn tất",
+                            "Đơn hàng #" + orderID + " đã được admin xác thực và thanh toán thành công.\n"
+                            + "Số tiền thuê: " + String.format("%,.0f", rentalAmount) + " VND\n"
+                            + "Phí hệ thống: 10%\n"
+                            + "Số tiền bạn sẽ nhận được: " + String.format("%,.0f", managerReceiveAmount) + " VND\n"
+                            + "Cảm ơn bạn đã tin tưởng và sử dụng hệ thống. Khoản thanh toán đã được thực hiện."
                         );
                     }
                 }
@@ -557,5 +602,41 @@ public class AdminServlet extends HttpServlet {
             e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true");
         }
+    }
+
+    private String buildProofKey(Part filePart, String prefix, int orderID) {
+        try {
+            String submitted = java.nio.file.Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+            String ext = getFileExtension(submitted);
+            if (ext.isEmpty()) {
+                ext = ".jpg";
+            }
+            return prefix + "_proof_order_" + orderID + "_" + System.currentTimeMillis() + ext;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private byte[] readPartBytes(Part filePart) {
+        try (InputStream is = filePart.getInputStream();
+             ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+            byte[] chunk = new byte[8192];
+            int read;
+            while ((read = is.read(chunk)) != -1) {
+                buffer.write(chunk, 0, read);
+            }
+            return buffer.toByteArray();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private String getFileExtension(String fileName) {
+        if (fileName == null) return "";
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex <= 0 || dotIndex >= fileName.length() - 1) return "";
+        return fileName.substring(dotIndex).toLowerCase();
     }
 }

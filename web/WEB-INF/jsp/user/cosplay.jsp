@@ -18,30 +18,147 @@
             --accent-hover: #ff5252;
             --border: #e5e7eb;
             --bg-light: #f9fafb;
-            --font-family: cursive;
+            --font-family: 'Inter', sans-serif;
+            --heading-font-family: 'Poppins', sans-serif;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-family); }
         body { background: var(--bg-light); color: var(--ink); }
+        h1, h2, h3, h4, h5, h6 { font-family: var(--heading-font-family); }
 
-        /* Hero Section */
-        .hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        /* Hero Slider */
+        .hero-slider {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1d4ed8 0%, #5b21b6 100%);
             color: white;
-            padding: 60px 20px;
-            text-align: center;
-        }
-        .hero h1 {
-            font-size: 48px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        .hero p {
-            font-size: 20px;
-            opacity: 0.95;
-            max-width: 600px;
+            width: 100%;
+            max-width: 1200px;
             margin: 0 auto;
+            border-radius: 18px;
+            box-shadow: 0 14px 38px rgba(37, 54, 112, 0.22);
+            aspect-ratio: 1200 / 675;
+        }
+        .hero-slider::before {
+            content: "";
+            position: absolute;
+            top: -120px;
+            right: -80px;
+            width: 240px;
+            height: 240px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 50%;
+            z-index: 1;
+        }
+        .hero-slider::after {
+            content: "";
+            position: absolute;
+            bottom: -110px;
+            left: -70px;
+            width: 210px;
+            height: 210px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 50%;
+            z-index: 1;
+        }
+        .slider-track {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .hero-slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1s ease;
+        }
+        .hero-slide.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .hero-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .hero-overlay {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 22px 24px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.68));
+            display: grid;
+            gap: 8px;
+            z-index: 2;
+        }
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.22);
+            font-size: 12px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            width: fit-content;
+        }
+        .hero-overlay h1 {
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: bold;
+            margin: 0;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.35);
+        }
+        .hero-overlay p {
+            margin: 0;
+            font-size: 17px;
+            opacity: 0.96;
+            max-width: 700px;
+        }
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 42px;
+            height: 42px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+            z-index: 3;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .slider-btn:hover { background: rgba(0, 0, 0, 0.6); }
+        .slider-btn.prev { left: 12px; }
+        .slider-btn.next { right: 12px; }
+        .slider-dots {
+            position: absolute;
+            left: 50%;
+            bottom: 14px;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 4;
+        }
+        .slider-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.55);
+            cursor: pointer;
+        }
+        .slider-dot.active {
+            background: #fff;
+            transform: scale(1.15);
         }
 
         /* Search Panel */
@@ -252,7 +369,9 @@
         }
 
         @media (max-width: 768px) {
-            .hero h1 { font-size: 32px; }
+            .hero-slider { aspect-ratio: 16 / 9; }
+            .hero-overlay { padding: 16px 16px 28px; }
+            .slider-btn { width: 36px; height: 36px; font-size: 20px; }
             .search-form {
                 grid-template-columns: 1fr;
             }
@@ -273,9 +392,60 @@
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
 
 <!-- Hero Section -->
-<div class="hero">
-    <h1> Cosplay & Fes</h1>
-    <p>Cho thuê trang phục cosplay chất lượng cao từ Anime, Game, và Movie. Biến hóa thành nhân vật yêu thích của bạn!</p>
+<div class="hero-slider" id="cosplayHeroSlider">
+    <div class="slider-track">
+        <div class="hero-slide active">
+            <img src="${pageContext.request.contextPath}/uploads/slider/slide-1.jpg" alt="Cosplay banner 1" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+            <div class="hero-overlay">
+                <span class="hero-tag">Cosplay spotlight</span>
+                <h1>Cosplay & Fes</h1>
+                <p>Cho thuê trang phục cosplay chất lượng cao từ Anime, Game và Movie để bạn hóa thân nổi bật trong mọi sự kiện.</p>
+            </div>
+        </div>
+        <div class="hero-slide">
+            <img src="${pageContext.request.contextPath}/uploads/slider/slide-2.jpg" alt="Cosplay banner 2" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+            <div class="hero-overlay">
+                <span class="hero-tag">Anime energy</span>
+                <h1>Biến hóa thành nhân vật yêu thích</h1>
+                <p>Từ chiến binh, công chúa đến phản diện cá tính, chọn đúng nhân vật bạn muốn xuất hiện thật ấn tượng.</p>
+            </div>
+        </div>
+        <div class="hero-slide">
+            <img src="${pageContext.request.contextPath}/uploads/slider/slide-3.jpg" alt="Cosplay banner 3" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+            <div class="hero-overlay">
+                <span class="hero-tag">Game & movie</span>
+                <h1>Trang phục chỉn chu, lên hình nổi bật</h1>
+                <p>Chất liệu đẹp, kiểu dáng rõ nhân vật và phù hợp cho lễ hội, chụp ảnh, event hay biểu diễn sân khấu.</p>
+            </div>
+        </div>
+        <div class="hero-slide">
+            <img src="${pageContext.request.contextPath}/uploads/slider/slide-4.jpg" alt="Cosplay banner 4" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+            <div class="hero-overlay">
+                <span class="hero-tag">Festival ready</span>
+                <h1>Đi event tự tin hơn</h1>
+                <p>Tìm nhanh bộ đồ phù hợp theo series, nhân vật hoặc loại cosplay để chuẩn bị cho buổi xuất hiện tiếp theo của bạn.</p>
+            </div>
+        </div>
+        <div class="hero-slide">
+            <img src="${pageContext.request.contextPath}/uploads/slider/slide-5.jpg" alt="Cosplay banner 5" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+            <div class="hero-overlay">
+                <span class="hero-tag">Signature look</span>
+                <h1>Tạo dấu ấn riêng với từng outfit</h1>
+                <p>Khám phá nhiều lựa chọn cosplay đang được yêu thích và chọn bộ phù hợp nhất với phong cách bạn muốn thể hiện.</p>
+            </div>
+        </div>
+        <div class="hero-slide">
+            <img src="${pageContext.request.contextPath}/uploads/slider/slide-6.jpg" alt="Cosplay banner 6" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+            <div class="hero-overlay">
+                <span class="hero-tag">WearConnect cosplay</span>
+                <h1>Sẵn sàng cho buổi hóa thân tiếp theo</h1>
+                <p>Lựa chọn nhanh, xem giá rõ ràng và tìm bộ cosplay phù hợp để xuất hiện nổi bật ở mọi sân chơi fandom.</p>
+            </div>
+        </div>
+    </div>
+    <button type="button" class="slider-btn prev" aria-label="Slide trước">‹</button>
+    <button type="button" class="slider-btn next" aria-label="Slide sau">›</button>
+    <div class="slider-dots" aria-label="Điều hướng slide"></div>
 </div>
 
 <!-- Search Panel -->
@@ -471,6 +641,76 @@
             }
         }
     }
+
+    (function () {
+        const slider = document.getElementById('cosplayHeroSlider');
+        if (!slider) return;
+
+        const slides = Array.from(slider.querySelectorAll('.hero-slide'));
+        const dotsContainer = slider.querySelector('.slider-dots');
+        const prevBtn = slider.querySelector('.slider-btn.prev');
+        const nextBtn = slider.querySelector('.slider-btn.next');
+        let currentIndex = 0;
+        let autoTimer;
+
+        if (slides.length <= 1) {
+            if (prevBtn) prevBtn.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'none';
+            if (dotsContainer) dotsContainer.style.display = 'none';
+            return;
+        }
+
+        slides.forEach((_, index) => {
+            const dot = document.createElement('button');
+            dot.type = 'button';
+            dot.className = 'slider-dot' + (index === 0 ? ' active' : '');
+            dot.setAttribute('aria-label', 'Chuyển đến slide ' + (index + 1));
+            dot.addEventListener('click', () => {
+                showSlide(index);
+                restartAutoPlay();
+            });
+            dotsContainer.appendChild(dot);
+        });
+
+        const dots = Array.from(dotsContainer.querySelectorAll('.slider-dot'));
+
+        function showSlide(index) {
+            currentIndex = (index + slides.length) % slides.length;
+            slides.forEach((slide, i) => slide.classList.toggle('active', i === currentIndex));
+            dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+        }
+
+        function nextSlide() {
+            showSlide(currentIndex + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentIndex - 1);
+        }
+
+        function startAutoPlay() {
+            autoTimer = setInterval(nextSlide, 7000);
+        }
+
+        function restartAutoPlay() {
+            clearInterval(autoTimer);
+            startAutoPlay();
+        }
+
+        prevBtn.addEventListener('click', () => {
+            prevSlide();
+            restartAutoPlay();
+        });
+        nextBtn.addEventListener('click', () => {
+            nextSlide();
+            restartAutoPlay();
+        });
+
+        slider.addEventListener('mouseenter', () => clearInterval(autoTimer));
+        slider.addEventListener('mouseleave', startAutoPlay);
+
+        startAutoPlay();
+    })();
 </script>
 </body>
 </html>

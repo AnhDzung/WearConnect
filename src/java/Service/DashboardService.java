@@ -11,16 +11,17 @@ import java.sql.*;
 import java.util.*;
 
 public class DashboardService {
+    private static final double SYSTEM_FEE_RATE = 0.10;
     
-    // Lấy doanh thu tổng cộng của manager (toàn thời gian, chỉ tính giao dịch đã thanh toán thành công)
+    // Lấy doanh thu thực nhận của manager (toàn thời gian, sau khi trừ 10% phí hệ thống)
     public static double getTotalRevenue(int renterID) {
-        String sql = "SELECT SUM(p.Amount) as TotalRevenue FROM Payment p " +
-                     "JOIN RentalOrder ro ON p.RentalOrderID = ro.RentalOrderID " +
+        String sql = "SELECT SUM(ro.TotalPrice * ?) as TotalRevenue FROM RentalOrder ro " +
                      "JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
-                     "WHERE c.RenterID = ? AND p.PaymentStatus = 'Completed'";
+                     "WHERE c.RenterID = ? AND ro.Status = 'COMPLETED'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, renterID);
+            ps.setDouble(1, 1.0 - SYSTEM_FEE_RATE);
+            ps.setInt(2, renterID);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     double revenue = rs.getDouble("TotalRevenue");
@@ -37,7 +38,7 @@ public class DashboardService {
     public static int getCompletedOrderCount(int renterID) {
         String sql = "SELECT COUNT(*) as CompletedCount FROM RentalOrder ro " +
                      "JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
-                     "WHERE c.RenterID = ? AND ro.Status = 'RETURNED'";
+                     "WHERE c.RenterID = ? AND ro.Status = 'COMPLETED'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, renterID);
@@ -139,20 +140,21 @@ public class DashboardService {
         return result;
     }
     
-    // Lấy top 3 sản phẩm có doanh thu cao nhất
+    // Lấy top 3 sản phẩm có doanh thu thực nhận cao nhất (chỉ đơn COMPLETED, đã trừ 10% phí)
     public static List<Map<String, Object>> getTopRevenueProducts(int renterID, int limit) {
         List<Map<String, Object>> result = new ArrayList<>();
         String sql = "SELECT TOP " + limit + " c.ClothingID, c.ClothingName, c.HourlyPrice, " +
-                     "SUM(ro.TotalPrice) as TotalRevenue, COUNT(ro.RentalOrderID) as OrderCount " +
+                     "SUM(ro.TotalPrice * ?) as TotalRevenue, COUNT(ro.RentalOrderID) as OrderCount " +
                      "FROM Clothing c " +
                      "LEFT JOIN RentalOrder ro ON c.ClothingID = ro.ClothingID " +
-                     "WHERE c.RenterID = ? AND c.IsActive = 1 " +
+                     "WHERE c.RenterID = ? AND c.IsActive = 1 AND ro.Status = 'COMPLETED' " +
                      "GROUP BY c.ClothingID, c.ClothingName, c.HourlyPrice " +
                      "ORDER BY TotalRevenue DESC";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, renterID);
+            ps.setDouble(1, 1.0 - SYSTEM_FEE_RATE);
+            ps.setInt(2, renterID);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> row = new HashMap<>();
@@ -170,37 +172,52 @@ public class DashboardService {
         return result;
     }
     
-    // Lấy doanh thu theo ngày cho biểu đồ. Nếu days <= 0 thì lấy toàn bộ lịch sử.
+    // Lấy doanh thu thực nhận theo ngày cho biểu đồ.
+    // Chỉ tính các đơn COMPLETED, nhóm theo ngày admin xử lý thanh toán (PaymentProcessedDate),
+    // fallback về CreatedAt nếu dữ liệu cũ chưa có PaymentProcessedDate.
     public static List<Map<String, Object>> getRevenueByDate(int renterID, int days) {
         List<Map<String, Object>> result = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT CAST(p.PaymentDate AS DATE) as PaymentDate, " +
-                     "SUM(p.Amount) as DailyRevenue " +
-                     "FROM Payment p " +
-                     "JOIN RentalOrder ro ON p.RentalOrderID = ro.RentalOrderID " +
-                     "JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
-                     "WHERE c.RenterID = ? AND p.PaymentStatus = 'Completed' ");
+        String primaryDateExpr = "COALESCE(ro.PaymentProcessedDate, ro.CreatedAt)";
+        try {
+            loadRevenueByDate(result, renterID, days, primaryDateExpr);
+        } catch (SQLException primaryError) {
+            // Older databases may not have PaymentProcessedDate yet.
+            try {
+                loadRevenueByDate(result, renterID, days, "ro.CreatedAt");
+            } catch (SQLException fallbackError) {
+                fallbackError.printStackTrace();
+            }
+        }
+        return result;
+    }
+
+    private static void loadRevenueByDate(List<Map<String, Object>> result, int renterID, int days, String dateExpr)
+            throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT CAST(").append(dateExpr).append(
+                " AS DATE) as RevenueDate, SUM(ro.TotalPrice * ?) as DailyRevenue "
+        ).append("FROM RentalOrder ro ")
+         .append("JOIN Clothing c ON ro.ClothingID = c.ClothingID ")
+         .append("WHERE c.RenterID = ? AND ro.Status = 'COMPLETED' ");
 
         if (days > 0) {
-            sql.append("AND p.PaymentDate >= DATEADD(DAY, -").append(days).append(", GETDATE()) ");
+            sql.append("AND ").append(dateExpr).append(" >= DATEADD(DAY, -").append(days).append(", GETDATE()) ");
         }
 
-        sql.append("GROUP BY CAST(p.PaymentDate AS DATE) ORDER BY PaymentDate ASC");
-        
+        sql.append("GROUP BY CAST(").append(dateExpr).append(" AS DATE) ORDER BY RevenueDate ASC");
+
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            ps.setInt(1, renterID);
+            ps.setDouble(1, 1.0 - SYSTEM_FEE_RATE);
+            ps.setInt(2, renterID);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> row = new HashMap<>();
-                    row.put("date", rs.getDate("PaymentDate").toString());
+                    row.put("date", rs.getDate("RevenueDate").toString());
                     row.put("revenue", rs.getDouble("DailyRevenue"));
                     result.add(row);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
-        return result;
     }
     
     // ===================================================================

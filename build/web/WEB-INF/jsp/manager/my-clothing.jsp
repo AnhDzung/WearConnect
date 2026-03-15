@@ -24,7 +24,7 @@
             background: radial-gradient(circle at 10% 10%, #f2e7d7, transparent 40%),
                         radial-gradient(circle at 90% 20%, #e5f2ec, transparent 45%),
                         var(--paper);
-            font-family: var(--font-family, cursive);
+            font-family: var(--font-family, 'Inter', sans-serif);
         }
         .container { max-width: 1180px; margin: 0 auto; padding: 32px 20px 70px; }
         .page-hero {
@@ -41,7 +41,7 @@
         }
         .page-hero h1 {
             margin: 0 0 6px;
-            font-family: var(--font-family, cursive);
+            font-family: 'Poppins', sans-serif;
             font-size: clamp(28px, 4vw, 40px);
             letter-spacing: 0.3px;
         }

@@ -8,7 +8,8 @@ public class Payment {
     private double amount;
     private String paymentMethod; // CREDIT_CARD, BANK_TRANSFER, CASH
     private String paymentStatus; // PENDING, COMPLETED, FAILED, REFUNDED
-    private String paymentProofImage; // Path to uploaded payment proof image
+    private String paymentProofImage; // Logical image key/name
+    private byte[] paymentProofImageData; // Raw image bytes stored in DB
     private LocalDateTime paymentDate;
     private LocalDateTime createdAt;
 
@@ -45,4 +46,7 @@ public class Payment {
 
     public String getPaymentProofImage() { return paymentProofImage; }
     public void setPaymentProofImage(String paymentProofImage) { this.paymentProofImage = paymentProofImage; }
+
+    public byte[] getPaymentProofImageData() { return paymentProofImageData; }
+    public void setPaymentProofImageData(byte[] paymentProofImageData) { this.paymentProofImageData = paymentProofImageData; }
 }

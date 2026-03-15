@@ -435,6 +435,10 @@
                     </div>
                     <div>
                         <strong>Tiền thuê trả cho Manager:</strong> <span id="rentalDisplay"></span> VND
+                        <div style="margin-top: 6px; color: #555;">
+                            <div>Phí hệ thống (10%): <strong><span id="systemFeeDisplay">0</span> VND</strong></div>
+                            <div>Số tiền Manager nhận: <strong><span id="managerReceiveDisplay">0</span> VND</strong></div>
+                        </div>
                         <div style="margin-top: 8px;">
                             <label style="display: block; margin-bottom: 5px;">Upload ảnh chứng minh đã trả tiền cho Manager:</label>
                             <input type="file" name="managerPaymentProof" accept="image/*" required style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">

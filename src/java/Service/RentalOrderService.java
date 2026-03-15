@@ -194,15 +194,43 @@ public class RentalOrderService {
         return RentalOrderDAO.updatePaymentProofPath(rentalOrderID, path);
     }
 
+    public static boolean setPaymentProofPath(int rentalOrderID, String path, byte[] imageData) {
+        return RentalOrderDAO.updatePaymentProofPath(rentalOrderID, path, imageData);
+    }
+
     public static boolean setReceivedProofPath(int rentalOrderID, String path) {
         return RentalOrderDAO.updateReceivedProofPath(rentalOrderID, path);
+    }
+
+    public static boolean setReceivedProofPath(int rentalOrderID, String path, byte[] imageData) {
+        return RentalOrderDAO.updateReceivedProofPath(rentalOrderID, path, imageData);
     }
 
     public static boolean setTrackingNumber(int rentalOrderID, String trackingNumber) {
         return RentalOrderDAO.updateTrackingNumber(rentalOrderID, trackingNumber);
     }
 
+    public static boolean setRefundProofImagePath(int rentalOrderID, String path) {
+        return RentalOrderDAO.updateRefundProofImage(rentalOrderID, path);
+    }
+
+    public static boolean setRefundProofImagePath(int rentalOrderID, String path, byte[] imageData) {
+        return RentalOrderDAO.updateRefundProofImage(rentalOrderID, path, imageData);
+    }
+
+    public static boolean setManagerPaymentProofImagePath(int rentalOrderID, String path) {
+        return RentalOrderDAO.updateManagerPaymentProofImage(rentalOrderID, path);
+    }
+
+    public static boolean setManagerPaymentProofImagePath(int rentalOrderID, String path, byte[] imageData) {
+        return RentalOrderDAO.updateManagerPaymentProofImage(rentalOrderID, path, imageData);
+    }
+
     public static RentalOrder getRentalOrderByID(int rentalOrderID) {
         return RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+    }
+
+    public static boolean markPaymentProcessed(int rentalOrderID) {
+        return RentalOrderDAO.markPaymentProcessed(rentalOrderID);
     }
 }

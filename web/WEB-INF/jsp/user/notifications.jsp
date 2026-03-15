@@ -7,7 +7,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thông báo của tôi</title>
     <style>
-        body { font-family: cursive; background:#f5f5f5; padding:20px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
+
+        body { font-family: 'Inter', sans-serif; background:#f5f5f5; padding:20px; }
+        h1, h2, h3, h4, h5, h6, .title { font-family: 'Poppins', sans-serif; }
         .box { max-width:800px; margin:0 auto; background:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.08); padding:16px; }
         .title-row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
         .title { font-size:20px; margin:0; }
@@ -26,7 +29,6 @@
         .btn-mark-all { padding:8px 14px; background:#28a745; color:white; border-radius:6px; text-decoration:none; border:none; cursor:pointer; font-size:14px; font-weight:500; }
         .btn-mark-all:hover { background:#218838; }
     </style>
-</head>
 <body>
     <div class="box">
         <div class="title-row">

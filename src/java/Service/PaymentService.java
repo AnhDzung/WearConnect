@@ -104,4 +104,8 @@ public class PaymentService {
     public static boolean updatePaymentProof(int paymentID, String proofImagePath) {
         return PaymentDAO.updatePaymentProof(paymentID, proofImagePath);
     }
+
+    public static boolean updatePaymentProof(int paymentID, String proofImagePath, byte[] proofImageData) {
+        return PaymentDAO.updatePaymentProof(paymentID, proofImagePath, proofImageData);
+    }
 }

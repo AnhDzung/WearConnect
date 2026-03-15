@@ -7,7 +7,10 @@
     <title>Chi tiết vấn đề - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
-        body { margin: 0; background-color: #f5f5f5; font-family: cursive; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
+
+        body { margin: 0; background-color: #f5f5f5; font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
         .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
         .back-btn { padding: 10px 20px; background-color: #6c757d; color: white; border: none; cursor: pointer; margin-bottom: 20px; border-radius: 4px; }
         .back-btn:hover { background-color: #5a6268; }

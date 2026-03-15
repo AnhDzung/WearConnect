@@ -7,7 +7,10 @@
     <title>Đánh giá sản phẩm - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
-        body { margin: 0; background-color: #f5f5f5; font-family: cursive; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
+
+        body { margin: 0; background-color: #f5f5f5; font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
         .container { max-width: 900px; margin: 20px auto; padding: 0 16px 40px; }
         .card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; }
         .rating-item { border-bottom: 1px solid #eee; padding: 12px 0; }
@@ -17,7 +20,6 @@
         .empty { text-align: center; color: #777; padding: 30px 0; }
         .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 12px; border-radius: 6px; margin-bottom: 16px; }
     </style>
-</head>
 <body>
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
 <div class="container">

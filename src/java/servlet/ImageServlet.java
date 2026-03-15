@@ -3,6 +3,8 @@ package servlet;
 import Controller.ClothingController;
 import DAO.ClothingImageDAO;
 import DAO.OrderIssueDAO;
+import DAO.PaymentDAO;
+import DAO.RentalOrderDAO;
 import Model.Clothing;
 import Model.ClothingImage;
 import Model.OrderIssue;
@@ -24,6 +26,11 @@ public class ImageServlet extends HttpServlet {
                 byte[] fileData = tryLoadFromDisk(pathParam);
                 if (fileData != null) {
                     writeImage(response, fileData, pathParam);
+                    return;
+                }
+                byte[] dbData = loadProofImageFromDatabase(pathParam);
+                if (dbData != null) {
+                    writeImage(response, dbData, pathParam);
                     return;
                 }
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "File not found: " + pathParam);
@@ -132,5 +139,13 @@ public class ImageServlet extends HttpServlet {
         } catch (Exception ignored) {
         }
         return null;
+    }
+
+    private byte[] loadProofImageFromDatabase(String logicalPath) {
+        byte[] paymentProof = PaymentDAO.getPaymentProofDataByPath(logicalPath);
+        if (paymentProof != null) {
+            return paymentProof;
+        }
+        return RentalOrderDAO.getAnyProofImageDataByPath(logicalPath);
     }
 }

@@ -10,57 +10,355 @@
     <title>Chi tiết đơn - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
-        .container { max-width: 1000px; margin: 40px auto; padding: 20px; }
-        .order-wrapper { display: flex; gap: 24px; align-items: flex-start; }
-        .order-left { flex: 1; }
-        .order-right { width: 320px; }
-        .product-image-box { background: #f9f9f9; padding: 14px; border-radius: 8px; text-align: center; border: 1px solid #e6e9f0; }
-        .product-image { width: 100%; max-height: 260px; object-fit: cover; border-radius: 6px; box-shadow: 0 6px 14px rgba(0,0,0,0.06); }
-        .order-info { background-color: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #e6e9f0; }
-        .info-row { margin: 10px 0; }
-        .info-row strong { display: inline-block; width: 150px; }
-        .status { padding: 8px 15px; border-radius: 3px; font-weight: bold; }
-        .status.pending { background-color: #ffc107; }
-        .status.verifying { background-color: #17a2b8; color: white; }
-        .status.confirmed { background-color: #28a745; color: white; }
-        .status.rented { background-color: #28a745; color: white; }
-        .status.returned { background-color: #6c757d; color: white; }
-        .status.issue { background-color: #dc3545; color: white; }
-        .status.return_requested { background-color: #ff9800; color: white; }
-        .btn { padding: 10px 20px; margin-top: 20px; background-color: #007bff; color: white; border: none; cursor: pointer; text-decoration: none; display: inline-block; border-radius: 4px; }
-        .btn-danger { background-color: #dc3545; }
-        .alert { padding: 15px; margin-bottom: 20px; border-radius: 5px; }
-        .alert-success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
-        .star-rating { display: inline-flex; flex-direction: row-reverse; gap: 6px; font-size: 26px; cursor: pointer; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
+
+        :root {
+            --ink-900: #1a2238;
+            --ink-700: #33446b;
+            --ink-500: #5a6f9a;
+            --soft-100: #f5f8ff;
+            --soft-200: #e8eefc;
+            --line: #d8e1f5;
+            --brand: #1f6feb;
+            --brand-2: #17a2b8;
+            --ok: #198754;
+            --warn: #ff9800;
+            --danger: #dc3545;
+            --shadow: 0 18px 40px rgba(18, 42, 93, 0.12);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            color: var(--ink-900);
+            background:
+                radial-gradient(circle at 8% 12%, rgba(31, 111, 235, 0.16), transparent 38%),
+                radial-gradient(circle at 92% 88%, rgba(23, 162, 184, 0.14), transparent 34%),
+                linear-gradient(165deg, #f8fbff 0%, #eef4ff 48%, #f3fbff 100%);
+        }
+
+        .container {
+            max-width: 1320px;
+            margin: 34px auto 46px;
+            padding: 0 16px;
+        }
+
+        h1 {
+            margin: 0 0 20px;
+            font-family: 'Poppins', sans-serif;
+            font-size: clamp(1.7rem, 2.6vw, 2.25rem);
+            letter-spacing: 0.3px;
+            color: var(--ink-900);
+        }
+
+        .order-wrapper {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 22px;
+            align-items: start;
+        }
+
+        .order-left { min-width: 0; }
+        .order-right { width: auto; }
+
+        .order-info {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(2px);
+            animation: riseIn 320ms ease-out;
+        }
+
+        .product-image-box {
+            background: linear-gradient(160deg, #ffffff, #f5f8ff);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 14px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .product-image {
+            width: 100%;
+            max-height: 270px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 12px 28px rgba(20, 46, 104, 0.2);
+        }
+
+        .info-row {
+            margin: 0;
+            padding: 12px 0;
+            display: grid;
+            grid-template-columns: minmax(130px, 180px) 1fr;
+            gap: 10px;
+            border-bottom: 1px dashed rgba(90, 111, 154, 0.25);
+        }
+
+        .info-row strong {
+            display: block;
+            width: auto;
+            font-weight: 700;
+            color: var(--ink-700);
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 32px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.83rem;
+            letter-spacing: 0.25px;
+            border: 1px solid transparent;
+        }
+
+        .status.pending { background: rgba(255, 193, 7, 0.18); border-color: rgba(255, 193, 7, 0.35); color: #7d5d00; }
+        .status.verifying { background: rgba(23, 162, 184, 0.18); border-color: rgba(23, 162, 184, 0.35); color: #0f5e6b; }
+        .status.confirmed { background: rgba(25, 135, 84, 0.16); border-color: rgba(25, 135, 84, 0.3); color: #11643d; }
+        .status.rented { background: rgba(31, 111, 235, 0.14); border-color: rgba(31, 111, 235, 0.3); color: #124b9f; }
+        .status.returned { background: rgba(108, 117, 125, 0.14); border-color: rgba(108, 117, 125, 0.3); color: #4d5862; }
+        .status.completed { background: rgba(25, 135, 84, 0.16); border-color: rgba(25, 135, 84, 0.3); color: #11643d; }
+        .status.issue { background: rgba(220, 53, 69, 0.14); border-color: rgba(220, 53, 69, 0.3); color: #9e1f31; }
+        .status.return_requested { background: rgba(255, 152, 0, 0.16); border-color: rgba(255, 152, 0, 0.3); color: #8c5300; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 18px;
+            margin-top: 16px;
+            border-radius: 11px;
+            border: 1px solid rgba(17, 77, 155, 0.35);
+            text-decoration: none;
+            cursor: pointer;
+            color: #fff;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            background: linear-gradient(135deg, var(--brand), #1358bf);
+            box-shadow: 0 10px 22px rgba(31, 111, 235, 0.24);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 13px 24px rgba(31, 111, 235, 0.28);
+            filter: saturate(1.08);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e03b49, #b61e2d);
+            border-color: rgba(182, 30, 45, 0.45);
+            box-shadow: 0 10px 22px rgba(182, 30, 45, 0.24);
+        }
+
+        .alert {
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border-radius: 12px;
+            border: 1px solid;
+            box-shadow: 0 6px 16px rgba(26, 34, 56, 0.08);
+            font-size: 0.95rem;
+        }
+
+        .alert-success {
+            background: #ebfaf2;
+            border-color: #b7e8cb;
+            color: #155a37;
+        }
+
+        .alert-info {
+            background: #eaf6ff;
+            border-color: #bddfff;
+            color: #0f4f7b;
+        }
+
+        .star-rating {
+            display: inline-flex;
+            flex-direction: row-reverse;
+            gap: 6px;
+            font-size: 27px;
+            cursor: pointer;
+        }
+
         .star-rating input { display: none; }
-        .star-rating label { color: #ccc; transition: color 0.2s ease; }
-        .star-rating input:checked ~ label { color: #f5b301; }
+        .star-rating label { color: #cfd6e6; transition: color 0.2s ease; }
+        .star-rating input:checked ~ label { color: #f3b321; }
         .star-rating label:hover,
-        .star-rating label:hover ~ label { color: #f5d16b; }
-        .rating-note { font-size: 12px; color: #666; margin-top: 4px; }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-        .modal.show { display: flex; align-items: center; justify-content: center; }
-        .modal-content { background-color: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .modal-header h2 { margin: 0; font-size: 24px; color: #333; }
-        .modal-close { background: none; border: none; font-size: 28px; cursor: pointer; color: #999; }
-        .modal-close:hover { color: #333; }
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #333; }
-        .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: 14px; }
-        .form-group textarea { resize: vertical; min-height: 100px; }
-        .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-        .modal-btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
-        .modal-btn-submit { background-color: #dc3545; color: white; }
-        .modal-btn-submit:hover { opacity: 0.9; }
-        .modal-btn-cancel { background-color: #e0e0e0; color: #333; }
-        .modal-btn-cancel:hover { background-color: #d0d0d0; }
+        .star-rating label:hover ~ label { color: #f9cd63; }
+
+        .rating-note {
+            font-size: 12px;
+            color: var(--ink-500);
+            margin-top: 4px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            inset: 0;
+            background-color: rgba(16, 30, 59, 0.5);
+            backdrop-filter: blur(2px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 26px;
+            border-radius: 16px;
+            width: 92%;
+            max-width: 520px;
+            border: 1px solid var(--line);
+            box-shadow: 0 20px 42px rgba(16, 30, 59, 0.24);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            color: var(--ink-900);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--ink-500);
+        }
+
+        .modal-close:hover { color: var(--ink-900); }
+
+        .form-group { margin-bottom: 14px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+            color: var(--ink-700);
+        }
+
+        .form-group select,
+        .form-group textarea,
+        .form-group input[type="text"],
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            background: #fff;
+            box-sizing: border-box;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+
+        .modal-btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .modal-btn-submit {
+            background: linear-gradient(135deg, #e03b49, #b61e2d);
+            color: #fff;
+        }
+
+        .modal-btn-submit:hover { filter: brightness(1.03); }
+
+        .modal-btn-cancel {
+            background: #eef2fb;
+            color: var(--ink-700);
+            border: 1px solid var(--line);
+        }
+
+        .modal-btn-cancel:hover { background: #e5ebfa; }
+
         .color-info { display: flex; align-items: center; gap: 10px; }
-        .color-swatch { display: inline-block; width: 24px; height: 24px; border-radius: 3px; border: 1px solid #999; }
-        @media (max-width: 768px) {
-            .order-wrapper { flex-direction: column; }
-            .order-right { width: 100%; }
-            .product-image { max-height: 320px; }
+
+        .color-swatch {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 1px solid rgba(26, 34, 56, 0.25);
+        }
+
+        @keyframes riseIn {
+            from {
+                transform: translateY(8px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .order-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .product-image {
+                max-height: 330px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                margin-top: 20px;
+                padding: 0 12px;
+            }
+
+            .order-info {
+                padding: 16px;
+                border-radius: 14px;
+            }
+
+            .info-row {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+
+            .btn,
+            .modal-btn {
+                width: 100%;
+            }
+
+            .modal-buttons {
+                flex-direction: column-reverse;
+            }
         }
     </style>
 </head>
@@ -140,6 +438,14 @@
                         <div class="info-row">
                             <strong>Tổng giá thuê:</strong> <fmt:formatNumber value="${order.totalPrice}" pattern="#,##0"/> VNĐ
                         </div>
+                        <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Admin'}">
+                            <div class="info-row" style="background-color: #eef9f0; padding: 8px; border-radius: 4px; border-left: 3px solid #198754;">
+                                <strong>Thực nhận sau trừ phí (10%):</strong>
+                                <span style="font-weight: 700; color: #198754;">
+                                    <fmt:formatNumber value="${order.totalPrice * 0.9}" pattern="#,##0"/> VNĐ
+                                </span>
+                            </div>
+                        </c:if>
                         
                         <c:if test="${sessionScope.userRole != 'Manager'}">
                             <!-- Tiền cọc chi tiết -->
@@ -178,7 +484,18 @@
                         <div class="info-row">
                             <strong>Trạng thái:</strong>
                             <span class="status ${order.status.toLowerCase()}">
-                                ${order.status}
+                                <c:choose>
+                                    <c:when test="${order.status == 'PENDING_PAYMENT'}">Chờ thanh toán</c:when>
+                                    <c:when test="${order.status == 'PAYMENT_SUBMITTED'}">Đã gửi thanh toán</c:when>
+                                    <c:when test="${order.status == 'PAYMENT_VERIFIED'}">Đã xác thực</c:when>
+                                    <c:when test="${order.status == 'DELIVERED_PENDING_CONFIRMATION'}">Chờ nhận hàng</c:when>
+                                    <c:when test="${order.status == 'RENTED'}">Đang thuê</c:when>
+                                    <c:when test="${order.status == 'RETURN_REQUESTED'}">Yêu cầu trả hàng</c:when>
+                                    <c:when test="${order.status == 'RETURNED'}">Đã trả hàng</c:when>
+                                    <c:when test="${order.status == 'COMPLETED'}">Hoàn thành</c:when>
+                                    <c:when test="${order.status == 'ISSUE'}">Có vấn đề</c:when>
+                                    <c:otherwise>${order.status}</c:otherwise>
+                                </c:choose>
                             </span>
                         </div>
                         <div class="info-row">

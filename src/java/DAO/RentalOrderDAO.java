@@ -284,9 +284,15 @@ public class RentalOrderDAO {
         } catch (SQLException ignore) {}
         try { order.setPaymentProofImage(rs.getString("PaymentProofImage")); } catch (SQLException ignore) {}
         try { order.setReceivedProofImage(rs.getString("ReceivedProofImage")); } catch (SQLException ignore) {}
+        try { order.setPaymentProofImageData(rs.getBytes("PaymentProofImageData")); } catch (SQLException ignore) {}
+        try { order.setReceivedProofImageData(rs.getBytes("ReceivedProofImageData")); } catch (SQLException ignore) {}
         try { order.setTrackingNumber(rs.getString("TrackingNumber")); } catch (SQLException ignore) {}   
         try { order.setReturnMethod(rs.getString("ReturnMethod")); } catch (SQLException ignore) {}
         try { order.setReturnTrackingNumber(rs.getString("ReturnTrackingNumber")); } catch (SQLException ignore) {}
+        try { order.setRefundProofImage(rs.getString("RefundProofImage")); } catch (SQLException ignore) {}
+        try { order.setManagerPaymentProofImage(rs.getString("ManagerPaymentProofImage")); } catch (SQLException ignore) {}
+        try { order.setRefundProofImageData(rs.getBytes("RefundProofImageData")); } catch (SQLException ignore) {}
+        try { order.setManagerPaymentProofImageData(rs.getBytes("ManagerPaymentProofImageData")); } catch (SQLException ignore) {}
         
         // Map new fields for trust-based deposit
         try { order.setUserRating(rs.getDouble("UserRating")); } catch (SQLException ignore) {}
@@ -310,27 +316,53 @@ public class RentalOrderDAO {
     }
 
     public static boolean updatePaymentProofPath(int rentalOrderID, String path) {
-        String sql = "UPDATE RentalOrder SET PaymentProofImage = ? WHERE RentalOrderID = ?";
+        return updatePaymentProofPath(rentalOrderID, path, null);
+    }
+
+    public static boolean updatePaymentProofPath(int rentalOrderID, String path, byte[] imageData) {
+        String sql = "UPDATE RentalOrder SET PaymentProofImage = ?, PaymentProofImageData = ? WHERE RentalOrderID = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, path);
-            ps.setInt(2, rentalOrderID);
+            ps.setBytes(2, imageData);
+            ps.setInt(3, rentalOrderID);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            String fallbackSql = "UPDATE RentalOrder SET PaymentProofImage = ? WHERE RentalOrderID = ?";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(fallbackSql)) {
+                ps.setString(1, path);
+                ps.setInt(2, rentalOrderID);
+                return ps.executeUpdate() > 0;
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         }
         return false;
     }
 
     public static boolean updateReceivedProofPath(int rentalOrderID, String path) {
-        String sql = "UPDATE RentalOrder SET ReceivedProofImage = ? WHERE RentalOrderID = ?";
+        return updateReceivedProofPath(rentalOrderID, path, null);
+    }
+
+    public static boolean updateReceivedProofPath(int rentalOrderID, String path, byte[] imageData) {
+        String sql = "UPDATE RentalOrder SET ReceivedProofImage = ?, ReceivedProofImageData = ? WHERE RentalOrderID = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, path);
-            ps.setInt(2, rentalOrderID);
+            ps.setBytes(2, imageData);
+            ps.setInt(3, rentalOrderID);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            String fallbackSql = "UPDATE RentalOrder SET ReceivedProofImage = ? WHERE RentalOrderID = ?";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(fallbackSql)) {
+                ps.setString(1, path);
+                ps.setInt(2, rentalOrderID);
+                return ps.executeUpdate() > 0;
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         }
         return false;
     }
@@ -372,6 +404,96 @@ public class RentalOrderDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public static boolean markPaymentProcessed(int rentalOrderID) {
+        String sql = "UPDATE RentalOrder SET PaymentProcessedDate = GETDATE() WHERE RentalOrderID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, rentalOrderID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static boolean updateRefundProofImage(int rentalOrderID, String path) {
+        return updateRefundProofImage(rentalOrderID, path, null);
+    }
+
+    public static boolean updateRefundProofImage(int rentalOrderID, String path, byte[] imageData) {
+        String sql = "UPDATE RentalOrder SET RefundProofImage = ?, RefundProofImageData = ? WHERE RentalOrderID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, path);
+            ps.setBytes(2, imageData);
+            ps.setInt(3, rentalOrderID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            String fallbackSql = "UPDATE RentalOrder SET RefundProofImage = ? WHERE RentalOrderID = ?";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(fallbackSql)) {
+                ps.setString(1, path);
+                ps.setInt(2, rentalOrderID);
+                return ps.executeUpdate() > 0;
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    public static boolean updateManagerPaymentProofImage(int rentalOrderID, String path) {
+        return updateManagerPaymentProofImage(rentalOrderID, path, null);
+    }
+
+    public static boolean updateManagerPaymentProofImage(int rentalOrderID, String path, byte[] imageData) {
+        String sql = "UPDATE RentalOrder SET ManagerPaymentProofImage = ?, ManagerPaymentProofImageData = ? WHERE RentalOrderID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, path);
+            ps.setBytes(2, imageData);
+            ps.setInt(3, rentalOrderID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            String fallbackSql = "UPDATE RentalOrder SET ManagerPaymentProofImage = ? WHERE RentalOrderID = ?";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(fallbackSql)) {
+                ps.setString(1, path);
+                ps.setInt(2, rentalOrderID);
+                return ps.executeUpdate() > 0;
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    public static byte[] getAnyProofImageDataByPath(String path) {
+        byte[] data = getProofBytesByColumn("PaymentProofImage", "PaymentProofImageData", path);
+        if (data != null) return data;
+        data = getProofBytesByColumn("ReceivedProofImage", "ReceivedProofImageData", path);
+        if (data != null) return data;
+        data = getProofBytesByColumn("RefundProofImage", "RefundProofImageData", path);
+        if (data != null) return data;
+        return getProofBytesByColumn("ManagerPaymentProofImage", "ManagerPaymentProofImageData", path);
+    }
+
+    private static byte[] getProofBytesByColumn(String pathColumn, String dataColumn, String path) {
+        String sql = "SELECT TOP 1 " + dataColumn + " FROM RentalOrder WHERE " + pathColumn + " = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, path);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBytes(dataColumn);
+                }
+            }
+        } catch (SQLException e) {
+            // Ignore when column is not migrated yet
+        }
+        return null;
     }
     
     /**

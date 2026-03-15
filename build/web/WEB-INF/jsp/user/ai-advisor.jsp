@@ -6,7 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tư vấn AI - WearConnect</title>
     <style>
-        body { font-family: cursive; background: #f5f6fb; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
+
+        body { font-family: 'Inter', sans-serif; background: #f5f6fb; }
+        h1, h2, h3, h4, h5, h6, .advisor-title, .advisor-side-title { font-family: 'Poppins', sans-serif; }
         .advisor-wrap { max-width: 1180px; margin: 20px auto; padding: 0 16px; }
         .advisor-layout { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
         .advisor-sidebar,
@@ -44,7 +47,7 @@
         .advisor-product-price { margin-top: 6px; color: #1d4ed8; font-size: 12px; font-weight: 700; }
         .advisor-product-cta { margin-top: 8px; display: inline-block; font-size: 11px; font-weight: 700; color: #374151; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 4px 8px; }
         .advisor-actions { padding: 12px; border-top: 1px solid #eee; display: flex; gap: 8px; }
-        .advisor-input { flex: 1; border: 1px solid #d8dbe8; border-radius: 8px; padding: 10px 12px; font-family: cursive; }
+        .advisor-input { flex: 1; border: 1px solid #d8dbe8; border-radius: 8px; padding: 10px 12px; font-family: 'Inter', sans-serif; }
         .advisor-send { border: none; background: #5c7cfa; color: white; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
         .advisor-send:hover { background: #4c6ef5; }
         .advisor-note { padding: 0 12px 12px 12px; font-size: 12px; color: #666; }

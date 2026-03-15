@@ -85,8 +85,16 @@ public class RentalOrderController {
         return RentalOrderService.setPaymentProofPath(rentalOrderID, path);
     }
 
+    public static boolean setPaymentProofPath(int rentalOrderID, String path, byte[] imageData) {
+        return RentalOrderService.setPaymentProofPath(rentalOrderID, path, imageData);
+    }
+
     public static boolean setReceivedProofPath(int rentalOrderID, String path) {
         return RentalOrderService.setReceivedProofPath(rentalOrderID, path);
+    }
+
+    public static boolean setReceivedProofPath(int rentalOrderID, String path, byte[] imageData) {
+        return RentalOrderService.setReceivedProofPath(rentalOrderID, path, imageData);
     }
 
     public static boolean setTrackingNumber(int rentalOrderID, String trackingNumber) {

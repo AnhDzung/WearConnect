@@ -48,6 +48,10 @@ public class PaymentController {
     public static boolean updatePaymentProof(int paymentID, String proofImagePath) {
         return PaymentService.updatePaymentProof(paymentID, proofImagePath);
     }
+
+    public static boolean updatePaymentProof(int paymentID, String proofImagePath, byte[] proofImageData) {
+        return PaymentService.updatePaymentProof(paymentID, proofImagePath, proofImageData);
+    }
     
     public static int createPaymentOnly(int rentalOrderID, String paymentMethod) {
         return PaymentService.createPaymentOnly(rentalOrderID, paymentMethod);

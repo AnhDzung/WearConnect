@@ -36,11 +36,15 @@ public class RentalOrder {
     private String selectedColorName;
     private String paymentProofImage;
     private String receivedProofImage;
+    private byte[] paymentProofImageData;
+    private byte[] receivedProofImageData;
     private String trackingNumber;
     private String returnMethod; // MANAGER_PICKUP hoặc SHIP_TO_MANAGER
     private String returnTrackingNumber; // Mã vận đơn khi user gửi hàng về
     private String refundProofImage; // Ảnh chứng minh hoàn cọc cho user
     private String managerPaymentProofImage; // Ảnh chứng minh trả tiền cho manager
+    private byte[] refundProofImageData;
+    private byte[] managerPaymentProofImageData;
     private LocalDateTime paymentProcessedDate; // Ngày admin xử lý thanh toán
 
     public RentalOrder() {}
@@ -140,8 +144,14 @@ public class RentalOrder {
     public String getPaymentProofImage() { return paymentProofImage; }
     public void setPaymentProofImage(String paymentProofImage) { this.paymentProofImage = paymentProofImage; }
 
+    public byte[] getPaymentProofImageData() { return paymentProofImageData; }
+    public void setPaymentProofImageData(byte[] paymentProofImageData) { this.paymentProofImageData = paymentProofImageData; }
+
     public String getReceivedProofImage() { return receivedProofImage; }
     public void setReceivedProofImage(String receivedProofImage) { this.receivedProofImage = receivedProofImage; }
+
+    public byte[] getReceivedProofImageData() { return receivedProofImageData; }
+    public void setReceivedProofImageData(byte[] receivedProofImageData) { this.receivedProofImageData = receivedProofImageData; }
 
     public String getTrackingNumber() { return trackingNumber; }
     public void setTrackingNumber(String trackingNumber) { this.trackingNumber = trackingNumber; }
@@ -155,8 +165,14 @@ public class RentalOrder {
     public String getRefundProofImage() { return refundProofImage; }
     public void setRefundProofImage(String refundProofImage) { this.refundProofImage = refundProofImage; }
 
+    public byte[] getRefundProofImageData() { return refundProofImageData; }
+    public void setRefundProofImageData(byte[] refundProofImageData) { this.refundProofImageData = refundProofImageData; }
+
     public String getManagerPaymentProofImage() { return managerPaymentProofImage; }
     public void setManagerPaymentProofImage(String managerPaymentProofImage) { this.managerPaymentProofImage = managerPaymentProofImage; }
+
+    public byte[] getManagerPaymentProofImageData() { return managerPaymentProofImageData; }
+    public void setManagerPaymentProofImageData(byte[] managerPaymentProofImageData) { this.managerPaymentProofImageData = managerPaymentProofImageData; }
 
     public LocalDateTime getPaymentProcessedDate() { return paymentProcessedDate; }
     public void setPaymentProcessedDate(LocalDateTime paymentProcessedDate) { this.paymentProcessedDate = paymentProcessedDate; }

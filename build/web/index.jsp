@@ -22,6 +22,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WearConnect - Hệ Thống Quản Lý Cho Thuê Đồ</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
+
         * {
             margin: 0;
             padding: 0;
@@ -29,12 +31,15 @@
         }
         
         body {
-            font-family: cursive;
+            font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
         }
         
         .container {

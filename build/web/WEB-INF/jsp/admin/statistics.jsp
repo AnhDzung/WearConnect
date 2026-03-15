@@ -8,6 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thống kê - WearConnect</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
+
         * {
             margin: 0;
             padding: 0;
@@ -15,9 +17,12 @@
         }
         
         body {
-            font-family: cursive;
+            font-family: 'Inter', sans-serif;
             background: #f5f5f5;
             padding: 20px;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
         }
         
         .container {

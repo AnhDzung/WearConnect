@@ -18,9 +18,8 @@ import com.google.gson.Gson;
 import java.util.HashMap;
 import java.util.Map;
 import java.nio.file.Paths;
-import java.nio.file.Files;
-import java.io.File;
-import java.nio.file.StandardCopyOption;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 
 @MultipartConfig(
     fileSizeThreshold = 1024 * 1024,
@@ -194,16 +193,17 @@ public class PaymentServlet extends HttpServlet {
                     
                     if (paymentID > 0) {
                         // Upload file
-                        String proofPath = handleFileUpload(request, rentalOrderID, filePart);
+                            String proofPath = buildPaymentProofKey(rentalOrderID, filePart);
+                            byte[] proofData = readPartBytes(filePart);
                         
                         System.out.println("[PaymentServlet] File upload result: " + proofPath);
                         
-                        if (proofPath != null) {
+                        if (proofPath != null && proofData != null) {
                             // Update payment with proof image
-                            boolean updated = PaymentController.updatePaymentProof(paymentID, proofPath);
+                            boolean updated = PaymentController.updatePaymentProof(paymentID, proofPath, proofData);
                             System.out.println("[PaymentServlet] Payment proof updated: " + updated);
                             // Also store payment proof path directly on the rental order
-                            boolean storedOnOrder = Controller.RentalOrderController.setPaymentProofPath(rentalOrderID, proofPath);
+                            boolean storedOnOrder = Controller.RentalOrderController.setPaymentProofPath(rentalOrderID, proofPath, proofData);
                             System.out.println("[PaymentServlet] Stored payment proof on RentalOrder: " + storedOnOrder);
                             
                             // Update order status to PAYMENT_SUBMITTED (waiting admin verification)
@@ -309,7 +309,7 @@ public class PaymentServlet extends HttpServlet {
     /**
      * Handle file upload - extracted as helper method
      */
-    private String handleFileUpload(HttpServletRequest request, int rentalOrderID, Part filePart) {
+    private String buildPaymentProofKey(int rentalOrderID, Part filePart) {
         try {
             // Validate file
             String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
@@ -324,28 +324,28 @@ public class PaymentServlet extends HttpServlet {
                 System.err.println("[PaymentServlet] File too large: " + filePart.getSize());
                 return null;
             }
-            
-            // Create uploads directory if doesn't exist
-            String appPath = request.getServletContext().getRealPath("");
-            String uploadPath = appPath + File.separator + "uploads" + File.separator + "payment-proof";
-            File uploadDir = new File(uploadPath);
-            if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
-            }
-            
-            // Generate unique file name
-            String uniqueFileName = "payment_" + rentalOrderID + "_" + System.currentTimeMillis() + "." + fileExtension;
-            String filePath = uploadPath + File.separator + uniqueFileName;
-            
-            // Save file
-            filePart.write(filePath);
-            
-            // Return relative path for database storage
-            return "uploads/payment-proof/" + uniqueFileName;
+
+            // Use logical key while bytes are stored directly in DB
+            return "payment_" + rentalOrderID + "_" + System.currentTimeMillis() + "." + fileExtension;
             
         } catch (Exception e) {
             System.err.println("[PaymentServlet] Error uploading file: " + e.getMessage());
             e.printStackTrace();
+            return null;
+        }
+    }
+
+    private byte[] readPartBytes(Part filePart) {
+        try (InputStream is = filePart.getInputStream();
+             ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+            byte[] chunk = new byte[8192];
+            int read;
+            while ((read = is.read(chunk)) != -1) {
+                buffer.write(chunk, 0, read);
+            }
+            return buffer.toByteArray();
+        } catch (Exception e) {
+            System.err.println("[PaymentServlet] Error reading upload bytes: " + e.getMessage());
             return null;
         }
     }

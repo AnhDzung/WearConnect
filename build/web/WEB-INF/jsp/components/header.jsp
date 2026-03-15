@@ -341,7 +341,7 @@
         border: 1px solid #d8dbe8;
         border-radius: 8px;
         padding: 8px 10px;
-        font-family: cursive;
+        font-family: 'Inter', sans-serif;
     }
     .wc-chat-send {
         border: none;

@@ -4,9 +4,17 @@
     }
 
     function openPaymentModal(orderID, depositAmount, totalAmount) {
+        const rentalAmount = parseFloat(totalAmount) || 0;
+        const systemFee = rentalAmount * 0.10;
+        const managerReceive = rentalAmount - systemFee;
+
         document.getElementById('paymentOrderID').value = orderID;
         document.getElementById('depositDisplay').textContent = parseFloat(depositAmount).toLocaleString('vi-VN');
-        document.getElementById('rentalDisplay').textContent = parseFloat(totalAmount).toLocaleString('vi-VN');
+        document.getElementById('rentalDisplay').textContent = rentalAmount.toLocaleString('vi-VN');
+        const systemFeeEl = document.getElementById('systemFeeDisplay');
+        const managerReceiveEl = document.getElementById('managerReceiveDisplay');
+        if (systemFeeEl) systemFeeEl.textContent = systemFee.toLocaleString('vi-VN');
+        if (managerReceiveEl) managerReceiveEl.textContent = managerReceive.toLocaleString('vi-VN');
         document.getElementById('paymentModal').classList.add('show');
     }
 

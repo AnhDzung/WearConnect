@@ -7,7 +7,10 @@
     <title>Quản lý đơn thuê - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
-        body { margin: 0; background-color: #f5f5f5; font-family: cursive; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
+
+        body { margin: 0; background-color: #f5f5f5; font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
         .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
         h1 { color: #333; margin-bottom: 20px; }
         
@@ -217,7 +220,6 @@
             background-color: #6c757d;
         }
     </style>
-</head>
 <body>
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
 
@@ -251,7 +253,7 @@
                 <th>Người thuê</th>
                 <th>Ngày bắt đầu</th>
                 <th>Ngày kết thúc</th>
-                <th>Tổng giá</th>
+                <th>Tổng giá (thực nhận)</th>
                 <th>Trạng thái</th>
                 <th></th>
             </tr>
@@ -281,7 +283,7 @@
                     </td>
                     <td>${order.formattedStartDate}</td>
                     <td>${order.formattedEndDate}</td>
-                    <td><fmt:formatNumber value="${order.totalPrice}" pattern="#,##0"/> VNĐ</td>
+                    <td><fmt:formatNumber value="${order.totalPrice * 0.9}" pattern="#,##0"/> VNĐ</td>
                     <td>
                         <span class="status ${order.status.toLowerCase()}">
                             <c:choose>
