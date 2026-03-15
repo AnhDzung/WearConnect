@@ -2,7 +2,10 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
+
     .wearconnect-header {
+        font-family: 'Inter', sans-serif;
         background: linear-gradient(135deg, #f5fbff 0%, #0cc0df 100%);
         color: #111;
         padding: 10px 0;
@@ -53,6 +56,7 @@
         display: block;
     }
     .header-logo .brand-name {
+        font-family: 'Poppins', sans-serif;
         font-size: 20px;
         font-weight: 700;
         line-height: 1;
@@ -98,6 +102,7 @@
         display: block;
         padding: 10px 12px;
         color: #111;
+        font-family: 'Inter', sans-serif;
         text-decoration: none;
         transition: background-color 0.3s;
         border: none;
@@ -110,6 +115,46 @@
 
     .header-nav > li > a {
         background: rgba(0,0,0,0.08);
+    }
+
+    .header-nav > li > a.cosplay-highlight {
+        background: linear-gradient(135deg, #ffb347 0%, #ff8c42 100%);
+        color: #1f1300;
+        font-weight: 700;
+        box-shadow: 0 6px 14px rgba(255, 140, 66, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.55);
+    }
+
+    .header-nav > li > a.cosplay-highlight .cosplay-badge {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 1px 6px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        color: #fff;
+        background: #d7263d;
+        box-shadow: 0 2px 8px rgba(215, 38, 61, 0.45);
+        vertical-align: middle;
+    }
+
+    .header-nav > li > a.cosplay-highlight.cosplay-spotlight {
+        animation: cosplayPulse 1.25s ease-in-out infinite;
+    }
+
+    @keyframes cosplayPulse {
+        0%, 100% {
+            box-shadow: 0 6px 14px rgba(255, 140, 66, 0.35);
+        }
+        50% {
+            box-shadow: 0 0 0 8px rgba(255, 140, 66, 0.22), 0 10px 24px rgba(255, 140, 66, 0.5);
+        }
+    }
+
+    .header-nav > li > a.cosplay-highlight:hover {
+        background: linear-gradient(135deg, #ff9e2f 0%, #ff7a1f 100%);
+        transform: translateY(-1px);
     }
 
     @media (max-width: 1200px) {
@@ -160,10 +205,12 @@
     }
     
     .header-user-name {
+        font-family: 'Inter', sans-serif;
         font-size: 14px;
     }
     
     .header-user-role {
+        font-family: 'Inter', sans-serif;
         font-size: 12px;
         opacity: 0.8;
         background: rgba(255,255,255,0.2);
@@ -180,6 +227,7 @@
 
     .header-auth-link {
         display: inline-block;
+        font-family: 'Inter', sans-serif;
         padding: 8px 12px;
         background: rgba(0,0,0,0.08);
         color: #111;
@@ -221,6 +269,7 @@
     .notif-wrapper { position: relative; }
     .notif-wrapper > a {
         display: inline-block;
+        font-family: 'Inter', sans-serif;
         padding: 8px 12px;
         border-radius: 8px;
         background: rgba(0,0,0,0.08);
@@ -402,15 +451,14 @@
             <!-- Menu cho Guest (Chưa đăng nhập) -->
             <% if (userRole == null || userRole.isEmpty()) { %>
                 <li><a href="${pageContext.request.contextPath}/home">Cửa Hàng</a></li>
-                <li><a href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes</a></li>
+                <li><a class="cosplay-highlight" href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes <span class="cosplay-badge">NEW</span></a></li>
             <% } %>
             
             <!-- Menu cho User -->
             <% if ("User".equals(userRole)) { %>
                 <li><a href="${pageContext.request.contextPath}/home">Cửa Hàng</a></li>
-                <li><a href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes</a></li>
+                <li><a class="cosplay-highlight" href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes <span class="cosplay-badge">NEW</span></a></li>
                 <li><a href="${pageContext.request.contextPath}/rental?action=myOrders">Đơn Thuê Của Tôi</a></li>
-                <li><a href="${pageContext.request.contextPath}/return?action=list">Trả Hàng</a></li>
                 <li><a href="${pageContext.request.contextPath}/user?action=favorites">Yêu Thích</a></li>
             <% } %>
             
@@ -574,6 +622,28 @@
                 dd.style.display = 'none';
             }
         });
+    })();
+
+    (function(){
+        const key = 'wc_cosplay_spotlight_seen_v1';
+        const cosplayLink = document.querySelector('.header-nav a.cosplay-highlight');
+        if (!cosplayLink) return;
+
+        try {
+            if (!localStorage.getItem(key)) {
+                cosplayLink.classList.add('cosplay-spotlight');
+                setTimeout(function(){
+                    cosplayLink.classList.remove('cosplay-spotlight');
+                }, 8000);
+                localStorage.setItem(key, '1');
+            }
+        } catch (e) {
+            // Fallback when storage is unavailable
+            cosplayLink.classList.add('cosplay-spotlight');
+            setTimeout(function(){
+                cosplayLink.classList.remove('cosplay-spotlight');
+            }, 5000);
+        }
     })();
 
     (function(){

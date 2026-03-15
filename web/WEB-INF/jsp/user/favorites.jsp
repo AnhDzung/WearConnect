@@ -183,7 +183,7 @@
         <div class="empty-message">
             <p>💔 Chưa có sản phẩm yêu thích</p>
             <p style="font-size: 14px; color: #999;">Hãy nhấn vào ngôi sao trên sản phẩm để thêm vào danh sách yêu thích!</p>
-            <a href="${pageContext.request.contextPath}/search">Khám Phá Sản Phẩm</a>
+            <a href="${pageContext.request.contextPath}/home">Khám Phá Sản Phẩm</a>
         </div>
         
         <div id="productsContainer" style="display: none;">

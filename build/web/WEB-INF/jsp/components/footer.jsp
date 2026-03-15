@@ -2,7 +2,10 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
+
   .wearconnect-footer {
+    font-family: 'Inter', sans-serif;
     background: linear-gradient(135deg, #1f2a44 0%, #314a72 100%);
     color: #eaeef6;
     padding: 24px 20px;
@@ -26,7 +29,7 @@
     width: auto;
     display: block;
   }
-  .footer-title { font-weight: 700; font-size: 18px; }
+  .footer-title { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; }
   .footer-links { list-style: none; margin: 0; padding: 0; }
   .footer-links li { margin: 8px 0; }
   .footer-links a { color: #eaeef6; text-decoration: none; opacity: 0.9; }

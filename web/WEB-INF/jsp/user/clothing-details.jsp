@@ -7,6 +7,9 @@
 <head>
     <title>Chi tiết quần áo - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --ink: #15110f;
@@ -20,13 +23,24 @@
             --radius: 18px;
         }
         body {
+            font-family: 'Inter', sans-serif;
             margin: 0;
             background: radial-gradient(circle at 10% 10%, #efe2d0, transparent 40%),
                         radial-gradient(circle at 90% 20%, #dff1ea, transparent 45%),
                         var(--paper);
             color: var(--ink);
         }
+        h1, h2, h3, h4, h5, h6,
+        .product-title,
+        .details-section h2 {
+            font-family: 'Poppins', sans-serif;
+        }
         .container { max-width: 1100px; margin: 28px auto 60px; padding: 0 20px; }
+        .page-title {
+            margin: 0 0 16px;
+            font-size: clamp(22px, 2.5vw, 30px);
+            color: var(--ink);
+        }
         .detail-wrapper {
             display: grid;
             grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
@@ -178,8 +192,8 @@
     boolean isLoggedIn = accountObj != null;
 %>
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
-
 <div class="container">
+    <h2 class="page-title">Chi tiết sản phẩm</h2>
     <div class="detail-wrapper">
         <div class="detail-image">
             <% if (isLoggedIn) { %>
