@@ -97,7 +97,7 @@
                 <select id="returnStatus" name="returnStatus" required onchange="onReturnStatusChange()">
                     <option value="">-- Chọn tình trạng --</option>
                     <option value="NO_DAMAGE">✓ Không hư hỏng (Hoàn 100% cọc)</option>
-                    <option value="LATE_RETURN">⏰ Trả trễ (Phí = giờ trễ × giá/giờ × 150%)</option>
+                    <option value="LATE_RETURN">⏰ Trả trễ (<= 1 ngày: 10% giá trị SP, > 1 ngày: 30%)</option>
                     <option value="MINOR_DAMAGE">⚠️ Hư hỏng nhẹ (Trừ bồi thường)</option>
                     <option value="LOST">❌ Mất đồ (Trừ giá trị sản phẩm)</option>
                 </select>
@@ -139,7 +139,7 @@
             <p><strong>2. Chọn tình trạng phù hợp:</strong></p>
             <ul>
                 <li><strong>Không hư hỏng:</strong> Quần áo nguyên vẹn, sạch sẽ → Hoàn 100% cọc</li>
-                <li><strong>Trả trễ:</strong> Trả sau thời hạn → Phí trườ</li>
+                <li><strong>Trả trễ:</strong> Trả sau thời hạn → Trễ dưới hoặc bằng 1 ngày thu 10% giá trị sản phẩm, trễ trên 1 ngày thu 30% giá trị sản phẩm</li>
                 <li><strong>Hư hỏng nhẹ:</strong> Vết nhỏ, xước, phai → Chi trả bồi thường tương ứng</li>
                 <li><strong>Mất đồ:</strong> Không tìm thấy hoặc hư hỏng nặng → Thu toàn bộ giá trị</li>
             </ul>

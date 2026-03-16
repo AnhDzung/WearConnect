@@ -44,9 +44,9 @@ public class ReturnOrderService {
         // Calculate late fee if applicable
         double lateFee = 0;
         if ("LATE_RETURN".equals(returnStatus)) {
-            long lateHours = ChronoUnit.HOURS.between(order.getRentalEndDate(), actualReturnDate);
-            if (lateHours > 0) {
-                lateFee = RefundCalculationUtil.calculateLateFee(clothing.getHourlyPrice(), lateHours);
+            long lateMinutes = ChronoUnit.MINUTES.between(order.getRentalEndDate(), actualReturnDate);
+            if (lateMinutes > 0) {
+                lateFee = RefundCalculationUtil.calculateLateFee(itemValue, lateMinutes);
             }
         }
         

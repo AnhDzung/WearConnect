@@ -121,7 +121,7 @@
                         <tr>
                             <td colspan="2" class="row-label">
                                 ⏰ Phí trả trễ 
-                                <small>(${order.lateFees > 0 ? 'Trễ ' : ''} ×150%)</small>
+                                <small>(<= 1 ngày: 10% giá trị SP, > 1 ngày: 30% giá trị SP)</small>
                             </td>
                             <td class="row-value amount-negative">- <fmt:formatNumber value="${refundDetails.lateFee}" pattern="#,###" /> ₫</td>
                         </tr>

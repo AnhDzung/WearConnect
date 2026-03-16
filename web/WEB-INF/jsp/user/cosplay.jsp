@@ -238,7 +238,7 @@
         }
         .product-grid {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 16px;
         }
 
@@ -330,6 +330,9 @@
         .rental-count {
             color: var(--muted);
         }
+        .price-thue { font-size:12px; color:var(--ink); font-weight:600; }
+        .price-thue span { color:var(--accent); }
+        .price-promo { font-size:10px; color:var(--muted); margin-top:2px; font-style:italic; }
 
         /* Empty State */
         .empty-state {
@@ -372,13 +375,8 @@
             .hero-slider { aspect-ratio: 16 / 9; }
             .hero-overlay { padding: 16px 16px 28px; }
             .slider-btn { width: 36px; height: 36px; font-size: 20px; }
-            .search-form {
-                grid-template-columns: 1fr;
-            }
+            .main-content { flex-direction: column; }
             .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        }
-        @media (max-width: 1200px) {
-            .product-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
         }
         @media (max-width: 980px) {
             .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -386,6 +384,43 @@
         @media (max-width: 520px) {
             .product-grid { grid-template-columns: 1fr; }
         }
+
+        /* ── Search Bar ── */
+        .search-bar-wrap { max-width: 1200px; margin: -30px auto 20px; padding: 0 20px; position: relative; z-index: 10; }
+        .search-bar-wrap form { background: white; padding: 14px 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,.05); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .search-bar-wrap select, .search-bar-wrap input[type=text] { padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-light); font-size: 13px; flex: 1; min-width: 120px; }
+        .search-bar-wrap button { padding: 10px 24px; background: var(--accent); color: #fff; border: none; cursor: pointer; border-radius: 999px; font-weight: 600; font-size: 13px; transition: background .2s, transform .2s; white-space: nowrap; }
+        .search-bar-wrap button:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+        /* ── Main Layout ── */
+        .main-content-wrap { max-width: 1200px; margin: 0 auto; padding: 0 20px 40px; }
+        .main-content { display: flex; gap: 18px; align-items: flex-start; }
+        .products-area { flex: 1; min-width: 0; }
+        .products-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+        .sort-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+        .sort-tab { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; cursor: pointer; background: #fff; color: var(--muted); text-decoration: none; transition: all .15s; white-space: nowrap; }
+        .sort-tab:hover { border-color: var(--accent); color: var(--accent); }
+        .sort-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        /* ── Filter Panel ── */
+        .filter-panel { width: 220px; flex-shrink: 0; background: white; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid var(--border); position: sticky; top: 74px; overflow: hidden; }
+        .filter-title-bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 14px; }
+        .filter-action-btns { display: flex; gap: 8px; }
+        .btn-apply { padding: 6px 14px; border-radius: 999px; border: none; cursor: pointer; background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; transition: background .2s; }
+        .btn-apply:hover { background: var(--accent-hover); }
+        .btn-clear { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); cursor: pointer; background: #fff; color: var(--ink); font-size: 12px; font-weight: 600; }
+        .btn-clear:hover { background: var(--bg-light); }
+        .filter-section { border-bottom: 1px solid var(--border); }
+        .filter-section:last-child { border-bottom: none; }
+        .filter-section-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; cursor: pointer; user-select: none; font-weight: 700; font-size: 12px; letter-spacing: .8px; color: #333; }
+        .filter-section-header:hover { background: var(--bg-light); }
+        .section-toggle { font-size: 16px; color: #888; line-height: 1; }
+        .filter-section-body { padding: 6px 16px 12px; display: none; }
+        .filter-section.open .filter-section-body { display: block; }
+        .filter-item { display: flex; align-items: center; padding: 6px 0; font-size: 13px; cursor: pointer; }
+        .filter-item label { display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; color: var(--ink); }
+        .filter-item input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--accent); border-radius: 3px; cursor: pointer; flex-shrink: 0; }
+        @media (max-width: 820px) { .filter-panel { display: none; } }
     </style>
 </head>
 <body>
@@ -398,7 +433,6 @@
             <img src="${pageContext.request.contextPath}/uploads/slider/slide-1.jpg" alt="Cosplay banner 1" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
             <div class="hero-overlay">
                 <span class="hero-tag">Cosplay spotlight</span>
-                <h1>Cosplay & Fes</h1>
                 <p>Cho thuê trang phục cosplay chất lượng cao từ Anime, Game và Movie để bạn hóa thân nổi bật trong mọi sự kiện.</p>
             </div>
         </div>
@@ -406,7 +440,6 @@
             <img src="${pageContext.request.contextPath}/uploads/slider/slide-2.jpg" alt="Cosplay banner 2" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
             <div class="hero-overlay">
                 <span class="hero-tag">Anime energy</span>
-                <h1>Biến hóa thành nhân vật yêu thích</h1>
                 <p>Từ chiến binh, công chúa đến phản diện cá tính, chọn đúng nhân vật bạn muốn xuất hiện thật ấn tượng.</p>
             </div>
         </div>
@@ -414,7 +447,6 @@
             <img src="${pageContext.request.contextPath}/uploads/slider/slide-3.jpg" alt="Cosplay banner 3" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
             <div class="hero-overlay">
                 <span class="hero-tag">Game & movie</span>
-                <h1>Trang phục chỉn chu, lên hình nổi bật</h1>
                 <p>Chất liệu đẹp, kiểu dáng rõ nhân vật và phù hợp cho lễ hội, chụp ảnh, event hay biểu diễn sân khấu.</p>
             </div>
         </div>
@@ -422,7 +454,6 @@
             <img src="${pageContext.request.contextPath}/uploads/slider/slide-4.jpg" alt="Cosplay banner 4" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
             <div class="hero-overlay">
                 <span class="hero-tag">Festival ready</span>
-                <h1>Đi event tự tin hơn</h1>
                 <p>Tìm nhanh bộ đồ phù hợp theo series, nhân vật hoặc loại cosplay để chuẩn bị cho buổi xuất hiện tiếp theo của bạn.</p>
             </div>
         </div>
@@ -430,7 +461,6 @@
             <img src="${pageContext.request.contextPath}/uploads/slider/slide-5.jpg" alt="Cosplay banner 5" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
             <div class="hero-overlay">
                 <span class="hero-tag">Signature look</span>
-                <h1>Tạo dấu ấn riêng với từng outfit</h1>
                 <p>Khám phá nhiều lựa chọn cosplay đang được yêu thích và chọn bộ phù hợp nhất với phong cách bạn muốn thể hiện.</p>
             </div>
         </div>
@@ -438,7 +468,6 @@
             <img src="${pageContext.request.contextPath}/uploads/slider/slide-6.jpg" alt="Cosplay banner 6" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
             <div class="hero-overlay">
                 <span class="hero-tag">WearConnect cosplay</span>
-                <h1>Sẵn sàng cho buổi hóa thân tiếp theo</h1>
                 <p>Lựa chọn nhanh, xem giá rõ ràng và tìm bộ cosplay phù hợp để xuất hiện nổi bật ở mọi sân chơi fandom.</p>
             </div>
         </div>
@@ -448,59 +477,67 @@
     <div class="slider-dots" aria-label="Điều hướng slide"></div>
 </div>
 
-<!-- Search Panel -->
-<div class="search-panel">
-    <form method="GET" action="${pageContext.request.contextPath}/cosplay" class="search-form">
-        <div class="form-group">
-            <label for="searchType">Tìm kiếm theo:</label>
-            <select id="searchType" name="searchType" onchange="toggleSearchInput()">
-                <option value="">-- Tất cả --</option>
-                <option value="character" ${searchType == 'character' ? 'selected' : ''}>Nhân vật</option>
-                <option value="series" ${searchType == 'series' ? 'selected' : ''}>Series</option>
-                <option value="type" ${searchType == 'type' ? 'selected' : ''}>Loại</option>
-            </select>
-        </div>
-
-        <div class="form-group" id="searchValueGroup" style="display: ${searchType != null && !searchType.isEmpty() ? 'block' : 'none'};">
-            <label for="searchValue">Giá trị tìm kiếm:</label>
-            <c:choose>
-                <c:when test="${searchType == 'type'}">
-                    <select id="searchValue" name="searchValue">
-                        <option value="">-- Chọn loại --</option>
-                        <option value="Anime" ${searchValue == 'Anime' ? 'selected' : ''}>Anime</option>
-                        <option value="Game" ${searchValue == 'Game' ? 'selected' : ''}>Game</option>
-                        <option value="Movie" ${searchValue == 'Movie' ? 'selected' : ''}>Movie</option>
-                    </select>
-                </c:when>
-                <c:otherwise>
-                    <input type="text" id="searchValue" name="searchValue" value="${searchValue}" 
-                           placeholder="Nhập tên nhân vật hoặc series...">
-                </c:otherwise>
-            </c:choose>
-        </div>
-
-        <button type="submit" class="btn-search">🔍 Tìm kiếm</button>
-    </form>
-</div>
-
-<!-- Sort Bar -->
-<div class="sort-bar">
-    <p>Tìm thấy ${totalItems != null ? totalItems : 0} trang phục cosplay</p>
-    <form method="GET" action="${pageContext.request.contextPath}/cosplay" style="display: inline;">
-        <input type="hidden" name="searchType" value="${searchType}">
-        <input type="hidden" name="searchValue" value="${searchValue}">
-        <input type="hidden" name="page" value="1">
-        <select name="sortBy" onchange="this.form.submit()">
-            <option value="">Sắp xếp theo</option>
-            <option value="rating" ${sortBy == 'rating' ? 'selected' : ''}>Đánh giá cao nhất</option>
-            <option value="priceAsc" ${sortBy == 'priceAsc' ? 'selected' : ''}>Giá thấp đến cao</option>
-            <option value="priceDesc" ${sortBy == 'priceDesc' ? 'selected' : ''}>Giá cao đến thấp</option>
+<!-- Search Bar -->
+<div class="search-bar-wrap">
+    <form method="GET" action="${pageContext.request.contextPath}/cosplay" id="cosplaySearchForm">
+        <select name="searchType" id="cosSearchType">
+            <option value="">Tìm theo tên</option>
+            <option value="character" ${searchType == 'character' ? 'selected' : ''}>Nhân vật</option>
+            <option value="series" ${searchType == 'series' ? 'selected' : ''}>Series</option>
         </select>
+        <input type="text" name="searchValue" id="cosSearchValue"
+               placeholder="Tìm nhân vật, series..."
+               value="${searchType != 'type' ? searchValue : ''}"/>
+        <input type="hidden" name="sortBy" value="${sortBy}"/>
+        <button type="submit">🔍 Tìm kiếm</button>
     </form>
 </div>
 
-<!-- Product Grid -->
-<div class="container">
+<!-- Main Content: Filter + Products -->
+<div class="main-content-wrap">
+    <div class="main-content">
+
+        <!-- Filter Panel -->
+        <aside class="filter-panel" id="filterPanel">
+            <div class="filter-title-bar">
+                <span>Bộ Lọc</span>
+                <div class="filter-action-btns">
+                    <button class="btn-apply" onclick="applyFilters()">Áp dụng</button>
+                    <button class="btn-clear" onclick="clearFilters()">Bỏ chọn</button>
+                </div>
+            </div>
+            <div class="filter-section open" id="sec-loai">
+                <div class="filter-section-header" onclick="toggleSection('sec-loai')">
+                    LOẠI COSPLAY <span class="section-toggle">−</span>
+                </div>
+                <div class="filter-section-body">
+                    <div class="filter-item">
+                        <label><input type="checkbox" class="type-cb" value="Anime"
+                            ${searchType == 'type' && searchValue == 'Anime' ? 'checked' : ''}> Anime</label>
+                    </div>
+                    <div class="filter-item">
+                        <label><input type="checkbox" class="type-cb" value="Game"
+                            ${searchType == 'type' && searchValue == 'Game' ? 'checked' : ''}> Game</label>
+                    </div>
+                    <div class="filter-item">
+                        <label><input type="checkbox" class="type-cb" value="Movie"
+                            ${searchType == 'type' && searchValue == 'Movie' ? 'checked' : ''}> Movie</label>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Products Area -->
+        <div class="products-area">
+            <div class="products-topbar">
+                <p style="color: var(--muted); font-size: 14px;">Tìm thấy <strong>${totalItems != null ? totalItems : 0}</strong> trang phục cosplay</p>
+                <div class="sort-tabs">
+                    <a class="sort-tab ${empty sortBy ? 'active' : ''}" href="javascript:void(0)" onclick="applySort('')">Mặc định</a>
+                    <a class="sort-tab ${sortBy == 'rating' ? 'active' : ''}" href="javascript:void(0)" onclick="applySort('rating')">Đánh giá cao nhất</a>
+                    <a class="sort-tab ${sortBy == 'priceAsc' ? 'active' : ''}" href="javascript:void(0)" onclick="applySort('priceAsc')">Giá thấp → cao</a>
+                    <a class="sort-tab ${sortBy == 'priceDesc' ? 'active' : ''}" href="javascript:void(0)" onclick="applySort('priceDesc')">Giá cao → thấp</a>
+                </div>
+            </div>
     <c:choose>
         <c:when test="${clothingList != null && clothingList.size() > 0}">
             <div class="product-grid">
@@ -538,16 +575,10 @@
                             
                             <div class="price-row">
                                 <div>
-                                    <div class="hourly-price">
-                                        <fmt:formatNumber value="${clothing.hourlyPrice}" pattern="#,###" />k / giờ
-                                    </div>
-                                    <div class="price-label">Thuê theo giờ</div>
+                                    <div class="price-thue">Thuê ngày: <span><fmt:formatNumber value="${clothing.dailyPrice}" pattern="#,##0"/> đ</span></div>
+                                    <div class="price-thue">Thuê giờ: <span><fmt:formatNumber value="${clothing.hourlyPrice}" pattern="#,##0"/> đ</span></div>
+                                    <div class="price-promo">Thuê 0đ khi mua gói ưu đãi</div>
                                 </div>
-                            </div>
-                            
-                            <div class="deposit-info">
-                                Giá trị: <fmt:formatNumber value="${clothing.itemValue}" pattern="#,###" />k 
-                                <span class="deposit-refund">(sản phẩm)</span>
                             </div>
                             
                             <div class="rating-row">
@@ -562,33 +593,13 @@
             <c:if test="${totalPages > 1}">
                 <div class="pagination">
                     <c:if test="${currentPage > 1}">
-                        <c:url var="prevLink" value="/cosplay">
-                            <c:param name="searchType" value="${searchType}" />
-                            <c:param name="searchValue" value="${searchValue}" />
-                            <c:param name="sortBy" value="${sortBy}" />
-                            <c:param name="page" value="${currentPage - 1}" />
-                        </c:url>
-                        <a class="page-link" href="${prevLink}">Truoc</a>
+                        <a class="page-link" href="javascript:void(0)" onclick="goPage(${currentPage - 1})">‹ Trước</a>
                     </c:if>
-
                     <c:forEach var="i" begin="1" end="${totalPages}">
-                        <c:url var="pageLink" value="/cosplay">
-                            <c:param name="searchType" value="${searchType}" />
-                            <c:param name="searchValue" value="${searchValue}" />
-                            <c:param name="sortBy" value="${sortBy}" />
-                            <c:param name="page" value="${i}" />
-                        </c:url>
-                        <a class="page-link ${i == currentPage ? 'active' : ''}" href="${pageLink}">${i}</a>
+                        <a class="page-link ${i == currentPage ? 'active' : ''}" href="javascript:void(0)" onclick="goPage(${i})">${i}</a>
                     </c:forEach>
-
                     <c:if test="${currentPage < totalPages}">
-                        <c:url var="nextLink" value="/cosplay">
-                            <c:param name="searchType" value="${searchType}" />
-                            <c:param name="searchValue" value="${searchValue}" />
-                            <c:param name="sortBy" value="${sortBy}" />
-                            <c:param name="page" value="${currentPage + 1}" />
-                        </c:url>
-                        <a class="page-link" href="${nextLink}">Sau</a>
+                        <a class="page-link" href="javascript:void(0)" onclick="goPage(${currentPage + 1})">Sau ›</a>
                     </c:if>
                 </div>
             </c:if>
@@ -600,48 +611,67 @@
             </div>
         </c:otherwise>
     </c:choose>
-</div>
+        </div><%-- /products-area --%>
+    </div><%-- /main-content --%>
+</div><%-- /main-content-wrap --%>
 
 <jsp:include page="/WEB-INF/jsp/components/footer.jsp" />
 
 <script>
-    function toggleSearchInput() {
-        const searchType = document.getElementById('searchType').value;
-        const searchValueGroup = document.getElementById('searchValueGroup');
-        const searchValue = document.getElementById('searchValue');
-        
-        if (searchType === '') {
-            searchValueGroup.style.display = 'none';
-        } else {
-            searchValueGroup.style.display = 'block';
-            
-            // Change input type based on search type
-            if (searchType === 'type') {
-                // Replace with select dropdown
-                const newSelect = document.createElement('select');
-                newSelect.id = 'searchValue';
-                newSelect.name = 'searchValue';
-                newSelect.innerHTML = `
-                    <option value="">-- Chọn loại --</option>
-                    <option value="Anime">Anime</option>
-                    <option value="Game">Game</option>
-                    <option value="Movie">Movie</option>
-                `;
-                searchValue.parentNode.replaceChild(newSelect, searchValue);
-            } else {
-                // Ensure it's a text input
-                if (searchValue.tagName !== 'INPUT') {
-                    const newInput = document.createElement('input');
-                    newInput.type = 'text';
-                    newInput.id = 'searchValue';
-                    newInput.name = 'searchValue';
-                    newInput.placeholder = 'Nhập tên nhân vật hoặc series...';
-                    searchValue.parentNode.replaceChild(newInput, searchValue);
-                }
-            }
-        }
+    // ═══════════════════════════ FILTER PANEL ═══════════════════════════
+    function toggleSection(id) {
+        const sec = document.getElementById(id);
+        const isOpen = sec.classList.toggle('open');
+        sec.querySelector('.section-toggle').textContent = isOpen ? '−' : '+';
     }
 
+    // Type checkboxes: radio-like (only one at a time)
+    document.querySelectorAll('.type-cb').forEach(cb => {
+        cb.addEventListener('change', function() {
+            if (this.checked) {
+                document.querySelectorAll('.type-cb').forEach(o => { if (o !== this) o.checked = false; });
+            }
+        });
+    });
+
+    function buildParams(extra) {
+        const params = new URLSearchParams();
+        const checkedType = document.querySelector('.type-cb:checked');
+        if (checkedType) {
+            params.append('searchType', 'type');
+            params.append('searchValue', checkedType.value);
+        } else {
+            const sType = document.getElementById('cosSearchType').value;
+            const sValue = document.getElementById('cosSearchValue').value;
+            if (sType && sValue) {
+                params.append('searchType', sType);
+                params.append('searchValue', sValue);
+            }
+        }
+        const currentSort = '${sortBy}';
+        const sortVal = (extra && extra.sort !== undefined) ? extra.sort : currentSort;
+        if (sortVal) params.append('sortBy', sortVal);
+        params.append('page', (extra && extra.page) ? extra.page : 1);
+        return params;
+    }
+
+    function applyFilters() {
+        window.location.href = '${pageContext.request.contextPath}/cosplay?' + buildParams().toString();
+    }
+
+    function applySort(sortVal) {
+        window.location.href = '${pageContext.request.contextPath}/cosplay?' + buildParams({sort: sortVal, page: 1}).toString();
+    }
+
+    function goPage(p) {
+        window.location.href = '${pageContext.request.contextPath}/cosplay?' + buildParams({page: p}).toString();
+    }
+
+    function clearFilters() {
+        document.querySelectorAll('.type-cb').forEach(cb => cb.checked = false);
+    }
+
+    // ═══════════════════════════ SLIDER ═══════════════════════════
     (function () {
         const slider = document.getElementById('cosplayHeroSlider');
         if (!slider) return;

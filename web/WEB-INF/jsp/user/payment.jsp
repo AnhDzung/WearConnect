@@ -416,10 +416,9 @@
         // Auto-select BANK_TRANSFER
         const bankRadio = document.getElementById('bankTransfer');
         if (bankRadio) {
-            bankRadio.checked = true;
             const wrapper = bankRadio.closest('.payment-method');
             if (wrapper) {
-                wrapper.classList.add('selected');
+                selectPaymentMethod('BANK_TRANSFER', wrapper);
             }
         }
         

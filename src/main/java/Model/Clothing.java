@@ -22,6 +22,7 @@ public class Clothing {
     private int quantity; // Số lượng sản phẩm có sẵn
     private BigDecimal itemValue; // Giá trị sản phẩm (Item value) do manager định
     private String clothingStatus; // ACTIVE, PENDING_COSPLAY_REVIEW, APPROVED_COSPLAY, INACTIVE
+    private double averageRating;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -119,4 +120,7 @@ public class Clothing {
 
     public String getClothingStatus() { return clothingStatus != null ? clothingStatus : "ACTIVE"; }
     public void setClothingStatus(String clothingStatus) { this.clothingStatus = clothingStatus; }
+
+    public double getAverageRating() { return averageRating; }
+    public void setAverageRating(double averageRating) { this.averageRating = averageRating; }
 }

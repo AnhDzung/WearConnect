@@ -1,7 +1,8 @@
 package config;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -12,52 +13,27 @@ public class DatabaseConnection {
     private static final String DEFAULT_USERNAME = "sa";
     private static final String DEFAULT_PASSWORD = "sa";
     private static final String DEFAULT_PORT = "1433";
-    
-    private static Connection connection;
+
+    private static volatile HikariDataSource dataSource;
 
     public DatabaseConnection() {
     }
 
     public static Connection getConnection() {
         try {
-            // Kiểm tra xem driver đã được load chưa
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-
-            String connectionString = resolveConnectionString();
-            Properties connectionProperties = new Properties();
-            String username = getSetting("wearconnect.db.username", "WEARCONNECT_DB_USERNAME", DEFAULT_USERNAME);
-            String password = getSetting("wearconnect.db.password", "WEARCONNECT_DB_PASSWORD", DEFAULT_PASSWORD);
-            if (username != null && !username.isBlank()) {
-                connectionProperties.setProperty("user", username);
-            }
-            if (password != null && !password.isBlank()) {
-                connectionProperties.setProperty("password", password);
-            }
-            
-            if (connection == null || connection.isClosed()) {
-                connection = DriverManager.getConnection(connectionString, connectionProperties);
-                System.out.println("Kết nối SQL Server thành công!");
-            }
-        } catch (ClassNotFoundException e) {
-            System.err.println("Lỗi: Driver SQL Server không tìm thấy!");
-            System.err.println("Vui lòng thêm file mssql-jdbc-*.jar vào Libraries");
-            e.printStackTrace();
+            return getDataSource().getConnection();
         } catch (SQLException e) {
             System.err.println("Lỗi kết nối SQL Server: " + e.getMessage());
             e.printStackTrace();
+            return null;
         }
-        return connection;
     }
 
     public static void closeConnection() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-                System.out.println("Đã đóng kết nối SQL Server!");
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi khi đóng kết nối: " + e.getMessage());
-            e.printStackTrace();
+        if (dataSource != null) {
+            dataSource.close();
+            dataSource = null;
+            System.out.println("Đã đóng SQL Server connection pool!");
         }
     }
 
@@ -85,6 +61,41 @@ public class DatabaseConnection {
         return "jdbc:sqlserver://" + server + ":" + port
                 + ";databaseName=" + database
                 + ";encrypt=true;trustServerCertificate=true;";
+    }
+
+    private static HikariDataSource getDataSource() {
+        if (dataSource == null) {
+            synchronized (DatabaseConnection.class) {
+                if (dataSource == null) {
+                    String connectionString = resolveConnectionString();
+                    String username = getSetting("wearconnect.db.username", "WEARCONNECT_DB_USERNAME", DEFAULT_USERNAME);
+                    String password = getSetting("wearconnect.db.password", "WEARCONNECT_DB_PASSWORD", DEFAULT_PASSWORD);
+
+                    Properties dsProps = new Properties();
+                    if (username != null && !username.isBlank()) {
+                        dsProps.setProperty("user", username);
+                    }
+                    if (password != null && !password.isBlank()) {
+                        dsProps.setProperty("password", password);
+                    }
+
+                    HikariConfig config = new HikariConfig();
+                    config.setJdbcUrl(connectionString);
+                    config.setDriverClassName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+                    config.setMaximumPoolSize(20);
+                    config.setMinimumIdle(3);
+                    config.setConnectionTimeout(30000);
+                    config.setIdleTimeout(600000);
+                    config.setMaxLifetime(1800000);
+                    config.setPoolName("WearConnectHikariPool");
+                    config.setDataSourceProperties(dsProps);
+
+                    dataSource = new HikariDataSource(config);
+                    System.out.println("Khởi tạo SQL Server connection pool thành công!");
+                }
+            }
+        }
+        return dataSource;
     }
 
     private static String getSetting(String systemPropertyKey, String envKey, String defaultValue) {

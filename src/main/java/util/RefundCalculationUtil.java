@@ -33,16 +33,20 @@ public class RefundCalculationUtil {
     }
     
     /**
-     * Calculate late fee
-     * LateFee = HourlyPrice × LateHours × 150%
-     * 
-     * @param hourlyPrice - Hourly rental price in VND
-     * @param lateHours - Number of hours late
-     * @return Late fee amount in VND
+     * Calculate late return penalty based on item value.
+     * - Late <= 1 day: 10% item value
+     * - Late > 1 day: 30% item value
+     *
+     * @param itemValue - Item value in VND
+     * @param lateMinutes - Number of minutes late
+     * @return Late penalty amount in VND
      */
-    public static double calculateLateFee(double hourlyPrice, long lateHours) {
-        if (lateHours <= 0) return 0;
-        return hourlyPrice * lateHours * 1.5; // 150%
+    public static double calculateLateFee(double itemValue, long lateMinutes) {
+        if (lateMinutes <= 0 || itemValue <= 0) return 0;
+
+        long oneDayMinutes = 24L * 60L;
+        double rate = lateMinutes <= oneDayMinutes ? 0.10 : 0.30;
+        return itemValue * rate;
     }
     
     /**

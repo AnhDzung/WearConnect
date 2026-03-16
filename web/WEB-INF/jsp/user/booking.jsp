@@ -115,7 +115,6 @@
         <input type="hidden" name="hourlyPrice" value="${hourlyPrice}">
         <input type="hidden" name="dailyPrice" value="${dailyPrice}">
         <input type="hidden" name="itemValue" value="${itemValue}">
-        <input type="hidden" id="rentalTypeInput" name="rentalType" value="hourly">
         <input type="hidden" id="isCosplayInput" name="isCosplay" value="<%= isCosplay %>">
         
         <% if (isCosplay) { %>
@@ -158,7 +157,6 @@
                 <option value="">-- Không chọn màu (nếu có) --</option>
                 <% for (Color color : availableColors) { %>
                 <option value="<%= color.getColorID() %>">
-                    <span style="color: <%= color.getHexCode() != null ? color.getHexCode() : "#999" %>;">●</span>
                     <%= color.getColorName() %>
                 </option>
                 <% } %>
@@ -188,12 +186,12 @@
         <div id="hourlySection" class="form-section active">
             <div class="form-group">
                 <label for="hourlyStartDate">Ngày giờ bắt đầu: <span style="color: red;">*</span></label>
-                <input type="datetime-local" id="hourlyStartDate" name="startDate" required onchange="calculatePrice()">
+                <input type="datetime-local" id="hourlyStartDate" name="startDate" onchange="calculatePrice()">
             </div>
             
             <div class="form-group">
                 <label for="hourlyEndDate">Ngày giờ kết thúc: <span style="color: red;">*</span></label>
-                <input type="datetime-local" id="hourlyEndDate" name="endDate" required onchange="calculatePrice()">
+                <input type="datetime-local" id="hourlyEndDate" name="endDate" onchange="calculatePrice()">
             </div>
         </div>
         
@@ -201,12 +199,12 @@
         <div id="dailySection" class="form-section">
             <div class="form-group">
                 <label for="dailyStartDate">Ngày bắt đầu: <span style="color: red;">*</span></label>
-                <input type="date" id="dailyStartDate" name="dailyStartDate" required onchange="calculatePrice()">
+                <input type="date" id="dailyStartDate" name="dailyStartDate" onchange="calculatePrice()">
             </div>
             
             <div class="form-group">
                 <label for="dailyEndDate">Ngày kết thúc: <span style="color: red;">*</span></label>
-                <input type="date" id="dailyEndDate" name="dailyEndDate" required onchange="calculatePrice()">
+                <input type="date" id="dailyEndDate" name="dailyEndDate" onchange="calculatePrice()">
             </div>
         </div>
         
@@ -287,9 +285,6 @@
         const hourlySection = document.getElementById('hourlySection');
         const dailySection = document.getElementById('dailySection');
         
-        // Update hidden input
-        document.getElementById('rentalTypeInput').value = rentalType;
-        
         if (rentalType === 'hourly') {
             hourlySection.classList.add('active');
             dailySection.classList.remove('active');
@@ -297,6 +292,11 @@
             document.getElementById('hourlyEndDate').required = true;
             document.getElementById('dailyStartDate').required = false;
             document.getElementById('dailyEndDate').required = false;
+
+            document.getElementById('hourlyStartDate').disabled = false;
+            document.getElementById('hourlyEndDate').disabled = false;
+            document.getElementById('dailyStartDate').disabled = true;
+            document.getElementById('dailyEndDate').disabled = true;
         } else {
             hourlySection.classList.remove('active');
             dailySection.classList.add('active');
@@ -304,10 +304,20 @@
             document.getElementById('hourlyEndDate').required = false;
             document.getElementById('dailyStartDate').required = true;
             document.getElementById('dailyEndDate').required = true;
+
+            document.getElementById('hourlyStartDate').disabled = true;
+            document.getElementById('hourlyEndDate').disabled = true;
+            document.getElementById('dailyStartDate').disabled = false;
+            document.getElementById('dailyEndDate').disabled = false;
         }
         
         calculatePrice();
     }
+
+    // Initialize correct required/disabled state on first load
+    window.addEventListener('DOMContentLoaded', function() {
+        toggleRentalType();
+    });
 
     function calculatePrice() {
         const rentalType = document.querySelector('input[name="rentalType"]:checked').value;

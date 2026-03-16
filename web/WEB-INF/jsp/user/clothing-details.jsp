@@ -1,312 +1,521 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" session="true" %>
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" session="true" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ page import="Model.Clothing" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chi tiết quần áo - WearConnect</title>
+    <meta charset="UTF-8">
+    <title>Chi tiết sản phẩm - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --ink: #15110f;
-            --muted: #6f6a64;
-            --paper: #f7f3ee;
-            --card: #ffffff;
-            --accent: #1f8e74;
-            --accent-strong: #156c57;
-            --berry: #c02b7f;
-            --shadow: 0 16px 34px rgba(20, 16, 11, 0.12);
-            --radius: 18px;
+            --bg: #f5f5f6;
+            --surface: #ffffff;
+            --line: #e9e6e2;
+            --text: #1f1b19;
+            --muted: #7a726c;
+            --accent: #f28b55;
+            --accent-strong: #e36f34;
+            --dark-btn: #111111;
+            --ok-bg: #ecf7ef;
+            --ok-text: #1e7a34;
         }
+
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif;
             margin: 0;
-            background: radial-gradient(circle at 10% 10%, #efe2d0, transparent 40%),
-                        radial-gradient(circle at 90% 20%, #dff1ea, transparent 45%),
-                        var(--paper);
-            color: var(--ink);
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
         }
-        h1, h2, h3, h4, h5, h6,
-        .product-title,
-        .details-section h2 {
-            font-family: 'Poppins', sans-serif;
+
+        .page-wrap {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 18px 16px 52px;
         }
-        .container { max-width: 1100px; margin: 28px auto 60px; padding: 0 20px; }
-        .page-title {
-            margin: 0 0 16px;
-            font-size: clamp(22px, 2.5vw, 30px);
-            color: var(--ink);
+
+        .breadcrumb {
+            font-size: 12px;
+            color: var(--muted);
+            margin: 6px 0 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
         }
-        .detail-wrapper {
+
+        .breadcrumb a {
+            color: #6f6b67;
+            text-decoration: none;
+        }
+
+        .top-card {
+            background: var(--surface);
+            border: 1px solid var(--line);
             display: grid;
-            grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-            gap: 28px;
-            background: var(--card);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 20px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            grid-template-columns: 480px 1fr;
+            gap: 24px;
+            padding: 16px;
         }
-        .detail-image {
-            position: relative;
+
+        .gallery-wrap {
             display: grid;
-            gap: 14px;
+            grid-template-columns: 68px 1fr;
+            gap: 12px;
+            align-items: start;
         }
-        .main-image {
-            width: 100%;
-            aspect-ratio: 4 / 5;
-            border-radius: 16px;
-            object-fit: cover;
-            object-position: center;
-            display: block;
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
-        }
-        .gallery { display: grid; gap: 12px; }
-        .thumbs {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+
+        .thumb-list {
+            display: flex;
+            flex-direction: column;
             gap: 8px;
+            max-height: 640px;
+            overflow: auto;
         }
-        .thumbs button {
-            border: 2px solid transparent;
+
+        .thumb-btn {
+            border: 1px solid #ddd;
+            background: #fff;
             padding: 0;
-            background: none;
+            height: 84px;
+            width: 100%;
             cursor: pointer;
-            border-radius: 12px;
             overflow: hidden;
-            transition: border-color 0.2s ease, transform 0.2s ease;
         }
-        .thumbs button:hover { transform: translateY(-2px); }
-        .thumbs button.active { border-color: var(--accent); }
-        .thumbs img { width: 100%; height: 70px; object-fit: cover; display: block; }
-        .favorite-btn {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            background: rgba(255, 255, 255, 0.95);
-            border: none;
-            border-radius: 50%;
-            width: 52px;
-            height: 52px;
-            font-size: 24px;
-            cursor: pointer;
+
+        .thumb-btn.active { border-color: #2b2b2b; }
+        .thumb-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .main-image-wrap {
+            position: relative;
+            width: 100%;
+            background: #f0efee;
+            min-height: 640px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
+            overflow: hidden;
         }
-        .favorite-btn:hover { transform: scale(1.05); box-shadow: 0 14px 24px rgba(0, 0, 0, 0.22); }
-        .favorite-btn.active { color: var(--berry); }
-        .detail-info {
+
+        .main-image {
+            width: 100%;
+            height: 100%;
+            min-height: 640px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .favorite-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            background: rgba(255,255,255,0.94);
+            color: #8f8a85;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .favorite-btn.active {
+            color: #d1486a;
+            border-color: #d1486a;
+        }
+
+        .detail-panel {
             display: grid;
-            gap: 16px;
             align-content: start;
-        }
-        .detail-info h1 {
-            margin: 0;
-            display: flex;
-            align-items: center;
             gap: 12px;
-            flex-wrap: wrap;
-            font-size: clamp(24px, 3vw, 34px);
         }
-        .avg-rating {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #fff3df;
-            color: #b65d06;
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-weight: 600;
-            font-size: 13px;
-        }
-        .avg-rating .star { color: #f59e0b; font-size: 16px; }
-        .info-row {
-            display: grid;
-            grid-template-columns: 120px 1fr;
-            gap: 12px;
-            padding: 10px 12px;
-            background: #faf8f4;
-            border-radius: 12px;
-        }
-        .info-row strong {
+
+        .brand-line {
             color: var(--muted);
             font-size: 12px;
+            letter-spacing: 0.2px;
+        }
+
+        .product-title {
+            font-family: 'Playfair Display', serif;
+            margin: 0;
+            font-size: clamp(24px, 3vw, 34px);
+            line-height: 1.2;
+        }
+
+        .rating-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #8f8277;
+            font-size: 13px;
+        }
+
+        .rating-stars { color: #f5a623; letter-spacing: 1px; }
+
+        .price-block {
+            border-top: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+            padding: 12px 0;
+            display: grid;
+            gap: 8px;
+        }
+
+        .price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .price-label { color: var(--muted); min-width: 42px; }
+        .price-value {
+            font-weight: 700;
+            color: #111;
+            font-size: 19px;
+        }
+
+        .price-sub {
+            font-size: 12px;
+            color: var(--accent-strong);
+        }
+
+        .size-wrap { display: grid; gap: 6px; }
+        .meta-title {
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.6px;
+            color: var(--muted);
+            font-weight: 700;
         }
-        .detail-info .info-row:last-of-type { align-items: start; }
+
+        .size-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .size-pill {
+            border: 1px solid #d6d6d6;
+            padding: 7px 12px;
+            font-size: 13px;
+            background: #fff;
+        }
+
+        .stock-line {
+            font-size: 12px;
+            color: var(--ok-text);
+            background: var(--ok-bg);
+            border: 1px solid #cde7d4;
+            width: fit-content;
+            padding: 6px 10px;
+        }
+
+        .summary-line {
+            font-size: 13px;
+            color: #5e5750;
+            line-height: 1.6;
+        }
+
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 2px;
+        }
+
         .btn {
-            padding: 10px 18px;
             border: none;
+            padding: 11px 18px;
+            font-size: 13px;
+            font-weight: 700;
             cursor: pointer;
-            border-radius: 999px;
-            font-weight: 600;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: background .2s ease;
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.12); }
-        .btn-book { background: var(--accent); color: #fff; }
+
+        .btn-book {
+            background: var(--accent);
+            color: #fff;
+        }
+
         .btn-book:hover { background: var(--accent-strong); }
-        .btn-back { background: #ece6dd; color: var(--ink); }
-        .ratings-block {
-            margin-top: 28px;
-            background: var(--card);
-            padding: 22px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(0, 0, 0, 0.05);
+
+        .btn-back {
+            background: var(--dark-btn);
+            color: #fff;
         }
-        .ratings-block h3 { margin: 0 0 12px; font-size: 20px; }
-        .rating-item { border-top: 1px solid #eee2d6; padding: 14px 0; }
-        .rating-item:first-of-type { border-top: none; }
+
+        .detail-grid {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: 1.6fr 0.9fr;
+            gap: 16px;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            padding: 18px;
+        }
+
+        .panel h3 {
+            margin: 0 0 12px;
+            font-size: 18px;
+            letter-spacing: 0.2px;
+        }
+
+        .desc {
+            white-space: pre-wrap;
+            font-size: 14px;
+            color: #393430;
+            line-height: 1.7;
+        }
+
+        .kv {
+            display: grid;
+            grid-template-columns: 110px 1fr;
+            gap: 10px;
+            padding: 10px 0;
+            border-top: 1px solid #f0ece8;
+            font-size: 13px;
+        }
+
+        .kv:first-child { border-top: none; }
+        .kv-label { color: var(--muted); }
+
+        .ratings-block {
+            margin-top: 16px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            padding: 18px;
+        }
+
+        .ratings-block h3 {
+            margin: 0 0 10px;
+            font-size: 18px;
+        }
+
+        .rating-item {
+            border-top: 1px solid #efe9e3;
+            padding: 12px 0;
+        }
+
+        .rating-item:first-child { border-top: none; }
+
         .rating-meta {
             display: flex;
             align-items: center;
             gap: 8px;
-            font-weight: 600;
+            flex-wrap: wrap;
+            font-size: 13px;
         }
-        .rating-stars { color: #f59e0b; }
-        .rating-stars .star { color: #e4d7c8; }
-        .rating-stars .filled { color: #f59e0b; }
-        .rating-comment { margin: 6px 0 0; color: #444; white-space: pre-wrap; }
+
+        .rating-comment {
+            margin-top: 6px;
+            color: #473f39;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
         .muted { color: var(--muted); }
-        @media (max-width: 900px) {
-            .detail-wrapper { grid-template-columns: 1fr; }
-            .info-row { grid-template-columns: 1fr; }
+
+        @media (max-width: 1100px) {
+            .top-card { grid-template-columns: 1fr; }
+            .main-image-wrap, .main-image { min-height: 520px; }
+        }
+
+        @media (max-width: 880px) {
+            .detail-grid { grid-template-columns: 1fr; }
+            .gallery-wrap { grid-template-columns: 56px 1fr; }
+            .thumb-btn { height: 72px; }
+            .main-image-wrap, .main-image { min-height: 440px; }
+            .kv { grid-template-columns: 1fr; gap: 4px; }
         }
     </style>
 </head>
 <body>
 <%
-    // Get user role from session
     Object accountObj = session.getAttribute("account");
     Object userRole = session.getAttribute("userRole");
     String role = userRole != null ? userRole.toString() : "";
-    boolean isUser = "User".equals(role);
     boolean isLoggedIn = accountObj != null;
 %>
-<jsp:include page="/WEB-INF/jsp/components/header.jsp" />
-<div class="container">
-    <h2 class="page-title">Chi tiết sản phẩm</h2>
-    <div class="detail-wrapper">
-        <div class="detail-image">
-            <% if (isLoggedIn) { %>
-                <button class="favorite-btn" id="favoriteBtn" onclick="toggleFavorite(${clothing.clothingID})" title="Thêm vào yêu thích">★</button>
-            <% } %>
 
+<jsp:include page="/WEB-INF/jsp/components/header.jsp" />
+
+<div class="page-wrap">
+    <div class="breadcrumb">
+        <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
+        <span>›</span>
+        <span>${clothing.category}</span>
+        <span>›</span>
+        <span>${clothing.clothingName}</span>
+    </div>
+
+    <div class="top-card">
+        <div class="gallery-wrap">
             <c:choose>
                 <c:when test="${not empty images}">
-                    <div class="gallery">
+                    <div class="thumb-list" id="thumbs">
+                        <c:forEach items="${images}" var="img" varStatus="loop">
+                            <button class="thumb-btn" data-index="${loop.index}" onclick="return showImage(this.dataset.index);" type="button">
+                                <img src="${pageContext.request.contextPath}/image?imageId=${img.imageID}" alt="Ảnh phụ ${loop.index + 1}">
+                            </button>
+                        </c:forEach>
+                    </div>
+                    <div class="main-image-wrap">
+                        <% if (isLoggedIn) { %>
+                            <button class="favorite-btn" id="favoriteBtn" data-clothing-id="${clothing.clothingID}" onclick="toggleFavorite(this)" title="Thêm vào yêu thích" type="button">♡</button>
+                        <% } %>
                         <img id="mainImage" class="main-image" src="${pageContext.request.contextPath}/image?imageId=${images[0].imageID}" alt="${clothing.clothingName}">
-                        <div class="thumbs" id="thumbs">
-                            <c:forEach items="${images}" var="img" varStatus="loop">
-                                <button class="${loop.index == 0 ? 'active' : ''}" data-index="${loop.index}" onclick="showImage(${loop.index}); return false;">
-                                    <img src="${pageContext.request.contextPath}/image?imageId=${img.imageID}" alt="thumb ${loop.index}">
-                                </button>
-                            </c:forEach>
-                        </div>
                     </div>
                 </c:when>
                 <c:otherwise>
-                    <img class="main-image" src="${pageContext.request.contextPath}/image?id=${clothing.clothingID}" alt="${clothing.clothingName}">
+                    <div></div>
+                    <div class="main-image-wrap">
+                        <% if (isLoggedIn) { %>
+                            <button class="favorite-btn" id="favoriteBtn" data-clothing-id="${clothing.clothingID}" onclick="toggleFavorite(this)" title="Thêm vào yêu thích" type="button">♡</button>
+                        <% } %>
+                        <img id="mainImage" class="main-image" src="${pageContext.request.contextPath}/image?id=${clothing.clothingID}" alt="${clothing.clothingName}">
+                    </div>
                 </c:otherwise>
             </c:choose>
         </div>
-        
-        <div class="detail-info">
-            <h1>
-                ${clothing.clothingName}
-                <span class="avg-rating">
-                    <span class="star">★</span>
+
+        <div class="detail-panel">
+            <div class="brand-line">
+                <c:choose>
+                    <c:when test="${not empty clothing.category}">${clothing.category}</c:when>
+                    <c:otherwise>Sản phẩm</c:otherwise>
+                </c:choose>
+            </div>
+            <h1 class="product-title">${clothing.clothingName}</h1>
+
+            <div class="rating-line">
+                <span class="rating-stars">★</span>
+                <c:choose>
+                    <c:when test="${avgRating > 0}">
+                        <span><fmt:formatNumber value="${avgRating}" type="number" maxFractionDigits="1" minFractionDigits="1"/> / 5</span>
+                    </c:when>
+                    <c:otherwise>
+                        <span>Chưa có đánh giá</span>
+                    </c:otherwise>
+                </c:choose>
+                <span class="muted">(${fn:length(ratings)} đánh giá)</span>
+            </div>
+
+            <div class="price-block">
+                <div class="price-row">
+                    <span class="price-label">Thuê ngày:</span>
+                    <span class="price-value"><fmt:formatNumber value="${clothing.dailyPrice}" pattern="#,##0"/> đ</span>
+                </div>
+                <div class="price-row">
+                    <span class="price-label">Thuê giờ:</span>
+                    <span class="price-value"><fmt:formatNumber value="${clothing.hourlyPrice}" pattern="#,##0"/> đ</span>
+                </div>
+            </div>
+
+            <div class="size-wrap">
+                <div class="meta-title">Size</div>
+                <div class="size-list">
                     <c:choose>
-                        <c:when test="${avgRating > 0}">
-                            <fmt:formatNumber value="${avgRating}" type="number" maxFractionDigits="1" minFractionDigits="1"/> / 5
+                        <c:when test="${not empty clothing.size}">
+                            <c:forEach var="sz" items="${fn:split(clothing.size, ',')}">
+                                <span class="size-pill">${fn:trim(sz)}</span>
+                            </c:forEach>
                         </c:when>
-                        <c:otherwise>Chưa có đánh giá</c:otherwise>
+                        <c:otherwise>
+                            <span class="muted">Không có thông tin size</span>
+                        </c:otherwise>
                     </c:choose>
-                </span>
-            </h1>
-            
-            <div class="info-row">
-                <strong>Danh mục:</strong> ${clothing.category}
-            </div>
-            <c:if test="${clothing.category ne 'Cosplay'}">
-                <div class="info-row">
-                    <strong>Phong cách:</strong> ${clothing.style}
                 </div>
-            </c:if>
-            <div class="info-row">
-                <strong>Mục đích:</strong> ${clothing.occasion}
             </div>
-            <div class="info-row">
-                <strong>Size có sẵn:</strong>
-                <%
-                    String sizeStr = null;
-                    try {
-                        Object clothingObj = pageContext.getAttribute("clothing", PageContext.REQUEST_SCOPE);
-                        if (clothingObj != null && clothingObj instanceof Model.Clothing) {
-                            sizeStr = ((Model.Clothing) clothingObj).getSize();
-                        }
-                    } catch (Exception e) {
-                        sizeStr = null;
-                    }
-                    
-                    if (sizeStr != null && !sizeStr.isEmpty()) {
-                        String[] sizes = sizeStr.split(", ");
-                %>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
-                <%
-                        for (String s : sizes) {
-                            s = s.trim();
-                %>
-                    <span style="background-color: #e8f5e9; color: #2e7d32; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500; border: 1px solid #81c784;">
-                        <%= s %>
-                    </span>
-                <%
-                        }
-                %>
-                </div>
-                <%
-                    }
-                %>
+
+            <div class="stock-line">
+                Có sẵn: ${clothing.availableFrom} → ${clothing.availableTo}
             </div>
-            <c:if test="${clothing.category eq 'Cosplay' && cosplayDetail != null}">
-                <div class="info-row">
+
+            <c:if test="${not empty cosplayDetail and clothing.category eq 'Cosplay'}">
+                <div class="summary-line">
                     <strong>Phụ kiện đi kèm:</strong> ${cosplayDetail.accessoryList}
                 </div>
             </c:if>
-            <div class="info-row">
-                <strong>Giá thuê:</strong> <fmt:formatNumber value="${clothing.hourlyPrice}" pattern="#,##0"/> VNĐ/giờ • <fmt:formatNumber value="${clothing.dailyPrice}" pattern="#,##0"/> VNĐ/ngày
-            </div>
-            <div class="info-row">
-                <strong>Có sẵn:</strong> ${clothing.availableFrom} đến ${clothing.availableTo}
-            </div>
-            <div class="info-row">
-                <strong>Mô tả:</strong> ${clothing.description}
-            </div>
-            
-            <div>
+
+            <c:choose>
+                <c:when test="${not empty clothing.description}">
+                    <div class="summary-line">${clothing.description}</div>
+                </c:when>
+                <c:otherwise>
+                    <div class="summary-line">Sản phẩm chưa có mô tả chi tiết.</div>
+                </c:otherwise>
+            </c:choose>
+
+            <div class="action-row">
                 <% if (!"Manager".equals(role) && !"Admin".equals(role)) { %>
-                    <button class="btn btn-book" onclick="handleBooking()">Đặt thuê</button>
+                    <!-- <button class="btn btn-book" onclick="handleBooking()" type="button">Thêm vào giỏ thuê</button> -->
+                    <button class="btn btn-back" onclick="handleBooking()" type="button">Thuê ngay</button>
                 <% } %>
-                <button class="btn btn-back" onclick="history.back()">Quay lại</button>
+                <button class="btn btn-back" onclick="history.back()" type="button">Quay lại</button>
             </div>
         </div>
     </div>
+
+    <div class="detail-grid">
+        <div class="panel">
+            <h3>Mô tả sản phẩm</h3>
+            <c:choose>
+                <c:when test="${not empty clothing.description}">
+                    <div class="desc">${clothing.description}</div>
+                </c:when>
+                <c:otherwise>
+                    <div class="desc">Chưa có mô tả.</div>
+                </c:otherwise>
+            </c:choose>
+        </div>
+
+        <div class="panel">
+            <h3>Thông tin chi tiết</h3>
+            <div class="kv">
+                <div class="kv-label">Mã sản phẩm</div>
+                <div>WC-${clothing.clothingID}</div>
+            </div>
+            <div class="kv">
+                <div class="kv-label">Danh mục</div>
+                <div><c:choose><c:when test="${not empty clothing.category}">${clothing.category}</c:when><c:otherwise>-</c:otherwise></c:choose></div>
+            </div>
+            <div class="kv">
+                <div class="kv-label">Phong cách</div>
+                <div><c:choose><c:when test="${not empty clothing.style}">${clothing.style}</c:when><c:otherwise>-</c:otherwise></c:choose></div>
+            </div>
+            <div class="kv">
+                <div class="kv-label">Mục đích</div>
+                <div><c:choose><c:when test="${not empty clothing.occasion}">${clothing.occasion}</c:when><c:otherwise>-</c:otherwise></c:choose></div>
+            </div>
+            <div class="kv">
+                <div class="kv-label">Size</div>
+                <div><c:choose><c:when test="${not empty clothing.size}">${clothing.size}</c:when><c:otherwise>-</c:otherwise></c:choose></div>
+            </div>
+            <div class="kv">
+                <div class="kv-label">Giá ngày</div>
+                <div><fmt:formatNumber value="${clothing.dailyPrice}" pattern="#,##0"/> đ</div>
+            </div>
+        </div>
+    </div>
+
     <div class="ratings-block">
-        <h3>Đánh giá</h3>
+        <h3>Đánh giá sản phẩm</h3>
         <c:choose>
             <c:when test="${empty ratings}">
-                <div class="muted">Chưa có đánh giá nào cho sản phẩm này.</div>
+                <div class="muted">Sản phẩm chưa có đánh giá.</div>
             </c:when>
             <c:otherwise>
-                <%-- Admin (and Manager) can see both renter->product and owner->renter ratings separately --%>
                 <c:choose>
                     <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Manager'}">
                         <h4>Đánh giá của người thuê về sản phẩm</h4>
@@ -316,7 +525,10 @@
                                     <div class="rating-meta">
                                         <span class="rating-stars">
                                             <c:forEach var="i" begin="1" end="5">
-                                                <span class="star${i <= r.rating ? ' filled' : ''}">★</span>
+                                                <c:choose>
+                                                    <c:when test="${i <= r.rating}"><span>★</span></c:when>
+                                                    <c:otherwise><span>☆</span></c:otherwise>
+                                                </c:choose>
                                             </c:forEach>
                                         </span>
                                         <span>${r.ratingFromUsername}</span>
@@ -330,14 +542,17 @@
                             </c:if>
                         </c:forEach>
 
-                        <h4 style="margin-top:18px">Đánh giá của người cho thuê về khách thuê</h4>
+                        <h4 style="margin-top:16px;">Đánh giá của người cho thuê về khách thuê</h4>
                         <c:forEach var="r" items="${ratings}">
                             <c:if test="${r.ratingFromUserID == r.rentalManagerUserID}">
                                 <div class="rating-item">
                                     <div class="rating-meta">
                                         <span class="rating-stars">
                                             <c:forEach var="i" begin="1" end="5">
-                                                <span class="star${i <= r.rating ? ' filled' : ''}">★</span>
+                                                <c:choose>
+                                                    <c:when test="${i <= r.rating}"><span>★</span></c:when>
+                                                    <c:otherwise><span>☆</span></c:otherwise>
+                                                </c:choose>
                                             </c:forEach>
                                         </span>
                                         <span>${r.ratingFromUsername}</span>
@@ -352,14 +567,16 @@
                         </c:forEach>
                     </c:when>
                     <c:otherwise>
-                        <!-- Regular users see only renter->product ratings -->
                         <c:forEach var="r" items="${ratings}">
                             <c:if test="${r.ratingFromUserID == r.rentalRenterUserID}">
                                 <div class="rating-item">
                                     <div class="rating-meta">
                                         <span class="rating-stars">
                                             <c:forEach var="i" begin="1" end="5">
-                                                <span class="star${i <= r.rating ? ' filled' : ''}">★</span>
+                                                <c:choose>
+                                                    <c:when test="${i <= r.rating}"><span>★</span></c:when>
+                                                    <c:otherwise><span>☆</span></c:otherwise>
+                                                </c:choose>
                                             </c:forEach>
                                         </span>
                                         <span>${r.ratingFromUsername}</span>
@@ -380,91 +597,74 @@
 </div>
 
 <script>
-    function toggleFavorite(clothingID) {
-        var btn = document.getElementById('favoriteBtn');
+    function toggleFavorite(btn) {
+        if (!btn) return;
+        var clothingID = btn.getAttribute('data-clothing-id');
+        if (!clothingID) return;
+
         btn.classList.toggle('active');
-        
-        // Lưu vào database qua server
         var action = btn.classList.contains('active') ? 'add' : 'remove';
-        
+
         fetch('${pageContext.request.contextPath}/user?action=' + action + 'Favorite&clothingID=' + clothingID, {
             method: 'POST'
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                alert(action === 'add' ? 'Đã thêm vào yêu thích!' : 'Đã xóa khỏi yêu thích!');
-                // Cập nhật localStorage để đồng bộ
-                var favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-                if (action === 'add' && favorites.indexOf(clothingID) === -1) {
-                    favorites.push(clothingID);
-                } else if (action === 'remove') {
-                    var index = favorites.indexOf(clothingID);
-                    if (index !== -1) {
-                        favorites.splice(index, 1);
-                    }
-                }
-                localStorage.setItem('favorites', JSON.stringify(favorites));
-            } else {
-                alert(action === 'add' ? 'Không thể thêm vào yêu thích!' : 'Không thể xóa khỏi yêu thích!');
+            if (!data.success) {
                 btn.classList.toggle('active');
             }
         })
-        .catch(err => {
-            console.error('Lỗi:', err);
-            alert('Có lỗi xảy ra! Vui lòng thử lại.');
+        .catch(() => {
             btn.classList.toggle('active');
         });
     }
-    
-    // Kiểm tra nếu sản phẩm đã được đánh dấu yêu thích
+
     window.addEventListener('load', function() {
         var btn = document.getElementById('favoriteBtn');
-        
-        // Only check favorites if user is logged in
-        if (btn) {
-            var clothingID = ${clothing.clothingID};
-            // Kiểm tra từ server
-            fetch('${pageContext.request.contextPath}/user?action=checkFavorite&clothingID=' + clothingID)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.isFavorited) {
-                        btn.classList.add('active');
-                    }
-                })
-                .catch(err => {
-                    // Nếu có lỗi, dùng localStorage
-                    var favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-                    if (favorites.indexOf(clothingID) !== -1) {
-                        btn.classList.add('active');
-                    }
-                });
+        var thumbButtons = document.querySelectorAll('#thumbs .thumb-btn');
+        if (thumbButtons.length) {
+            thumbButtons[0].classList.add('active');
         }
+
+        if (!btn) return;
+
+        var clothingID = btn.getAttribute('data-clothing-id');
+        fetch('${pageContext.request.contextPath}/user?action=checkFavorite&clothingID=' + clothingID)
+            .then(response => response.json())
+            .then(data => {
+                if (data.isFavorited) {
+                    btn.classList.add('active');
+                }
+            })
+            .catch(() => {});
     });
 
     function handleBooking() {
-        // Redirect to booking page (will redirect to login if not logged in)
         window.location.href = '${pageContext.request.contextPath}/rental?action=booking&clothingID=${clothing.clothingID}&hourlyPrice=${clothing.hourlyPrice}&dailyPrice=${clothing.dailyPrice}';
     }
 
-    // Gallery logic
     const images = [
         <c:forEach items="${images}" var="img" varStatus="loop">
-            '${pageContext.request.contextPath}/image?imageId=${img.imageID}'${!loop.last ? ',' : ''}
+            '${pageContext.request.contextPath}/image?imageId=${img.imageID}'<c:if test="${not loop.last}">,</c:if>
         </c:forEach>
     ];
 
     function showImage(idx) {
         if (!images.length) return false;
+        idx = Number(idx);
+
         const main = document.getElementById('mainImage');
-        const buttons = document.querySelectorAll('#thumbs button');
+        const buttons = document.querySelectorAll('#thumbs .thumb-btn');
+
         if (main && images[idx]) {
             main.src = images[idx];
         }
+
         buttons.forEach((btn, i) => btn.classList.toggle('active', i === idx));
         return false;
     }
 </script>
+
 <jsp:include page="/WEB-INF/jsp/components/footer.jsp" />
 </body>
 </html>

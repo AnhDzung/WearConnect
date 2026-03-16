@@ -8,6 +8,85 @@ import java.util.List;
 import java.math.BigDecimal;
 
 public class ClothingDAO {
+
+    public static List<Clothing> getHomeProducts(String type,
+                                                 String query,
+                                                 List<String> categories,
+                                                 String dateFrom,
+                                                 String dateTo,
+                                                 String sort,
+                                                 int page,
+                                                 int pageSize) {
+        List<Clothing> list = new ArrayList<>();
+        String safeSort = sort != null ? sort : "newest";
+        int safePage = Math.max(page, 1);
+        int safePageSize = Math.max(pageSize, 1);
+        int offset = (safePage - 1) * safePageSize;
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT c.*, COALESCE(r.AvgRating, 0) AS AvgRating ")
+           .append("FROM Clothing c ")
+           .append("LEFT JOIN ( ")
+           .append("  SELECT ro.ClothingID, AVG(CAST(rt.Rating AS FLOAT)) AS AvgRating ")
+           .append("  FROM Rating rt ")
+           .append("  JOIN RentalOrder ro ON rt.RentalOrderID = ro.RentalOrderID ")
+           .append("  GROUP BY ro.ClothingID ")
+           .append(") r ON r.ClothingID = c.ClothingID ")
+           .append("WHERE 1=1 ");
+
+        appendHomeFilters(sql, type, query, categories, dateFrom, dateTo);
+
+        if ("popular".equals(safeSort)) {
+            sql.append(" ORDER BY COALESCE(r.AvgRating, 0) DESC, c.ClothingID DESC ");
+        } else if ("price_asc".equals(safeSort)) {
+            sql.append(" ORDER BY ISNULL(c.DailyPrice, 0) ASC, c.ClothingID DESC ");
+        } else if ("price_desc".equals(safeSort)) {
+            sql.append(" ORDER BY ISNULL(c.DailyPrice, 0) DESC, c.ClothingID DESC ");
+        } else {
+            sql.append(" ORDER BY c.ClothingID DESC ");
+        }
+        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int paramIndex = bindHomeFilters(ps, 1, type, query, categories, dateFrom, dateTo);
+            ps.setInt(paramIndex++, offset);
+            ps.setInt(paramIndex, safePageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRowToClothing(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    public static int countHomeProducts(String type,
+                                        String query,
+                                        List<String> categories,
+                                        String dateFrom,
+                                        String dateTo) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT COUNT(*) AS TotalItems FROM Clothing c WHERE 1=1 ");
+        appendHomeFilters(sql, type, query, categories, dateFrom, dateTo);
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            bindHomeFilters(ps, 1, type, query, categories, dateFrom, dateTo);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("TotalItems");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
     
     public static int addClothing(Clothing clothing) {
         String sql = "INSERT INTO Clothing (RenterID, ClothingName, Category, Style, Occasion, Size, Description, HourlyPrice, DailyPrice, ImagePath, ImageData, AvailableFrom, AvailableTo, Quantity, ItemValue, ClothingStatus) " +
@@ -370,9 +449,86 @@ public class ClothingDAO {
         // Set clothing status
         String clothingStatus = rs.getString("ClothingStatus");
         clothing.setClothingStatus(clothingStatus != null ? clothingStatus : "ACTIVE");
+
+        // Optional aggregated column used by home listing optimization
+        try {
+            clothing.setAverageRating(rs.getDouble("AvgRating"));
+        } catch (SQLException ignore) {}
         
         clothing.setCreatedAt(rs.getTimestamp("CreatedAt").toLocalDateTime());
         return clothing;
+    }
+
+    private static void appendHomeFilters(StringBuilder sql,
+                                          String type,
+                                          String query,
+                                          List<String> categories,
+                                          String dateFrom,
+                                          String dateTo) {
+        sql.append(" AND c.IsActive = 1 ")
+           .append(" AND (c.Category IS NULL OR LTRIM(RTRIM(c.Category)) <> 'Cosplay') ")
+           .append(" AND (c.ClothingStatus IS NULL OR UPPER(LTRIM(RTRIM(c.ClothingStatus))) = 'ACTIVE') ");
+
+        if (query != null && !query.isBlank()) {
+            if ("category".equals(type)) {
+                sql.append(" AND c.Category = ? ");
+            } else if ("style".equals(type)) {
+                sql.append(" AND c.Style LIKE ? ");
+            } else if ("occasion".equals(type)) {
+                sql.append(" AND c.Occasion LIKE ? ");
+            } else {
+                sql.append(" AND c.ClothingName LIKE ? ");
+            }
+        }
+
+        if (categories != null && !categories.isEmpty()) {
+            sql.append(" AND c.Category IN (");
+            for (int i = 0; i < categories.size(); i++) {
+                if (i > 0) sql.append(", ");
+                sql.append("?");
+            }
+            sql.append(") ");
+        }
+
+        if (dateFrom != null && !dateFrom.isBlank()) {
+            sql.append(" AND (c.AvailableTo IS NULL OR CAST(c.AvailableTo AS DATE) >= CAST(? AS DATE)) ");
+        }
+        if (dateTo != null && !dateTo.isBlank()) {
+            sql.append(" AND (c.AvailableFrom IS NULL OR CAST(c.AvailableFrom AS DATE) <= CAST(? AS DATE)) ");
+        }
+    }
+
+    private static int bindHomeFilters(PreparedStatement ps,
+                                       int startIndex,
+                                       String type,
+                                       String query,
+                                       List<String> categories,
+                                       String dateFrom,
+                                       String dateTo) throws SQLException {
+        int paramIndex = startIndex;
+
+        if (query != null && !query.isBlank()) {
+            if ("category".equals(type)) {
+                ps.setString(paramIndex++, query);
+            } else {
+                ps.setString(paramIndex++, "%" + query + "%");
+            }
+        }
+
+        if (categories != null && !categories.isEmpty()) {
+            for (String category : categories) {
+                ps.setString(paramIndex++, category);
+            }
+        }
+
+        if (dateFrom != null && !dateFrom.isBlank()) {
+            ps.setString(paramIndex++, dateFrom);
+        }
+        if (dateTo != null && !dateTo.isBlank()) {
+            ps.setString(paramIndex++, dateTo);
+        }
+
+        return paramIndex;
     }
     
     /**
