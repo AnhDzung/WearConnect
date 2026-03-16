@@ -3,26 +3,8 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/ClothingServlet.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/web/WEB-INF/jsp/user/order-details.jsp</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/DAO/RatingDAO.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/ImageServlet.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/Service/RentalOrderService.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/Model/RentalOrder.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/web/WEB-INF/jsp/home.jsp</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/RentalOrderServlet.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/DAO/RentalOrderDAO.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/Controller/AIChatController.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/ManagerServlet.java</file>
             <file>file:/D:/Fpt/sm7/WearConnect/web/WEB-INF/jsp/user/payment.jsp</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/ChatServlet.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/LoginServlet.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/RatingServlet.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/config/DatabaseConnection.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/DAO/AIChatDAO.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/config/AIProviderConfig.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/UserServlet.java</file>
-            <file>file:/D:/Fpt/sm7/WearConnect/src/java/servlet/AdminServlet.java</file>
+            <file>file:/D:/Fpt/sm7/WearConnect/web/WEB-INF/jsp/home.jsp</file>
         </group>
     </open-files>
 </project-private>
