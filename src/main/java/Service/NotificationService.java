@@ -27,6 +27,18 @@ public class NotificationService {
         return createNotification(userID, title.trim(), message.trim());
     }
 
+    public static int createNotificationOnceByOrderAndTitle(int userID, int orderID, String title, String message) {
+        if (userID <= 0 || orderID <= 0 || title == null || title.trim().isEmpty() || message == null || message.trim().isEmpty()) {
+            return -1;
+        }
+
+        if (NotificationDAO.existsByUserOrderAndTitle(userID, orderID, title.trim())) {
+            return 0;
+        }
+
+        return createNotification(userID, title.trim(), message.trim(), orderID);
+    }
+
     public static List<Notification> getUnreadNotifications(int userID) {
         return NotificationDAO.getUnreadNotificationsByUser(userID);
     }

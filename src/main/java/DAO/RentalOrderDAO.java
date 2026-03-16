@@ -578,4 +578,29 @@ public class RentalOrderDAO {
         }
         return list;
     }
+
+    public static List<RentalOrder> getOverdueOrdersForNotification() {
+        List<RentalOrder> list = new ArrayList<>();
+        String sql = "SELECT ro.*, c.ClothingName, c.RenterID, " +
+                     "a.Username AS RenterUsername, a.FullName AS RenterFullName, " +
+                     "a.Email AS RenterEmail, a.PhoneNumber AS RenterPhone, a.Address AS RenterAddress " +
+                     "FROM RentalOrder ro " +
+                     "LEFT JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
+                     "LEFT JOIN Accounts a ON ro.RenterUserID = a.AccountID " +
+                     "WHERE ro.RentalEndDate < GETDATE() " +
+                     "AND ro.ActualReturnDate IS NULL " +
+                     "AND UPPER(TRIM(ro.Status)) NOT IN ('RETURNED', 'CANCELLED', 'COMPLETED') " +
+                     "ORDER BY ro.RentalEndDate ASC";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRowToRentalOrder(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("[RentalOrderDAO] Error fetching overdue orders: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return list;
+    }
 }

@@ -17,6 +17,7 @@ D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\ReturnPageC
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\SearchPageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\UserPageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\WebhookPageController.java
+D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\scheduler\OverdueRentalNotificationScheduler.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\WearConnectSpringBootApplication.java
 D:\Fpt\sm7\WearConnect\src\main\java\config\AIProviderConfig.java
 D:\Fpt\sm7\WearConnect\src\main\java\config\BankTransferConfig.java

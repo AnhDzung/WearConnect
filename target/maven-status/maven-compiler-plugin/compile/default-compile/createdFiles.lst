@@ -82,6 +82,7 @@ com\wearconnect\boot\controller\UserPageController.class
 Controller\ClothingController.class
 DAO\AIChatDAO.class
 Model\AIChatReply.class
+com\wearconnect\boot\scheduler\OverdueRentalNotificationScheduler.class
 Controller\AIKnowledgeController.class
 DAO\RatingDAO.class
 com\wearconnect\boot\controller\WebhookPageController.class
