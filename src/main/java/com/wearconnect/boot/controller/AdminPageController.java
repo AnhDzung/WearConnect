@@ -1,0 +1,517 @@
+package com.wearconnect.boot.controller;
+
+import Controller.UserController;
+import Controller.PaymentController;
+import Controller.RentalOrderController;
+import Controller.NotificationController;
+import DAO.AccountDAO;
+import DAO.ClothingDAO;
+import DAO.CosplayDetailDAO;
+import Model.Account;
+import Model.Clothing;
+import Model.CosplayDetail;
+import Model.Payment;
+import Model.RentalOrder;
+import Service.DashboardService;
+import Service.NotificationService;
+import Service.RentalOrderService;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping("/admin")
+public class AdminPageController {
+
+    private static final double SYSTEM_FEE_RATE = 0.10;
+
+    @RequestMapping
+    public void handleRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("account") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        String userRole = (String) session.getAttribute("userRole");
+        if (userRole != null) userRole = userRole.trim();
+        if (!("Admin".equals(userRole))) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        String method = request.getMethod();
+        if ("POST".equalsIgnoreCase(method)) {
+            String action = request.getParameter("action");
+            if ("confirmPayment".equals(action)) {
+                handleConfirmPayment(request, response);
+                return;
+            }
+            // Fall through to GET handling for other POSTs
+        }
+
+        String action = request.getParameter("action");
+
+        if ("delete".equals(action)) {
+            int accountID = Integer.parseInt(request.getParameter("id"));
+            UserController.deleteUser(accountID);
+            response.sendRedirect(request.getContextPath() + "/admin");
+            return;
+        } else if ("toggleStatus".equals(action)) {
+            int accountID = Integer.parseInt(request.getParameter("id"));
+            String status = request.getParameter("status");
+            boolean newStatus = !"active".equals(status);
+            UserController.toggleUserStatus(accountID, newStatus);
+            response.sendRedirect(request.getContextPath() + "/admin");
+            return;
+        } else if ("orders".equals(action)) {
+            showOrdersPage(request, response);
+            return;
+        } else if ("verifyPayment".equals(action)) {
+            verifyPayment(request, response);
+            return;
+        } else if ("rejectPayment".equals(action)) {
+            rejectPayment(request, response);
+            return;
+        } else if ("statistics".equals(action)) {
+            showStatistics(request, response);
+            return;
+        } else if ("reviewCosplay".equals(action)) {
+            showCosplayReviewPage(request, response);
+            return;
+        } else if ("deactivateProduct".equals(action)) {
+            deactivateProduct(request, response);
+            return;
+        } else if ("approveProduct".equals(action)) {
+            approveProduct(request, response);
+            return;
+        } else if ("approveCosplay".equals(action)) {
+            approveCosplay(request, response);
+            return;
+        } else if ("rejectCosplay".equals(action)) {
+            rejectCosplay(request, response);
+            return;
+        } else if ("users".equals(action)) {
+            showUsersPage(request, response);
+            return;
+        } else if ("ratings".equals(action)) {
+            showRatingsPage(request, response);
+            return;
+        } else if ("payments".equals(action)) {
+            showPaymentsPage(request, response);
+            return;
+        } else if ("aiKnowledge".equals(action)) {
+            showAIKnowledgePage(request, response);
+            return;
+        }
+
+        // Default: product list dashboard
+        List<Clothing> products = ClothingDAO.getAllClothingAdmin();
+        Map<Integer, Account> managerMap = new HashMap<>();
+        for (Clothing clothing : products) {
+            int renterID = clothing.getRenterID();
+            if (!managerMap.containsKey(renterID)) {
+                Account acc = AccountDAO.findById(renterID);
+                managerMap.put(renterID, acc);
+            }
+        }
+        request.setAttribute("products", products);
+        request.setAttribute("managerMap", managerMap);
+        request.setAttribute("view", "products");
+
+        int pendingCount = RentalOrderService.countOrdersByStatus("PENDING_PAYMENT");
+        int verifyingCount = RentalOrderService.countOrdersByStatus("PAYMENT_SUBMITTED");
+        request.setAttribute("pendingCount", pendingCount);
+        request.setAttribute("verifyingCount", verifyingCount);
+        request.setAttribute("newOrdersCount", pendingCount + verifyingCount);
+
+        request.getRequestDispatcher("/WEB-INF/jsp/admin/dashboard.jsp").forward(request, response);
+    }
+
+    private void deactivateProduct(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int clothingID = Integer.parseInt(request.getParameter("clothingID"));
+            String reason = request.getParameter("reason");
+            String note = request.getParameter("note");
+
+            Clothing clothing = ClothingDAO.getClothingByID(clothingID);
+            boolean statusOk = ClothingDAO.updateClothingStatus(clothingID, "INACTIVE");
+            boolean activeOk = ClothingDAO.setClothingActive(clothingID, false);
+
+            if (statusOk && activeOk && clothing != null) {
+                StringBuilder msg = new StringBuilder();
+                msg.append("San pham '").append(clothing.getClothingName()).append("' da bi tam ngung hoat dong. Ly do: ");
+                msg.append(reason != null ? reason : "Khac");
+                if (note != null && !note.trim().isEmpty()) {
+                    msg.append(". Ghi chu: ").append(note.trim());
+                }
+                NotificationService.createNotification(clothing.getRenterID(), "San pham bi tam ngung", msg.toString());
+            }
+            response.sendRedirect(request.getContextPath() + "/admin");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?error=true");
+        }
+    }
+
+    private void approveProduct(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int clothingID = Integer.parseInt(request.getParameter("clothingID"));
+            Clothing clothing = ClothingDAO.getClothingByID(clothingID);
+            if (clothing == null) {
+                response.sendRedirect(request.getContextPath() + "/admin?error=true");
+                return;
+            }
+
+            boolean statusOk;
+            if ("Cosplay".equals(clothing.getCategory())) {
+                statusOk = ClothingDAO.updateClothingStatus(clothingID, "APPROVED_COSPLAY");
+            } else {
+                statusOk = ClothingDAO.updateClothingStatus(clothingID, "ACTIVE");
+            }
+            boolean activeOk = ClothingDAO.setClothingActive(clothingID, true);
+
+            if (statusOk && activeOk) {
+                NotificationService.createNotification(
+                        clothing.getRenterID(),
+                        "San pham da duoc duyet",
+                        "San pham '" + clothing.getClothingName() + "' da duoc admin duyet va hoat dong lai."
+                );
+            }
+            response.sendRedirect(request.getContextPath() + "/admin");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?error=true");
+        }
+    }
+
+    private void showOrdersPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String statusFilter = request.getParameter("status");
+        if (statusFilter == null) statusFilter = "ALL";
+
+        String dbStatusFilter = statusFilter;
+        if ("PENDING".equalsIgnoreCase(statusFilter)) {
+            dbStatusFilter = "PENDING_PAYMENT";
+        } else if ("VERIFYING".equalsIgnoreCase(statusFilter)) {
+            dbStatusFilter = "PAYMENT_SUBMITTED";
+        } else if (statusFilter.isEmpty() || "ALL".equalsIgnoreCase(statusFilter)) {
+            dbStatusFilter = "ALL";
+        }
+
+        List<Map<String, Object>> orders = DashboardService.getAllOrdersWithDetails(dbStatusFilter);
+        request.setAttribute("orders", orders);
+        request.setAttribute("statusFilter", statusFilter);
+        request.getRequestDispatcher("/WEB-INF/jsp/admin/orders.jsp").forward(request, response);
+    }
+
+    private void showRatingsPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        List<Map<String, Object>> ratings = DashboardService.getAllRatingsWithDetails();
+        request.setAttribute("ratings", ratings);
+        request.getRequestDispatcher("/WEB-INF/jsp/admin/ratings.jsp").forward(request, response);
+    }
+
+    private void verifyPayment(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int orderID = Integer.parseInt(request.getParameter("orderID"));
+            RentalOrderService.updateOrderStatus(orderID, "PAYMENT_VERIFIED");
+
+            try {
+                RentalOrder ro = RentalOrderController.getRentalOrderByID(orderID);
+                if (ro != null) {
+                    int managerUserID = ro.getManagerID();
+                    if (managerUserID > 0) {
+                        NotificationController.createNotification(managerUserID,
+                                "Đơn hàng đã được xác nhận",
+                                "Đơn hàng #" + orderID + " đã được xác nhận bởi quản trị viên.", orderID);
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            response.sendRedirect(request.getContextPath() + "/admin?action=orders&status=ALL&verified=true");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?action=orders&error=true");
+        }
+    }
+
+    private void rejectPayment(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int orderID = Integer.parseInt(request.getParameter("orderID"));
+            String reason = request.getParameter("reason");
+            if (reason == null) reason = "Lý do không được cung cấp";
+            RentalOrderController.setPaymentProofPath(orderID, null);
+            RentalOrderController.updateOrderStatusWithNotes(orderID, "PENDING_PAYMENT", reason);
+            Payment payment = PaymentController.getPaymentStatus(orderID);
+            if (payment != null) {
+                PaymentController.failPayment(payment.getPaymentID());
+            }
+
+            try {
+                RentalOrder ro = RentalOrderController.getRentalOrderByID(orderID);
+                if (ro != null) {
+                    NotificationController.createNotification(ro.getRenterUserID(),
+                            "Đơn hàng bị từ chối",
+                            "Đơn hàng #" + orderID + " của bạn đã bị từ chối. Lý do: " + reason, orderID);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            response.sendRedirect(request.getContextPath() + "/admin?action=orders&status=ALL&rejected=true");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?action=orders&error=true");
+        }
+    }
+
+    private void showStatistics(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        List<Map<String, Object>> topManagers = DashboardService.getTopRatedManagers(10);
+        request.setAttribute("topManagers", topManagers);
+        List<Map<String, Object>> topProducts = DashboardService.getMostRentedProducts(10);
+        request.setAttribute("topProducts", topProducts);
+        request.getRequestDispatcher("/WEB-INF/jsp/admin/statistics.jsp").forward(request, response);
+    }
+
+    private void showCosplayReviewPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        List<Clothing> pendingCosplay = ClothingDAO.getCosplayByStatus("PENDING_COSPLAY_REVIEW");
+        for (Clothing clothing : pendingCosplay) {
+            CosplayDetail detail = CosplayDetailDAO.getCosplayDetailByClothingID(clothing.getClothingID());
+            request.setAttribute("cosplayDetail_" + clothing.getClothingID(), detail);
+        }
+        request.setAttribute("pendingCosplay", pendingCosplay);
+        request.getRequestDispatcher("/WEB-INF/jsp/admin/review-cosplay.jsp").forward(request, response);
+    }
+
+    private void approveCosplay(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int clothingID = Integer.parseInt(request.getParameter("id"));
+            Clothing clothing = ClothingDAO.getClothingByID(clothingID);
+            boolean success = ClothingDAO.updateClothingStatus(clothingID, "APPROVED_COSPLAY");
+            if (success && clothing != null) {
+                NotificationService.createNotification(
+                        clothing.getRenterID(),
+                        "Sản phẩm Cosplay đã được xác thực",
+                        "Sản phẩm '" + clothing.getClothingName() + "' (SP#" + clothing.getClothingID() + ") đã được Admin duyệt và hiện đang hiển thị trên trang Cosplay."
+                );
+                response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&success=approved");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&error=true");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&error=true");
+        }
+    }
+
+    private void rejectCosplay(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int clothingID = Integer.parseInt(request.getParameter("id"));
+            Clothing clothing = ClothingDAO.getClothingByID(clothingID);
+            boolean success = ClothingDAO.updateClothingStatus(clothingID, "INACTIVE");
+            if (success) {
+                ClothingDAO.setClothingActive(clothingID, false);
+                if (clothing != null) {
+                    NotificationService.createNotification(
+                            clothing.getRenterID(),
+                            "Sản phẩm Cosplay không được duyệt",
+                            "Sản phẩm '" + clothing.getClothingName() + "' (SP#" + clothing.getClothingID() + ") đã bị từ chối bởi Admin. Vui lòng kiểm tra lại thông tin và chất lượng sản phẩm."
+                    );
+                }
+            }
+            if (success) {
+                response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&success=rejected");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&error=true");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?action=reviewCosplay&error=true");
+        }
+    }
+
+    private void showUsersPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        List<Account> users = UserController.getAllUsers();
+        request.setAttribute("users", users);
+        request.setAttribute("view", "users");
+
+        int pendingCount = RentalOrderService.countOrdersByStatus("PENDING_PAYMENT");
+        int verifyingCount = RentalOrderService.countOrdersByStatus("PAYMENT_SUBMITTED");
+        request.setAttribute("pendingCount", pendingCount);
+        request.setAttribute("verifyingCount", verifyingCount);
+        request.setAttribute("newOrdersCount", pendingCount + verifyingCount);
+
+        request.getRequestDispatcher("/WEB-INF/jsp/admin/dashboard.jsp").forward(request, response);
+    }
+
+    private void showPaymentsPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            List<Model.RentalOrder> returnedOrders = RentalOrderService.getOrdersByStatus("RETURNED");
+            Map<Integer, Account> accountMap = new HashMap<>();
+            Map<Integer, Clothing> clothingMap = new HashMap<>();
+
+            for (Model.RentalOrder order : returnedOrders) {
+                if (!accountMap.containsKey(order.getRenterUserID())) {
+                    accountMap.put(order.getRenterUserID(), AccountDAO.findById(order.getRenterUserID()));
+                }
+                if (!clothingMap.containsKey(order.getClothingID())) {
+                    Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
+                    clothingMap.put(order.getClothingID(), clothing);
+                    if (clothing != null && !accountMap.containsKey(clothing.getRenterID())) {
+                        accountMap.put(clothing.getRenterID(), AccountDAO.findById(clothing.getRenterID()));
+                    }
+                }
+            }
+
+            request.setAttribute("returnedOrders", returnedOrders);
+            request.setAttribute("accountMap", accountMap);
+            request.setAttribute("clothingMap", clothingMap);
+            request.setAttribute("view", "payments");
+
+            int pendingCount = RentalOrderService.countOrdersByStatus("PENDING_PAYMENT");
+            int verifyingCount = RentalOrderService.countOrdersByStatus("PAYMENT_SUBMITTED");
+            request.setAttribute("pendingCount", pendingCount);
+            request.setAttribute("verifyingCount", verifyingCount);
+            request.setAttribute("newOrdersCount", pendingCount + verifyingCount);
+
+            request.getRequestDispatcher("/WEB-INF/jsp/admin/dashboard.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?error=true");
+        }
+    }
+
+    private void showAIKnowledgePage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setAttribute("view", "aiKnowledge");
+        int pendingCount = RentalOrderService.countOrdersByStatus("PENDING_PAYMENT");
+        int verifyingCount = RentalOrderService.countOrdersByStatus("PAYMENT_SUBMITTED");
+        request.setAttribute("pendingCount", pendingCount);
+        request.setAttribute("verifyingCount", verifyingCount);
+        request.setAttribute("newOrdersCount", pendingCount + verifyingCount);
+        request.getRequestDispatcher("/WEB-INF/jsp/admin/dashboard.jsp").forward(request, response);
+    }
+
+    private void handleConfirmPayment(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int orderID = Integer.parseInt(request.getParameter("orderID"));
+
+            Part refundProofPart = request.getPart("refundProof");
+            Part managerProofPart = request.getPart("managerPaymentProof");
+            if (refundProofPart == null || refundProofPart.getSize() <= 0
+                    || managerProofPart == null || managerProofPart.getSize() <= 0) {
+                response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true&missingProof=true");
+                return;
+            }
+
+            String refundProofPath = buildProofKey(refundProofPart, "refund", orderID);
+            String managerProofPath = buildProofKey(managerProofPart, "manager", orderID);
+            byte[] refundProofData = readPartBytes(refundProofPart);
+            byte[] managerProofData = readPartBytes(managerProofPart);
+            if (refundProofPath == null || managerProofPath == null || refundProofData == null || managerProofData == null) {
+                response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true&uploadFailed=true");
+                return;
+            }
+
+            boolean savedRefund = RentalOrderService.setRefundProofImagePath(orderID, refundProofPath, refundProofData);
+            boolean savedManager = RentalOrderService.setManagerPaymentProofImagePath(orderID, managerProofPath, managerProofData);
+            if (!savedRefund || !savedManager) {
+                response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true&saveProofFailed=true");
+                return;
+            }
+
+            boolean success = RentalOrderService.updateOrderStatus(orderID, "COMPLETED");
+            if (success) {
+                RentalOrderService.markPaymentProcessed(orderID);
+                Model.RentalOrder order = RentalOrderService.getRentalOrderDetails(orderID);
+                if (order != null) {
+                    double depositRefundAmount = order.getAdjustedDepositAmount() > 0
+                            ? order.getAdjustedDepositAmount() : order.getDepositAmount();
+                    double rentalAmount = order.getTotalPrice();
+                    double systemFeeAmount = rentalAmount * SYSTEM_FEE_RATE;
+                    double managerReceiveAmount = rentalAmount - systemFeeAmount;
+
+                    NotificationService.createNotification(
+                            order.getRenterUserID(),
+                            "Hoàn tiền cọc",
+                            "Tiền cọc " + String.format("%,.0f", depositRefundAmount) + " VND của đơn hàng #" + orderID + " đã được hoàn lại vào tài khoản ngân hàng của bạn. Cảm ơn bạn đã sử dụng WearConnect!"
+                    );
+
+                    Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
+                    if (clothing != null) {
+                        NotificationService.createNotification(
+                                clothing.getRenterID(),
+                                "Thanh toán tiền thuê đã hoàn tất",
+                                "Đơn hàng #" + orderID + " đã được admin xác thực và thanh toán thành công.\n"
+                                        + "Số tiền thuê: " + String.format("%,.0f", rentalAmount) + " VND\n"
+                                        + "Phí hệ thống: 10%\n"
+                                        + "Số tiền bạn sẽ nhận được: " + String.format("%,.0f", managerReceiveAmount) + " VND\n"
+                                        + "Cảm ơn bạn đã tin tưởng và sử dụng hệ thống. Khoản thanh toán đã được thực hiện."
+                        );
+                    }
+                }
+                response.sendRedirect(request.getContextPath() + "/admin?action=payments&success=true");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true");
+        }
+    }
+
+    private String buildProofKey(Part filePart, String prefix, int orderID) {
+        try {
+            String submitted = java.nio.file.Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+            String ext = getFileExtension(submitted);
+            if (ext.isEmpty()) ext = ".jpg";
+            return prefix + "_proof_order_" + orderID + "_" + System.currentTimeMillis() + ext;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private byte[] readPartBytes(Part filePart) {
+        try (InputStream is = filePart.getInputStream();
+             ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+            byte[] chunk = new byte[8192];
+            int read;
+            while ((read = is.read(chunk)) != -1) buffer.write(chunk, 0, read);
+            return buffer.toByteArray();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String getFileExtension(String fileName) {
+        if (fileName == null) return "";
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex <= 0 || dotIndex >= fileName.length() - 1) return "";
+        return fileName.substring(dotIndex).toLowerCase();
+    }
+}
