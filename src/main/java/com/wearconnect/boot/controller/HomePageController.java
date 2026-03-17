@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class HomePageController {
 
-    @GetMapping({"/", "/home"})
+    @GetMapping("/home")
     public String showHome(
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String query,
