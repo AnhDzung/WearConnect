@@ -81,6 +81,22 @@
         }
         
         .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .actions-cell {
+            min-width: 260px;
+        }
+
+        .actions-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .actions-wrap form {
+            display: inline-flex;
+            margin: 0;
+        }
         
         .btn { 
             padding: 8px 14px; 
@@ -299,17 +315,18 @@
                             </c:choose>
                         </span>
                     </td>
-                    <td>
+                    <td class="actions-cell">
+                        <div class="actions-wrap">
                         <a href="${pageContext.request.contextPath}/rental?action=viewOrder&id=${order.rentalOrderID}" class="btn btn-info">Chi tiết</a>
                         <c:if test="${order.status == 'SHIPPING'}">
-                            <form method="POST" action="${pageContext.request.contextPath}/manager" style="display:inline-block;">
+                            <form method="POST" action="${pageContext.request.contextPath}/manager">
                                 <input type="hidden" name="action" value="confirmDelivery" />
                                 <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
                                 <button type="submit" class="btn btn-success">Xác nhận đã giao</button>
                             </form>
                         </c:if>
                         <c:if test="${order.status == 'RENTED'}">
-                            <form method="POST" action="${pageContext.request.contextPath}/manager" style="display:inline-block;">
+                            <form method="POST" action="${pageContext.request.contextPath}/manager">
                                 <input type="hidden" name="action" value="updateStatus" />
                                 <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
                                 <input type="hidden" name="status" value="RETURNED" />
@@ -317,7 +334,7 @@
                             </form>
                         </c:if>
                         <c:if test="${order.status == 'RETURNED'}">
-                            <form method="POST" action="${pageContext.request.contextPath}/manager" style="display:inline-block;">
+                            <form method="POST" action="${pageContext.request.contextPath}/manager">
                                 <input type="hidden" name="action" value="updateStatus" />
                                 <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
                                 <input type="hidden" name="status" value="COMPLETED" />
@@ -327,22 +344,23 @@
                         <c:if test="${order.status == 'COMPLETED'}">
                             <c:choose>
                                 <c:when test="${ratedMap[order.rentalOrderID]}">
-                                    <button type="button" class="btn btn-secondary" disabled style="margin-left:8px;opacity:0.6">Đã đánh giá</button>
+                                    <button type="button" class="btn btn-secondary" disabled style="opacity:0.6">Đã đánh giá</button>
                                 </c:when>
                                 <c:otherwise>
-                                    <button type="button" class="btn btn-info rating-btn" data-toggle-row="${order.rentalOrderID}" style="margin-left:8px;">Đánh giá người thuê</button>
+                                    <button type="button" class="btn btn-info rating-btn" data-toggle-row="${order.rentalOrderID}">Đánh giá người thuê</button>
                                 </c:otherwise>
                             </c:choose>
                         </c:if>
                         <c:if test="${order.status == 'ISSUE'}">
                             <a href="${pageContext.request.contextPath}/manager?action=viewIssue&id=${order.rentalOrderID}" class="btn btn-info">Xem vấn đề</a>
-                            <form method="POST" action="${pageContext.request.contextPath}/manager" style="display:inline-block;">
+                            <form method="POST" action="${pageContext.request.contextPath}/manager">
                                 <input type="hidden" name="action" value="updateStatus" />
                                 <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
                                 <input type="hidden" name="status" value="CANCELLED" />
                                 <button type="submit" class="btn btn-danger">Hủy đơn hàng</button>
                             </form>
                         </c:if>
+                        </div>
                     </td>
                 </tr>
             </c:forEach>

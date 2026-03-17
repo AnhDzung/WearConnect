@@ -239,6 +239,60 @@
     .header-auth-link:hover {
         background: rgba(0,0,0,0.14);
     }
+
+    .header-auth-actions .auth-login,
+    .header-auth-actions .auth-register {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 106px;
+        padding: 10px 16px;
+        border-radius: 999px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        overflow: hidden;
+        transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+        box-shadow: 0 8px 18px rgba(7, 24, 46, 0.2);
+    }
+
+    .header-auth-actions .auth-login {
+        background: linear-gradient(135deg, #0a84ff 0%, #2db6ff 100%);
+        color: #fff;
+    }
+
+    .header-auth-actions .auth-register {
+        background: linear-gradient(135deg, #ff7a18 0%, #ffb347 100%);
+        color: #1f1300;
+    }
+
+    .header-auth-actions .auth-login::before,
+    .header-auth-actions .auth-register::before {
+        content: "";
+        position: absolute;
+        top: -60%;
+        left: -140%;
+        width: 80%;
+        height: 220%;
+        transform: rotate(25deg);
+        background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0) 100%);
+        transition: left 0.55s ease;
+        pointer-events: none;
+    }
+
+    .header-auth-actions .auth-login:hover,
+    .header-auth-actions .auth-register:hover {
+        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.25), 0 12px 28px rgba(18, 39, 68, 0.35);
+        filter: saturate(1.08);
+    }
+
+    .header-auth-actions .auth-login:hover::before,
+    .header-auth-actions .auth-register:hover::before {
+        left: 150%;
+    }
     
     .logout-btn:hover {
         background-color: #ff3838 !important;
@@ -474,7 +528,7 @@
             
             <!-- Menu cho Admin -->
             <% if ("Admin".equals(userRole)) { %>
-                <li><a href="${pageContext.request.contextPath}/">Trang Chủ</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin">Trang Chủ</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin?action=orders">Đơn Hàng</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin?action=reviewCosplay">Xét Duyệt Cosplay</a></li>
                 <li><a href="${pageContext.request.contextPath}/admin?action=statistics">Thống Kê</a></li>
@@ -578,8 +632,8 @@
                     </div>
             <% } else { %>
                 <div class="header-auth-actions">
-                    <a href="${pageContext.request.contextPath}/login" class="header-auth-link">Đăng Nhập</a>
-                    <a href="${pageContext.request.contextPath}/register" class="header-auth-link">Đăng Ký</a>
+                    <a href="${pageContext.request.contextPath}/login" class="header-auth-link auth-login">Đăng Nhập</a>
+                    <a href="${pageContext.request.contextPath}/register" class="header-auth-link auth-register">Đăng Ký</a>
                 </div>
             <% } %>
         </div>

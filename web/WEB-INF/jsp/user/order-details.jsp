@@ -508,8 +508,8 @@
                         </c:if>
                         <c:if test="${order.colorID != null}">
                             <%
-                                Integer colorID = (Integer) pageContext.getAttribute("order", PageContext.PAGE_SCOPE) != null ? 
-                                    ((Model.RentalOrder) pageContext.getAttribute("order", PageContext.PAGE_SCOPE)).getColorID() : null;
+                                Model.RentalOrder orderObj = (Model.RentalOrder) request.getAttribute("order");
+                                Integer colorID = (orderObj != null) ? orderObj.getColorID() : null;
                                 if (colorID != null) {
                                     Color color = ColorDAO.getColorByID(colorID);
                                     if (color != null) {
@@ -519,12 +519,17 @@
                             %>
                             <div class="info-row">
                                 <strong>Màu sắc:</strong>
-                                <c:if test="${not empty selectedColor}">
-                                    <div class="color-info">
-                                        <div class="color-swatch" style="background-color: ${selectedColor.hexCode != null ? selectedColor.hexCode : '#ccc'};"></div>
-                                        <span>${selectedColor.colorName}</span>
-                                    </div>
-                                </c:if>
+                                <c:choose>
+                                    <c:when test="${not empty selectedColor}">
+                                        <div class="color-info">
+                                            <div class="color-swatch order-color-swatch" data-color="${selectedColor.hexCode}"></div>
+                                            <span>${selectedColor.colorName}</span>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span>#${order.colorID}</span>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                         </c:if>
                     </div>
@@ -852,6 +857,11 @@
                 modal.classList.remove('show');
             }
         }
+
+        document.querySelectorAll('.order-color-swatch').forEach(function(swatch) {
+            const hex = swatch.getAttribute('data-color');
+            swatch.style.backgroundColor = (hex && hex.trim()) ? hex : '#ccc';
+        });
     </script>
 
     <!-- Payment proof preview (visible only to Admin or the renter user) -->

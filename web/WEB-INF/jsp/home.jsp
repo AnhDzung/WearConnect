@@ -249,27 +249,27 @@
     <div class="hero-slider" id="homeHeroSlider">
         <div class="slider-track">
             <div class="hero-slide active">
-                <img src="${pageContext.request.contextPath}/uploads/slider/slide-1.jpg" alt="WearConnect banner 1" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+                <img src="${pageContext.request.contextPath}/uploads/slider/slide-1.jpg?v=2" alt="WearConnect banner 1" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
                 <div class="hero-overlay"><span class="hero-tag">Sàn giao thuê trang phục</span><h1>WearConnect</h1><p>Wear once – Connect forever</p></div>
             </div>
             <div class="hero-slide">
-                <img src="${pageContext.request.contextPath}/uploads/slider/slide-2.jpg" alt="WearConnect banner 2" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+                <img src="${pageContext.request.contextPath}/uploads/slider/slide-2.jpg?v=2" alt="WearConnect banner 2" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
                 <div class="hero-overlay"><span class="hero-tag">Sàn giao thuê trang phục</span><h1>WearConnect</h1><p>Wear once – Connect forever</p></div>
             </div>
             <div class="hero-slide">
-                <img src="${pageContext.request.contextPath}/uploads/slider/slide-3.jpg" alt="WearConnect banner 3" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+                <img src="${pageContext.request.contextPath}/uploads/slider/slide-3.jpg?v=2" alt="WearConnect banner 3" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
                 <div class="hero-overlay"><span class="hero-tag">Sàn giao thuê trang phục</span><h1>WearConnect</h1><p>Wear once – Connect forever</p></div>
             </div>
             <div class="hero-slide">
-                <img src="${pageContext.request.contextPath}/uploads/slider/slide-4.jpg" alt="WearConnect banner 4" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+                <img src="${pageContext.request.contextPath}/uploads/slider/slide-4.jpg?v=2" alt="WearConnect banner 4" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
                 <div class="hero-overlay"><span class="hero-tag">Sàn giao thuê trang phục</span><h1>WearConnect</h1><p>Wear once – Connect forever</p></div>
             </div>
             <div class="hero-slide">
-                <img src="${pageContext.request.contextPath}/uploads/slider/slide-5.jpg" alt="WearConnect banner 5" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+                <img src="${pageContext.request.contextPath}/uploads/slider/slide-5.jpg?v=2" alt="WearConnect banner 5" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
                 <div class="hero-overlay"><span class="hero-tag">Sàn giao thuê trang phục</span><h1>WearConnect</h1><p>Wear once – Connect forever</p></div>
             </div>
             <div class="hero-slide">
-                <img src="${pageContext.request.contextPath}/uploads/slider/slide-6.jpg" alt="WearConnect banner 6" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+                <img src="${pageContext.request.contextPath}/uploads/slider/slide-6.jpg?v=2" alt="WearConnect banner 6" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
                 <div class="hero-overlay"><span class="hero-tag">Sàn giao thuê trang phục</span><h1>WearConnect</h1><p>Wear once – Connect forever</p></div>
             </div>
         </div>

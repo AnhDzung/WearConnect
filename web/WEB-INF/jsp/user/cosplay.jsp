@@ -34,10 +34,10 @@
             color: white;
             width: 100%;
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 0 auto 20px;
             border-radius: 18px;
             box-shadow: 0 14px 38px rgba(37, 54, 112, 0.22);
-            aspect-ratio: 1200 / 675;
+            aspect-ratio: 1200 / 400;
         }
         .hero-slider::before {
             content: "";
@@ -372,7 +372,6 @@
         }
 
         @media (max-width: 768px) {
-            .hero-slider { aspect-ratio: 16 / 9; }
             .hero-overlay { padding: 16px 16px 28px; }
             .slider-btn { width: 36px; height: 36px; font-size: 20px; }
             .main-content { flex-direction: column; }
@@ -430,42 +429,42 @@
 <div class="hero-slider" id="cosplayHeroSlider">
     <div class="slider-track">
         <div class="hero-slide active">
-            <img src="${pageContext.request.contextPath}/uploads/slider/slide-1.jpg" alt="Cosplay banner 1" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+            <img src="${pageContext.request.contextPath}/uploads/slider/slide-7.jpg?v=2" alt="Cosplay banner 1" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
             <div class="hero-overlay">
                 <span class="hero-tag">Cosplay spotlight</span>
                 <p>Cho thuê trang phục cosplay chất lượng cao từ Anime, Game và Movie để bạn hóa thân nổi bật trong mọi sự kiện.</p>
             </div>
         </div>
         <div class="hero-slide">
-            <img src="${pageContext.request.contextPath}/uploads/slider/slide-2.jpg" alt="Cosplay banner 2" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+            <img src="${pageContext.request.contextPath}/uploads/slider/slide-8.jpg?v=2" alt="Cosplay banner 2" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
             <div class="hero-overlay">
                 <span class="hero-tag">Anime energy</span>
                 <p>Từ chiến binh, công chúa đến phản diện cá tính, chọn đúng nhân vật bạn muốn xuất hiện thật ấn tượng.</p>
             </div>
         </div>
         <div class="hero-slide">
-            <img src="${pageContext.request.contextPath}/uploads/slider/slide-3.jpg" alt="Cosplay banner 3" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+            <img src="${pageContext.request.contextPath}/uploads/slider/slide-9.jpg?v=2" alt="Cosplay banner 3" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
             <div class="hero-overlay">
                 <span class="hero-tag">Game & movie</span>
                 <p>Chất liệu đẹp, kiểu dáng rõ nhân vật và phù hợp cho lễ hội, chụp ảnh, event hay biểu diễn sân khấu.</p>
             </div>
         </div>
         <div class="hero-slide">
-            <img src="${pageContext.request.contextPath}/uploads/slider/slide-4.jpg" alt="Cosplay banner 4" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+            <img src="${pageContext.request.contextPath}/uploads/slider/slide-10.jpg?v=2" alt="Cosplay banner 4" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
             <div class="hero-overlay">
                 <span class="hero-tag">Festival ready</span>
                 <p>Tìm nhanh bộ đồ phù hợp theo series, nhân vật hoặc loại cosplay để chuẩn bị cho buổi xuất hiện tiếp theo của bạn.</p>
             </div>
         </div>
         <div class="hero-slide">
-            <img src="${pageContext.request.contextPath}/uploads/slider/slide-5.jpg" alt="Cosplay banner 5" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+            <img src="${pageContext.request.contextPath}/uploads/slider/slide-11.jpg?v=2" alt="Cosplay banner 5" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
             <div class="hero-overlay">
                 <span class="hero-tag">Signature look</span>
                 <p>Khám phá nhiều lựa chọn cosplay đang được yêu thích và chọn bộ phù hợp nhất với phong cách bạn muốn thể hiện.</p>
             </div>
         </div>
         <div class="hero-slide">
-            <img src="${pageContext.request.contextPath}/uploads/slider/slide-6.jpg" alt="Cosplay banner 6" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
+            <img src="${pageContext.request.contextPath}/uploads/slider/slide-12.jpg?v=2" alt="Cosplay banner 6" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/wear-connect-logo.png';">
             <div class="hero-overlay">
                 <span class="hero-tag">WearConnect cosplay</span>
                 <p>Lựa chọn nhanh, xem giá rõ ràng và tìm bộ cosplay phù hợp để xuất hiện nổi bật ở mọi sân chơi fandom.</p>
