@@ -20,10 +20,7 @@ D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\UserPageCon
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\WebhookPageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\scheduler\OverdueRentalNotificationScheduler.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\WearConnectSpringBootApplication.java
-D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\chatbot\client\N8nChatClient.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\chatbot\config\InternalApiProperties.java
-D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\chatbot\config\N8nProperties.java
-D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\chatbot\config\WebClientConfig.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\chatbot\config\WebMvcConfig.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\chatbot\controller\ChatController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\chatbot\controller\InternalChatController.java
