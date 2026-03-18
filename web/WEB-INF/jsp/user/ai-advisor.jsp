@@ -70,6 +70,7 @@
                 <div class="advisor-side-actions">
                     <button id="newConversationBtn" class="advisor-new-btn" type="button">+ Tư vấn mới</button>
                     <button id="deleteConversationBtn" class="advisor-clear-btn" type="button">Xóa hội thoại</button>
+                    <button id="deleteAllConversationsBtn" class="advisor-clear-btn" type="button">Xóa tất cả</button>
                 </div>
             </div>
             <div id="advisorHistoryList" class="advisor-history-list"></div>
@@ -99,6 +100,7 @@
     const historyListEl = document.getElementById('advisorHistoryList');
     const newConversationBtn = document.getElementById('newConversationBtn');
     const deleteConversationBtn = document.getElementById('deleteConversationBtn');
+    const deleteAllConversationsBtn = document.getElementById('deleteAllConversationsBtn');
 
     const params = new URLSearchParams(window.location.search);
     let currentConversationID = params.get('conversationID') ? parseInt(params.get('conversationID'), 10) : null;
@@ -333,8 +335,12 @@
         })
         .then(async function(response){
             const data = await response.json();
+            if (response.status === 401) {
+                throw new Error('UNAUTHORIZED');
+            }
             if (!response.ok || !data.success) {
-                throw new Error((data && data.error) ? data.error : 'DELETE_CONVERSATION_FAILED');
+                const detail = (data && (data.detail || data.error)) ? (data.detail || data.error) : 'DELETE_CONVERSATION_FAILED';
+                throw new Error(detail);
             }
 
             currentConversationID = null;
@@ -345,7 +351,54 @@
         })
         .catch(function(error){
             console.error(error);
-            addMessage('bot', 'Chưa thể xóa hội thoại lúc này, bạn thử lại sau nhé.');
+            if (error && error.message === 'UNAUTHORIZED') {
+                addMessage('bot', 'Phiên đăng nhập đã hết hạn. Bạn vui lòng đăng nhập lại để xóa hội thoại.');
+                setTimeout(function(){
+                    window.location.href = contextPath + '/login';
+                }, 1200);
+                return;
+            }
+            addMessage('bot', 'Chưa thể xóa hội thoại lúc này (' + (error && error.message ? error.message : 'Loi khong xac dinh') + ').');
+        });
+    }
+
+    function deleteAllConversations() {
+        const confirmed = window.confirm('Bạn có chắc muốn xóa toàn bộ lịch sử hội thoại không?');
+        if (!confirmed) {
+            return;
+        }
+
+        fetch(contextPath + '/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete_all_conversations' })
+        })
+        .then(async function(response){
+            const data = await response.json();
+            if (response.status === 401) {
+                throw new Error('UNAUTHORIZED');
+            }
+            if (!response.ok || !data.success) {
+                const detail = (data && (data.detail || data.error)) ? (data.detail || data.error) : 'DELETE_ALL_CONVERSATIONS_FAILED';
+                throw new Error(detail);
+            }
+
+            currentConversationID = null;
+            syncConversationInUrl();
+            clearMessages();
+            addMessage('bot', 'Mình đã xóa toàn bộ lịch sử hội thoại của bạn.');
+            loadConversations(false);
+        })
+        .catch(function(error){
+            console.error(error);
+            if (error && error.message === 'UNAUTHORIZED') {
+                addMessage('bot', 'Phiên đăng nhập đã hết hạn. Bạn vui lòng đăng nhập lại.');
+                setTimeout(function(){
+                    window.location.href = contextPath + '/login';
+                }, 1200);
+                return;
+            }
+            addMessage('bot', 'Chưa thể xóa toàn bộ hội thoại lúc này (' + (error && error.message ? error.message : 'Loi khong xac dinh') + ').');
         });
     }
 
@@ -405,6 +458,10 @@
 
     deleteConversationBtn.addEventListener('click', function(){
         deleteCurrentConversation();
+    });
+
+    deleteAllConversationsBtn.addEventListener('click', function(){
+        deleteAllConversations();
     });
 
     addMessage('bot', 'Chào bạn! Mình là trợ lý tư vấn AI của WearConnect. Bạn muốn tư vấn theo phong cách nào?');

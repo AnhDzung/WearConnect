@@ -222,6 +222,13 @@ public class AIChatService {
         return AIChatDAO.deleteConversationForUser(userID, conversationID);
     }
 
+    public static boolean conversationExistsForUser(int userID, int conversationID) {
+        if (userID <= 0 || conversationID <= 0) {
+            return false;
+        }
+        return AIChatDAO.getConversationByIdAndUser(conversationID, userID) != null;
+    }
+
     private static int resolveConversationID(int userID, Integer conversationID) {
         if (conversationID != null && conversationID > 0) {
             AIConversation conversation = AIChatDAO.getConversationByIdAndUser(conversationID, userID);

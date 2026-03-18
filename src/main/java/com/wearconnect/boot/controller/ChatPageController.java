@@ -159,6 +159,23 @@ public class ChatPageController {
             return;
         }
 
+        if ("delete_all_conversations".equals(action)) {
+            boolean cleared = AIChatController.clearUserHistory(userID);
+            if (!cleared) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                result.put("success", false);
+                result.put("error", "DELETE_ALL_CONVERSATIONS_FAILED");
+                result.put("detail", "Khong the xoa toan bo hoi thoai o thoi diem hien tai");
+                response.getWriter().write(GSON.toJson(result));
+                return;
+            }
+
+            result.put("success", true);
+            result.put("message", "ALL_CONVERSATIONS_DELETED");
+            response.getWriter().write(GSON.toJson(result));
+            return;
+        }
+
         if ("delete_conversation".equals(action)) {
             Integer conversationIDToDelete = parseNullableInteger(requestData.get("conversationID"));
             if (conversationIDToDelete == null || conversationIDToDelete <= 0) {
@@ -171,9 +188,18 @@ public class ChatPageController {
 
             boolean deleted = AIChatController.deleteConversation(userID, conversationIDToDelete);
             if (!deleted) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                boolean stillExists = AIChatController.conversationExistsForUser(userID, conversationIDToDelete);
+                if (!stillExists) {
+                    result.put("success", true);
+                    result.put("message", "CONVERSATION_ALREADY_REMOVED");
+                    response.getWriter().write(GSON.toJson(result));
+                    return;
+                }
+
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 result.put("success", false);
                 result.put("error", "DELETE_CONVERSATION_FAILED");
+                result.put("detail", "Khong the xoa hoi thoai o thoi diem hien tai");
                 response.getWriter().write(GSON.toJson(result));
                 return;
             }

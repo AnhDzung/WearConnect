@@ -6,12 +6,13 @@
 
     .wearconnect-header {
         font-family: 'Inter', sans-serif;
-        background: linear-gradient(135deg, #f5fbff 0%, #0cc0df 100%);
+        background: #f1f1f1;
         color: #111;
-        padding: 10px 0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        padding: 12px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        border-bottom: 1px solid #e2e2e2;
         margin-bottom: 20px;
-        min-height: 64px;
+        min-height: 72px;
         overflow: visible;
         position: relative;
         z-index: 20;
@@ -19,45 +20,50 @@
     
     .header-container {
         width: 100%;
-        max-width: 1320px;
-        padding: 0 16px;
+        max-width: 1500px;
+        padding: 0 24px;
         box-sizing: border-box;
         margin: 0 auto;
-        display: flex;
-        justify-content: flex-start;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
         align-items: center;
-        gap: 12px;
-        min-height: 40px;
+        gap: 16px;
+        min-height: 48px;
         overflow: visible;
     }
 
     .header-right {
-        margin-left: auto;
+        grid-column: 3;
         display: flex;
         align-items: center;
-        gap: 10px;
-        flex: 1;
+        justify-content: flex-end;
+        gap: 12px;
+        justify-self: end;
+        width: max-content;
         min-width: 0;
     }
     
     .header-logo {
+        grid-column: 2;
+        justify-self: center;
         font-size: 24px;
         font-weight: bold;
         text-decoration: none;
         color: #111;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
+        flex-shrink: 0;
     }
     .header-logo img.logo-img {
         width: 150px;
-        height: 92px;
+        height: 74px;
         object-fit: contain;
         display: block;
     }
     .header-logo .brand-name {
         font-family: 'Poppins', sans-serif;
-        font-size: 20px;
+        font-size: 24px;
         font-weight: 700;
         line-height: 1;
     }
@@ -67,19 +73,21 @@
     }
     
     .header-nav {
+        grid-column: 1;
         display: flex;
-        gap: 10px;
+        gap: 8px;
         align-items: center;
         justify-content: flex-start;
-        flex: 1;
         min-width: 0;
         list-style: none;
         margin: 0;
         padding: 0;
         flex-wrap: nowrap;
-        overflow-x: visible;  /* allow dropdown to overflow without adding scrollbar */
+        overflow-x: auto;
+        overflow-y: visible;
         white-space: nowrap;
         -webkit-overflow-scrolling: touch;
+        justify-self: start;
     }
     
     .header-nav li {
@@ -91,11 +99,33 @@
 
     .header-auth-actions {
         display: flex;
-        gap: 8px;
+        gap: 10px;
         align-items: center;
         flex-wrap: nowrap;
         justify-content: flex-end;
-        margin-left: auto;
+    }
+
+    .advisor-prompt-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: 0 16px;
+        border-radius: 10px;
+        border: 1px solid #ffccd1;
+        background: #fff6f7;
+        color: #bf0f24;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .advisor-prompt-btn:hover {
+        background: #ffe9ec;
+        border-color: #ffb3bd;
     }
     
     .header-nav a, .header-nav button {
@@ -159,23 +189,26 @@
 
     @media (max-width: 1200px) {
         .header-container {
-            flex-direction: column;
-            align-items: stretch;
+            grid-template-columns: 1fr;
+            align-items: center;
             gap: 10px;
         }
 
         .header-logo {
+            grid-column: auto;
             justify-content: center;
         }
 
         .header-right {
-            margin-left: 0;
+            grid-column: auto;
             width: 100%;
             flex-direction: column;
             gap: 8px;
+            justify-content: center;
         }
 
         .header-nav {
+            grid-column: auto;
             margin-left: 0;
             justify-content: center;
             flex-wrap: wrap;
@@ -199,9 +232,23 @@
         align-items: center;
         gap: 10px;
         white-space: normal;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         justify-content: flex-end;
+        width: 100%;
         max-width: 100%;
+    }
+
+    .header-user-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+    }
+
+    .header-user-info > .logout-btn {
+        margin-left: auto;
+        flex-shrink: 0;
     }
     
     .header-user-name {
@@ -219,21 +266,33 @@
     }
     
     .logout-btn {
-        padding: 8px 16px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        min-width: 120px;
+        padding: 0 16px !important;
         background-color: #ff4757 !important;
-        border-radius: 4px;
+        border-radius: 10px;
         font-size: 13px !important;
+        font-weight: 700;
     }
 
     .header-auth-link {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         font-family: 'Inter', sans-serif;
-        padding: 8px 12px;
+        min-height: 42px;
+        min-width: 120px;
+        padding: 0 16px;
         background: rgba(0,0,0,0.08);
         color: #111;
         text-decoration: none;
-        border-radius: 8px;
+        border-radius: 10px;
         line-height: 1;
+        font-size: 13px;
+        font-weight: 600;
     }
 
     .header-auth-link:hover {
@@ -300,7 +359,6 @@
     
     @media (max-width: 768px) {
         .header-container {
-            flex-direction: column;
             gap: 15px;
             padding: 0 12px;
         }
@@ -318,16 +376,27 @@
             padding: 10px 15px;
             font-size: 13px;
         }
+
+        .advisor-prompt-btn {
+            width: 100%;
+            justify-content: center;
+        }
     }
     /* Notifications dropdown styles (match provided screenshot) */
     .notif-wrapper { position: relative; }
     .notif-wrapper > a {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         font-family: 'Inter', sans-serif;
-        padding: 8px 12px;
-        border-radius: 8px;
+        min-height: 42px;
+        min-width: 120px;
+        padding: 0 16px;
+        border-radius: 10px;
         background: rgba(0,0,0,0.08);
         color: #111;
+        font-size: 13px;
+        font-weight: 600;
     }
     .notif-wrapper > a:hover { background: rgba(0,0,0,0.14); }
     .notif-dropdown {
@@ -493,13 +562,7 @@
             }
         %>
         
-        <a href="<%= logoHref %>" class="header-logo">
-            <img class="logo-img" src="${pageContext.request.contextPath}/assets/images/wear-connect-logo.png" alt="Wear Connect logo">
-            <span class="brand-name">Wear Connect</span>
-        </a>
-        
-        <div class="header-right">
-        <!-- Navigation Menu -->
+        <!-- Navigation Menu - Column 1 (LEFT) -->
         <ul class="header-nav">
             
             <!-- Menu cho Guest (Chưa đăng nhập) -->
@@ -536,10 +599,18 @@
             
         </ul>
 
+        <!-- Logo - Column 2 (CENTER) -->
+        <a href="<%= logoHref %>" class="header-logo">
+            <img class="logo-img" src="${pageContext.request.contextPath}/assets/images/wear-connect-logo.png" alt="Wear Connect logo">
+            <span class="brand-name">Wear Connect</span>
+        </a>
+        
+        <!-- User Controls - Column 3 (RIGHT) -->
+        <div class="header-right">
             <!-- User Info -->
             <% if (userRole != null && !userRole.isEmpty()) { %>
                             <div class="header-user-info header-auth-actions">
-                                <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="header-user-actions">
                                     <%-- Unread notifications --%>
                                     <%
                                         int currentUserID = -1;
@@ -586,6 +657,7 @@
                                             </div>
                                         </div>
                                 </div>
+                                    <a href="${pageContext.request.contextPath}/advisor-chat" class="advisor-prompt-btn">Cần tư vấn ư? Hãy để AI tư vấn cho bạn.</a>
                                 <div class="header-user-name">
                             <% 
                                 // Show badge next to username if available

@@ -32,6 +32,10 @@ public class AIChatController {
         return AIChatService.deleteConversation(userID, conversationID);
     }
 
+    public static boolean conversationExistsForUser(int userID, int conversationID) {
+        return AIChatService.conversationExistsForUser(userID, conversationID);
+    }
+
     public static boolean submitAssistantFeedback(int userID, int assistantMessageID, int rating, boolean isHelpful, String note) {
         return AIChatService.submitAssistantFeedback(userID, assistantMessageID, rating, isHelpful, note);
     }
