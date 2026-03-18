@@ -12,6 +12,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class AIChatDAO {
 
@@ -252,7 +253,8 @@ public class AIChatDAO {
     public static boolean clearUserHistory(int userID) {
         List<AIConversation> conversations = getRecentConversationsByUser(userID, 500);
         for (AIConversation conversation : conversations) {
-            if (!deleteConversationForUser(userID, conversation.getConversationID())) {
+            boolean deleted = deleteConversationForUser(userID, conversation.getConversationID());
+            if (!deleted && getConversationByIdAndUser(conversation.getConversationID(), userID) != null) {
                 return false;
             }
         }
@@ -266,11 +268,29 @@ public class AIChatDAO {
         String deleteHandoffSql = "DELETE FROM AIHandoffTickets WHERE ConversationID = ?";
         String deleteMessagesSql = "DELETE FROM AIMessages WHERE ConversationID = ?";
         String deleteConversationSql = "DELETE FROM AIConversations WHERE ConversationID = ? AND UserID = ?";
+        String existsConversationSql = "SELECT 1 FROM AIConversations WHERE ConversationID = ? AND UserID = ?";
 
         try (Connection conn = DatabaseConnection.getConnection()) {
             boolean previousAutoCommit = conn.getAutoCommit();
             conn.setAutoCommit(false);
             try {
+                boolean conversationExists;
+                try (PreparedStatement ps = conn.prepareStatement(existsConversationSql)) {
+                    ps.setInt(1, conversationID);
+                    ps.setInt(2, userID);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        conversationExists = rs.next();
+                    }
+                }
+
+                if (!conversationExists) {
+                    conn.commit();
+                    conn.setAutoCommit(previousAutoCommit);
+                    return true;
+                }
+
+                deleteDynamicAITableDependencies(conn, conversationID);
+
                 try (PreparedStatement ps = conn.prepareStatement(deleteFeedbackSql)) {
                     ps.setInt(1, conversationID);
                     ps.executeUpdate();
@@ -311,6 +331,51 @@ public class AIChatDAO {
         }
 
         return false;
+    }
+
+    private static void deleteDynamicAITableDependencies(Connection conn, int conversationID) throws SQLException {
+        List<String> conversationTables = findAITablesWithColumn(conn, "ConversationID");
+        for (String table : conversationTables) {
+            String normalized = table.toLowerCase(Locale.ROOT);
+            if ("aiconversations".equals(normalized) || "aimessages".equals(normalized)) {
+                continue;
+            }
+            String sql = "DELETE FROM [" + table + "] WHERE ConversationID = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, conversationID);
+                ps.executeUpdate();
+            }
+        }
+
+        List<String> messageTables = findAITablesWithColumn(conn, "MessageID");
+        for (String table : messageTables) {
+            String normalized = table.toLowerCase(Locale.ROOT);
+            if ("aimessages".equals(normalized)) {
+                continue;
+            }
+            String sql = "DELETE FROM [" + table + "] WHERE MessageID IN (SELECT MessageID FROM AIMessages WHERE ConversationID = ?)";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, conversationID);
+                ps.executeUpdate();
+            }
+        }
+    }
+
+    private static List<String> findAITablesWithColumn(Connection conn, String columnName) throws SQLException {
+        List<String> tables = new ArrayList<>();
+        String sql = "SELECT DISTINCT TABLE_NAME "
+                + "FROM INFORMATION_SCHEMA.COLUMNS "
+                + "WHERE TABLE_NAME LIKE 'AI%' AND COLUMN_NAME = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, columnName);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    tables.add(rs.getString("TABLE_NAME"));
+                }
+            }
+        }
+        return tables;
     }
 
     private static AIConversation mapConversation(ResultSet rs) throws SQLException {

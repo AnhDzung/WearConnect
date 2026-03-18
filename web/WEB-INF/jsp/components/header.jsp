@@ -38,9 +38,16 @@
         align-items: center;
         justify-content: flex-end;
         gap: 12px;
-        justify-self: end;
-        width: max-content;
+        justify-self: stretch;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: visible;
         min-width: 0;
+    }
+
+    .header-right::-webkit-scrollbar {
+        height: 0;
     }
     
     .header-logo {

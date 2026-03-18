@@ -82,16 +82,62 @@ public class ChatServiceImpl implements ChatService {
         }
         catch (Exception ex) {
             LOGGER.error("Gemini call failed for session {}", request.sessionId(), ex);
-            return ChatResponse.fallback(ex.getClass().getSimpleName() + ": " + safeMessage(ex));
+            String errorDetail = ex.getClass().getSimpleName() + ": " + safeMessage(ex);
+            String normalizedError = errorDetail.toLowerCase();
+
+            if (normalizedError.contains("quota")
+                    || normalizedError.contains("resource_exhausted")
+                    || normalizedError.contains("429")) {
+                return ChatResponse.fallback(
+                        "He thong AI tam het han muc su dung. Vui long thu lai sau it phut hoac lien he admin de nang quota Gemini.",
+                        errorDetail
+                );
+            }
+
+            if (normalizedError.contains("api key")
+                    || normalizedError.contains("permission")
+                    || normalizedError.contains("unauthorized")
+                    || normalizedError.contains("403")
+                    || normalizedError.contains("401")) {
+                return ChatResponse.fallback(
+                        "Cau hinh AI key chua hop le hoac khong du quyen. Vui long kiem tra GEMINI_API_KEY.",
+                        errorDetail
+                );
+            }
+
+            if (normalizedError.contains("model") && normalizedError.contains("not found")) {
+                return ChatResponse.fallback(
+                        "Model AI cau hinh khong ton tai. Vui long kiem tra bien GEMINI_MODEL.",
+                        errorDetail
+                );
+            }
+
+            return ChatResponse.fallback(errorDetail);
         }
     }
 
     private String safeMessage(Exception ex) {
-        String message = ex.getMessage();
+        String message = deepestMessage(ex);
         if (message == null || message.isBlank()) {
             return "No detail message";
         }
         return message.length() > 200 ? message.substring(0, 200) + "..." : message;
+    }
+
+    private String deepestMessage(Throwable throwable) {
+        Throwable current = throwable;
+        String candidate = throwable == null ? null : throwable.getMessage();
+        int guard = 0;
+
+        while (current != null && guard < 10) {
+            if (current.getMessage() != null && !current.getMessage().isBlank()) {
+                candidate = current.getMessage();
+            }
+            current = current.getCause();
+            guard++;
+        }
+
+        return candidate;
     }
 
     private String buildUserPrompt(String userMessage,

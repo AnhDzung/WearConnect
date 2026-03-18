@@ -8,12 +8,16 @@ public record ChatResponse(
         Map<String, Object> metadata
 ) {
     public static ChatResponse fallback() {
-    return fallback("Unknown chatbot error");
+    return fallback("He thong chatbot dang ban. Vui long thu lai sau it phut.", "Unknown chatbot error");
     }
 
     public static ChatResponse fallback(String reason) {
+        return fallback("He thong chatbot dang ban. Vui long thu lai sau it phut.", reason);
+    }
+
+    public static ChatResponse fallback(String reply, String reason) {
         return new ChatResponse(
-                "He thong chatbot dang ban. Vui long thu lai sau it phut.",
+                reply,
                 "FALLBACK",
         Map.of(
             "source", "spring-fallback",
