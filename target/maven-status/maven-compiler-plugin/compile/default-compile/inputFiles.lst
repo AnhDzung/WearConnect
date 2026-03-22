@@ -18,6 +18,7 @@ D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\RootRedirec
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\SearchPageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\UserPageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\WebhookPageController.java
+D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\scheduler\AIPaymentVerificationScheduler.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\scheduler\OverdueRentalNotificationScheduler.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\WearConnectSpringBootApplication.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\chatbot\config\InternalApiProperties.java
@@ -86,10 +87,12 @@ D:\Fpt\sm7\WearConnect\src\main\java\Model\CosplayDetail.java
 D:\Fpt\sm7\WearConnect\src\main\java\Model\Notification.java
 D:\Fpt\sm7\WearConnect\src\main\java\Model\OrderIssue.java
 D:\Fpt\sm7\WearConnect\src\main\java\Model\Payment.java
+D:\Fpt\sm7\WearConnect\src\main\java\Model\PaymentVerificationCandidate.java
 D:\Fpt\sm7\WearConnect\src\main\java\Model\Rating.java
 D:\Fpt\sm7\WearConnect\src\main\java\Model\RentalOrder.java
 D:\Fpt\sm7\WearConnect\src\main\java\Service\AIChatService.java
 D:\Fpt\sm7\WearConnect\src\main\java\Service\AIKnowledgeService.java
+D:\Fpt\sm7\WearConnect\src\main\java\Service\AIPaymentVerificationService.java
 D:\Fpt\sm7\WearConnect\src\main\java\Service\AuthService.java
 D:\Fpt\sm7\WearConnect\src\main\java\Service\BankTransferService.java
 D:\Fpt\sm7\WearConnect\src\main\java\Service\ClothingService.java

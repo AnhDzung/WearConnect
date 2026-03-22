@@ -41,13 +41,9 @@
         justify-self: stretch;
         width: 100%;
         max-width: 100%;
-        overflow-x: auto;
+        overflow-x: visible;
         overflow-y: visible;
         min-width: 0;
-    }
-
-    .header-right::-webkit-scrollbar {
-        height: 0;
     }
     
     .header-logo {
@@ -106,10 +102,25 @@
 
     .header-auth-actions {
         display: flex;
-        gap: 10px;
+        gap: 8px;
         align-items: center;
         flex-wrap: nowrap;
         justify-content: flex-end;
+        min-width: 0;
+    }
+
+    .header-nav-main-btn {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 160px;
+        min-height: 42px;
+        padding: 0 16px !important;
+        border-radius: 999px !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        line-height: 1;
+        text-align: center;
     }
 
     .advisor-prompt-btn {
@@ -118,7 +129,8 @@
         justify-content: center;
         gap: 8px;
         min-height: 42px;
-        padding: 0 16px;
+        max-width: 220px;
+        padding: 0 12px;
         border-radius: 10px;
         border: 1px solid #ffccd1;
         background: #fff6f7;
@@ -128,6 +140,9 @@
         line-height: 1;
         text-decoration: none;
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 0 1 auto;
     }
 
     .advisor-prompt-btn:hover {
@@ -237,20 +252,35 @@
     .header-user-info {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         white-space: normal;
         flex-wrap: nowrap;
         justify-content: flex-end;
         width: 100%;
         max-width: 100%;
+        min-width: 0;
     }
 
     .header-user-actions {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         flex-wrap: nowrap;
         justify-content: flex-end;
+        min-width: 0;
+    }
+
+    .header-user-name {
+        min-width: 0;
+        max-width: 210px;
+    }
+
+    .header-user-name .header-auth-link {
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .header-user-info > .logout-btn {
@@ -312,9 +342,11 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 106px;
-        padding: 10px 16px;
+        width: 160px;
+        min-height: 42px;
+        padding: 0 16px;
         border-radius: 999px;
+        font-size: 14px;
         font-weight: 700;
         letter-spacing: 0.2px;
         border: 1px solid rgba(255, 255, 255, 0.7);
@@ -397,8 +429,8 @@
         justify-content: center;
         font-family: 'Inter', sans-serif;
         min-height: 42px;
-        min-width: 120px;
-        padding: 0 16px;
+        min-width: 108px;
+        padding: 0 12px;
         border-radius: 10px;
         background: rgba(0,0,0,0.08);
         color: #111;
@@ -574,14 +606,14 @@
             
             <!-- Menu cho Guest (Chưa đăng nhập) -->
             <% if (userRole == null || userRole.isEmpty()) { %>
-                <li><a href="${pageContext.request.contextPath}/home">Cửa Hàng</a></li>
-                <li><a class="cosplay-highlight" href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes <span class="cosplay-badge">NEW</span></a></li>
+                <li><a class="header-nav-main-btn" href="${pageContext.request.contextPath}/home">Cửa Hàng</a></li>
+                <li><a class="header-nav-main-btn cosplay-highlight" href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes </a></li>
             <% } %>
             
             <!-- Menu cho User -->
             <% if ("User".equals(userRole)) { %>
                 <li><a href="${pageContext.request.contextPath}/home">Cửa Hàng</a></li>
-                <li><a class="cosplay-highlight" href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes <span class="cosplay-badge">NEW</span></a></li>
+                <li><a class="cosplay-highlight" href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes </a></li>
                 <li><a href="${pageContext.request.contextPath}/rental?action=myOrders">Đơn Thuê Của Tôi</a></li>
                 <li><a href="${pageContext.request.contextPath}/user?action=favorites">Yêu Thích</a></li>
             <% } %>
@@ -664,7 +696,9 @@
                                             </div>
                                         </div>
                                 </div>
-                                    <a href="${pageContext.request.contextPath}/advisor-chat" class="advisor-prompt-btn">Cần tư vấn ư? Hãy để AI tư vấn cho bạn.</a>
+                                    <% if ("User".equals(userRole)) { %>
+                                        <a href="${pageContext.request.contextPath}/advisor-chat" class="advisor-prompt-btn">Hãy để AI tư vấn cho bạn.</a>
+                                    <% } %>
                                 <div class="header-user-name">
                             <% 
                                 // Show badge next to username if available

@@ -1,6 +1,7 @@
 package DAO;
 
 import config.DatabaseConnection;
+import Model.PaymentVerificationCandidate;
 import Model.RentalOrder;
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -602,5 +603,90 @@ public class RentalOrderDAO {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public static List<PaymentVerificationCandidate> getPaymentSubmittedCandidatesForAIVerification(int timeoutHours, int limit) {
+        List<PaymentVerificationCandidate> list = new ArrayList<>();
+        int safeTimeoutHours = Math.max(1, timeoutHours);
+        int safeLimit = Math.max(1, Math.min(limit, 200));
+
+        String transferContentSelect = "'' AS TransferContentProvided";
+        String paymentApplyRefColumn = "'' AS bankTransactionRef";
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            if (hasColumn(conn, "Payment", "bankTransactionRef")) {
+                transferContentSelect = "ISNULL(p.bankTransactionRef, '') AS TransferContentProvided";
+                paymentApplyRefColumn = "bankTransactionRef";
+            }
+
+            String sql = "SELECT TOP " + safeLimit + " "
+                    + "ro.RentalOrderID, ro.RenterUserID, c.RenterID AS ManagerID, "
+                    + "CAST((ISNULL(ro.TotalPrice, 0) + ISNULL(ro.DepositAmount, 0)) AS DECIMAL(18,2)) AS ExpectedAmount, "
+                    + "ISNULL(p.PaymentID, 0) AS PaymentID, ISNULL(p.Amount, 0) AS PaidAmount, "
+                    + "COALESCE(p.PaymentDate, p.CreatedAt, ro.CreatedAt) AS TransferTime, "
+                    + "ro.CreatedAt AS SubmittedAt, "
+                    + "CASE WHEN ro.PaymentProofImage IS NULL OR LTRIM(RTRIM(ro.PaymentProofImage)) = '' THEN 0 ELSE 1 END AS HasProofImage, "
+                    + "('WRC' + RIGHT('00000' + CAST(ro.RentalOrderID AS VARCHAR(20)), 5)) AS ExpectedTransferContent, "
+                    + transferContentSelect + " "
+                    + "FROM RentalOrder ro "
+                    + "LEFT JOIN Clothing c ON ro.ClothingID = c.ClothingID "
+                    + "OUTER APPLY ( "
+                    + "  SELECT TOP 1 PaymentID, Amount, PaymentDate, CreatedAt, " + paymentApplyRefColumn + " "
+                    + "  FROM Payment "
+                    + "  WHERE RentalOrderID = ro.RentalOrderID "
+                    + "  ORDER BY PaymentID DESC "
+                    + ") p "
+                    + "WHERE UPPER(LTRIM(RTRIM(ro.Status))) = 'PAYMENT_SUBMITTED' "
+                    + "AND COALESCE(p.PaymentDate, p.CreatedAt, ro.CreatedAt) <= DATEADD(HOUR, -?, GETDATE()) "
+                    + "ORDER BY COALESCE(p.PaymentDate, p.CreatedAt, ro.CreatedAt) ASC";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, safeTimeoutHours);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    PaymentVerificationCandidate candidate = new PaymentVerificationCandidate();
+                    candidate.setRentalOrderID(rs.getInt("RentalOrderID"));
+                    candidate.setRenterUserID(rs.getInt("RenterUserID"));
+                    candidate.setManagerID(rs.getInt("ManagerID"));
+                    candidate.setPaymentID(rs.getInt("PaymentID"));
+                    candidate.setExpectedAmount(rs.getDouble("ExpectedAmount"));
+                    candidate.setPaidAmount(rs.getDouble("PaidAmount"));
+
+                    Timestamp transferTs = rs.getTimestamp("TransferTime");
+                    if (transferTs != null) {
+                        candidate.setTransferTime(transferTs.toLocalDateTime());
+                    }
+
+                    Timestamp submittedTs = rs.getTimestamp("SubmittedAt");
+                    if (submittedTs != null) {
+                        candidate.setSubmittedAt(submittedTs.toLocalDateTime());
+                    }
+
+                    candidate.setHasProofImage(rs.getInt("HasProofImage") == 1);
+                    candidate.setExpectedTransferContent(rs.getString("ExpectedTransferContent"));
+                    candidate.setProvidedTransferContent(rs.getString("TransferContentProvided"));
+                    list.add(candidate);
+                }
+            }
+            }
+        } catch (SQLException e) {
+            System.err.println("[RentalOrderDAO] Error fetching AI payment verification candidates: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    private static boolean hasColumn(Connection conn, String tableName, String columnName) {
+        String sql = "SELECT COUNT(*) AS cnt FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND COLUMN_NAME = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tableName);
+            ps.setString(2, columnName);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt("cnt") > 0;
+            }
+        } catch (SQLException e) {
+            return false;
+        }
     }
 }
