@@ -3,8 +3,14 @@ package com.wearconnect.boot.controller;
 import Model.Account;
 import Service.GoogleOAuth2Service;
 import Service.GoogleOAuth2Service.GoogleUserInfo;
-import Controller.AuthController;
+import Service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,8 +31,32 @@ public class OAuth2CallbackController {
     
     @Autowired(required = false)
     private GoogleOAuth2Service googleOAuth2Service;
+
+    @Value("${spring.security.oauth2.client.registration.google.client-id:}")
+    private String configuredClientId;
+
+    @Value("${spring.security.oauth2.client.registration.google.client-secret:}")
+    private String configuredClientSecret;
     
-    private static final String GOOGLE_TOKEN_URL = "https://www.googleapis.com/oauth2/v4/token";
+    private static final String GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+
+    private String resolveClientId() {
+        if (configuredClientId != null && !configuredClientId.isBlank()
+                && !"local-dev-client-id".equals(configuredClientId)) {
+            return configuredClientId;
+        }
+        String envValue = System.getenv("GOOGLE_CLIENT_ID");
+        return (envValue == null || envValue.isBlank()) ? null : envValue;
+    }
+
+    private String resolveClientSecret() {
+        if (configuredClientSecret != null && !configuredClientSecret.isBlank()
+                && !"local-dev-client-secret".equals(configuredClientSecret)) {
+            return configuredClientSecret;
+        }
+        String envValue = System.getenv("GOOGLE_CLIENT_SECRET");
+        return (envValue == null || envValue.isBlank()) ? null : envValue;
+    }
     
     /**
      * Google OAuth2 callback endpoint
@@ -97,6 +127,11 @@ public class OAuth2CallbackController {
             if (role != null) {
                 role = role.trim();
             }
+
+            if ("User".equals(role) || "Manager".equals(role)) {
+                checkProfileCompletionAndNotify(account);
+            }
+
             if ("Admin".equals(role)) {
                 response.sendRedirect(request.getContextPath() + "/admin");
             } else if ("Manager".equals(role)) {
@@ -122,8 +157,8 @@ public class OAuth2CallbackController {
     private String exchangeCodeForToken(String code, HttpServletRequest request) {
         try {
             // Lấy client credentials từ environment hoặc application.properties
-            String clientId = System.getenv("GOOGLE_CLIENT_ID");
-            String clientSecret = System.getenv("GOOGLE_CLIENT_SECRET");
+            String clientId = resolveClientId();
+            String clientSecret = resolveClientSecret();
             String redirectUri = request.getScheme() + "://" + request.getServerName() + 
                                ":" + request.getServerPort() + 
                                request.getContextPath() + "/oauth2/callback/google";
@@ -132,21 +167,35 @@ public class OAuth2CallbackController {
                 System.err.println("Missing Google credentials in environment");
                 return null;
             }
-            
-            // Prepare token request
-            String tokenRequestBody = String.format(
-                "code=%s&client_id=%s&client_secret=%s&redirect_uri=%s&grant_type=authorization_code",
-                code, clientId, clientSecret, java.net.URLEncoder.encode(redirectUri, "UTF-8")
-            );
-            
-            // Use RestTemplate hoặc HttpClient để gọi Google token endpoint
+
+            // Google token endpoint yêu cầu application/x-www-form-urlencoded
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+            form.add("code", code);
+            form.add("client_id", clientId);
+            form.add("client_secret", clientSecret);
+            form.add("redirect_uri", redirectUri);
+            form.add("grant_type", "authorization_code");
+
+            HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(form, headers);
+
             RestTemplate restTemplate = new RestTemplate();
-            String response = restTemplate.postForObject(GOOGLE_TOKEN_URL, tokenRequestBody, String.class);
+            String response = restTemplate.postForObject(GOOGLE_TOKEN_URL, requestEntity, String.class);
             
             if (response != null) {
                 JsonObject jsonResponse = JsonParser.parseString(response).getAsJsonObject();
                 if (jsonResponse.has("access_token")) {
                     return jsonResponse.get("access_token").getAsString();
+                }
+
+                if (jsonResponse.has("error")) {
+                    String error = jsonResponse.get("error").getAsString();
+                    String desc = jsonResponse.has("error_description")
+                            ? jsonResponse.get("error_description").getAsString()
+                            : "";
+                    System.err.println("Google token error: " + error + " - " + desc);
                 }
             }
         } catch (Exception e) {
@@ -163,7 +212,7 @@ public class OAuth2CallbackController {
     @GetMapping("/oauth2/authorize/google")
     public void authorizeGoogle(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            String clientId = System.getenv("GOOGLE_CLIENT_ID");
+            String clientId = resolveClientId();
             String redirectUri = request.getScheme() + "://" + request.getServerName() + 
                                ":" + request.getServerPort() + 
                                request.getContextPath() + "/oauth2/callback/google";
@@ -190,6 +239,59 @@ public class OAuth2CallbackController {
             System.err.println("Error in authorize: " + e.getMessage());
             e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/login?error=server_error");
+        }
+    }
+
+    private void checkProfileCompletionAndNotify(Account account) {
+        try {
+            boolean isIncomplete = false;
+            StringBuilder missingFields = new StringBuilder();
+
+            if (account.getPhoneNumber() == null || account.getPhoneNumber().trim().isEmpty()) {
+                isIncomplete = true;
+                missingFields.append("Số điện thoại, ");
+            }
+            if (account.getAddress() == null || account.getAddress().trim().isEmpty()) {
+                isIncomplete = true;
+                missingFields.append("Địa chỉ, ");
+            }
+            try {
+                if (account.getBankAccountNumber() == null || account.getBankAccountNumber().trim().isEmpty()) {
+                    isIncomplete = true;
+                    missingFields.append("Số tài khoản ngân hàng, ");
+                }
+            } catch (Exception e) {
+                isIncomplete = true;
+                missingFields.append("Số tài khoản ngân hàng, ");
+            }
+            try {
+                if (account.getBankName() == null || account.getBankName().trim().isEmpty()) {
+                    isIncomplete = true;
+                    missingFields.append("Tên ngân hàng, ");
+                }
+            } catch (Exception e) {
+                isIncomplete = true;
+                missingFields.append("Tên ngân hàng, ");
+            }
+
+            if (isIncomplete && missingFields.length() > 0) {
+                String fields = missingFields.substring(0, missingFields.length() - 2);
+                String role = account.getUserRole() == null ? "" : account.getUserRole().trim();
+                String chatbotGuidance = "Manager".equals(role)
+                        ? "Bên cạnh đó nếu bạn muốn tìm hiểu về quy trình đăng tải quần áo lên website thì có thể vào phần chatbot và hỏi về quy trình đăng tải quần áo."
+                        : "Bên cạnh đó nếu bạn muốn tìm hiểu về quy trình thuê hàng thì có thể vào phần chatbot và hỏi về quy trình đặt thuê.";
+
+                String message = "Cảm ơn bạn đã tin tưởng và sử dụng WearConnect. Hãy cập nhật đầy đủ thông tin của bạn trong profile để trải nghiệm tốt hơn!"
+                        + "\n\nThông tin chưa đầy đủ: " + fields + "\n\n" + chatbotGuidance;
+
+                NotificationService.createNotificationOnceByTitle(
+                        account.getAccountID(),
+                        "Cập nhật thông tin Profile",
+                        message
+                );
+            }
+        } catch (Exception e) {
+            System.err.println("Error checking profile completion (OAuth): " + e.getMessage());
         }
     }
 }

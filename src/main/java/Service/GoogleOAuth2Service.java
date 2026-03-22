@@ -2,11 +2,16 @@ package Service;
 
 import Model.Account;
 import DAO.AccountDAO;
+import DAO.LoginHistoryDAO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
@@ -32,22 +37,54 @@ public class GoogleOAuth2Service {
      */
     public GoogleUserInfo getGoogleUserInfo(String accessToken) {
         try {
-            String url = "https://www.googleapis.com/oauth2/v3/userinfo?access_token=" + accessToken;
-            
-            URLConnection urlConnection = new URL(url).openConnection();
-            InputStream inputStream = urlConnection.getInputStream();
-            
-            String jsonResponse = getStringFromInputStream(inputStream);
+            String url = "https://www.googleapis.com/oauth2/v3/userinfo";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(accessToken);
+            HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> responseEntity = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    requestEntity,
+                    String.class
+            );
+
+            String jsonResponse = responseEntity.getBody();
+            if (jsonResponse == null || jsonResponse.isBlank()) {
+                System.err.println("Google userinfo response is empty");
+                return null;
+            }
             
             JsonObject jsonObject = JsonParser.parseString(jsonResponse).getAsJsonObject();
+
+            if (jsonObject.has("error")) {
+                String error = safeGetString(jsonObject, "error");
+                String desc = safeGetString(jsonObject, "error_description");
+                System.err.println("Google userinfo error: " + error + " - " + desc);
+                return null;
+            }
             
             GoogleUserInfo userInfo = new GoogleUserInfo();
-            userInfo.setGoogleId(jsonObject.get("id").getAsString());
-            userInfo.setEmail(jsonObject.get("email").getAsString());
-            userInfo.setName(jsonObject.has("name") ? jsonObject.get("name").getAsString() : "");
-            userInfo.setGivenName(jsonObject.has("given_name") ? jsonObject.get("given_name").getAsString() : "");
-            userInfo.setFamilyName(jsonObject.has("family_name") ? jsonObject.get("family_name").getAsString() : "");
-            userInfo.setPicture(jsonObject.has("picture") ? jsonObject.get("picture").getAsString() : "");
+            // Google OIDC userinfo dùng 'sub' làm subject identifier.
+            String googleId = safeGetString(jsonObject, "sub");
+            if (googleId.isBlank()) {
+                googleId = safeGetString(jsonObject, "id");
+            }
+
+            String email = safeGetString(jsonObject, "email");
+            if (googleId.isBlank() || email.isBlank()) {
+                System.err.println("Google userinfo missing required fields. Payload: " + jsonResponse);
+                return null;
+            }
+
+            userInfo.setGoogleId(googleId);
+            userInfo.setEmail(email);
+            userInfo.setName(safeGetString(jsonObject, "name"));
+            userInfo.setGivenName(safeGetString(jsonObject, "given_name"));
+            userInfo.setFamilyName(safeGetString(jsonObject, "family_name"));
+            userInfo.setPicture(safeGetString(jsonObject, "picture"));
             
             return userInfo;
         } catch (Exception e) {
@@ -55,6 +92,13 @@ public class GoogleOAuth2Service {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private String safeGetString(JsonObject jsonObject, String key) {
+        if (!jsonObject.has(key) || jsonObject.get(key).isJsonNull()) {
+            return "";
+        }
+        return jsonObject.get(key).getAsString();
     }
     
     /**

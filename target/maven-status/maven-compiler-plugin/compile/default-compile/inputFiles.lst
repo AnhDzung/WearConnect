@@ -1,5 +1,6 @@
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\config\CacheControlSpringFilter.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\config\LegacyDatabaseCompatibilityConfig.java
+D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\config\SecurityConfig.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\AdminPageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\AIKnowledgeAdminPageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\AuthPageController.java
@@ -9,6 +10,7 @@ D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\CosplayPage
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\HomePageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\ImagePageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\ManagerPageController.java
+D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\OAuth2CallbackController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\OrderIssuePageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\PaymentPageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\RatingPageController.java
@@ -97,6 +99,7 @@ D:\Fpt\sm7\WearConnect\src\main\java\Service\AuthService.java
 D:\Fpt\sm7\WearConnect\src\main\java\Service\BankTransferService.java
 D:\Fpt\sm7\WearConnect\src\main\java\Service\ClothingService.java
 D:\Fpt\sm7\WearConnect\src\main\java\Service\DashboardService.java
+D:\Fpt\sm7\WearConnect\src\main\java\Service\GoogleOAuth2Service.java
 D:\Fpt\sm7\WearConnect\src\main\java\Service\LLMClientService.java
 D:\Fpt\sm7\WearConnect\src\main\java\Service\NotificationService.java
 D:\Fpt\sm7\WearConnect\src\main\java\Service\PaymentService.java
