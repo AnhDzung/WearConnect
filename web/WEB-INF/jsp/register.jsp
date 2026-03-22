@@ -8,7 +8,12 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/global-styles.css">
     <style>
         body {
-            background: var(--primary-gradient);
+            background-image:
+                linear-gradient(rgba(20, 24, 32, 0.45), rgba(20, 24, 32, 0.45)),
+                url('${pageContext.request.contextPath}/assets/images/register-img.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -168,7 +173,6 @@
             <h1>Đăng Ký</h1>
             <p>Tạo tài khoản mới trên WearConnect</p>
         </div>
-        
         <% if (request.getAttribute("error") != null) { %>
             <div class="error-message">
                 <%= request.getAttribute("error") %>
