@@ -6,11 +6,11 @@
 
     .wearconnect-header {
         font-family: 'Inter', sans-serif;
-        background: #f1f1f1;
+        background: linear-gradient(135deg, #f5fbff 0%, #0cc0df 100%);
         color: #111;
         padding: 12px 0;
         box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        border-bottom: 1px solid #e2e2e2;
+        border-bottom: 1px solid rgba(62, 213, 240, 0.897);
         margin-bottom: 20px;
         min-height: 72px;
         overflow: visible;
@@ -20,14 +20,14 @@
     
     .header-container {
         width: 100%;
-        max-width: 1500px;
-        padding: 0 24px;
+        max-width: 1680px;
+        padding: 0 clamp(12px, 1.8vw, 24px);
         box-sizing: border-box;
         margin: 0 auto;
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
         align-items: center;
-        gap: 16px;
+        gap: 10px;
         min-height: 48px;
         overflow: visible;
     }
@@ -37,7 +37,7 @@
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 12px;
+        gap: 10px;
         justify-self: stretch;
         width: 100%;
         max-width: 100%;
@@ -78,7 +78,7 @@
     .header-nav {
         grid-column: 1;
         display: flex;
-        gap: 8px;
+        gap: 12px;
         align-items: center;
         justify-content: flex-start;
         min-width: 0;
@@ -102,7 +102,7 @@
 
     .header-auth-actions {
         display: flex;
-        gap: 8px;
+        gap: 12px;
         align-items: center;
         flex-wrap: nowrap;
         justify-content: flex-end;
