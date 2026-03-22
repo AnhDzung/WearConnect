@@ -14,6 +14,10 @@ public class Account {
     private String avatar;
     private String bankAccountNumber; // Số tài khoản ngân hàng
     private String bankName; // Tên ngân hàng
+    // OAuth2 Fields
+    private String oauthProvider; // Google, Facebook, etc.
+    private String oauthID; // OAuth Provider ID
+    private String googleID; // Google-specific ID
     private boolean status;
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
@@ -155,6 +159,30 @@ public class Account {
 
     public void setBankName(String bankName) {
         this.bankName = bankName;
+    }
+
+    public String getOAuthProvider() {
+        return oauthProvider;
+    }
+
+    public void setOAuthProvider(String oauthProvider) {
+        this.oauthProvider = oauthProvider;
+    }
+
+    public String getOAuthID() {
+        return oauthID;
+    }
+
+    public void setOAuthID(String oauthID) {
+        this.oauthID = oauthID;
+    }
+
+    public String getGoogleID() {
+        return googleID;
+    }
+
+    public void setGoogleID(String googleID) {
+        this.googleID = googleID;
     }
 
     @Override

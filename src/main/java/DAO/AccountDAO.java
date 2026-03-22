@@ -367,6 +367,83 @@ public class AccountDAO {
         account.setStatus(rs.getBoolean("Status"));
         try { account.setBankAccountNumber(rs.getString("BankAccountNumber")); } catch (SQLException ignore) {}
         try { account.setBankName(rs.getString("BankName")); } catch (SQLException ignore) {}
+        // OAuth2 Fields
+        try { account.setOAuthProvider(rs.getString("OAuthProvider")); } catch (SQLException ignore) {}
+        try { account.setOAuthID(rs.getString("OAuthID")); } catch (SQLException ignore) {}
+        try { account.setGoogleID(rs.getString("GoogleID")); } catch (SQLException ignore) {}
+        try { account.setAvatar(rs.getString("Avatar")); } catch (SQLException ignore) {}
         return account;
+    }
+    
+    /**
+     * Lấy tài khoản theo Google ID
+     */
+    public static Account findByGoogleID(String googleID) {
+        String query = "SELECT * FROM Accounts WHERE GoogleID = ? OR OAuthID = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            
+            ps.setString(1, googleID);
+            ps.setString(2, googleID);
+            
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                return mapResultSetToAccount(rs);
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi tìm Google account: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Lấy tài khoản theo email
+     */
+    public static Account findByEmail(String email) {
+        String query = "SELECT * FROM Accounts WHERE Email = ? AND Status = 1";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            
+            ps.setString(1, email);
+            
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                return mapResultSetToAccount(rs);
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi tìm email: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Update account with OAuth information
+     */
+    public static boolean updateOAuthInfo(int accountID, String provider, String oauthID, String googleID) {
+        String query = "UPDATE Accounts SET OAuthProvider = ?, OAuthID = ?, GoogleID = ? WHERE AccountID = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            
+            ps.setString(1, provider);
+            ps.setString(2, oauthID);
+            ps.setString(3, googleID);
+            ps.setInt(4, accountID);
+            
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Lỗi cập nhật OAuth info: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
     }
 }
