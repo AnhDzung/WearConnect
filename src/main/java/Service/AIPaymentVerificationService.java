@@ -8,6 +8,7 @@ import com.google.gson.JsonParser;
 import config.AIProviderConfig;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
@@ -76,15 +77,33 @@ public class AIPaymentVerificationService {
     private static AIDecision evaluateCandidate(PaymentVerificationCandidate candidate) {
         String expectedTransferContent = safeText(candidate.getExpectedTransferContent());
         String providedTransferContent = safeText(candidate.getProvidedTransferContent());
+        OcrSnapshot ocrSnapshot = extractFromProofImage(candidate);
 
-        if (!providedTransferContent.isBlank()) {
-            String normalizedExpected = normalizeTransferContent(expectedTransferContent);
-            String normalizedProvided = normalizeTransferContent(providedTransferContent);
-            if (!normalizedExpected.isEmpty() && !normalizedExpected.equals(normalizedProvided)) {
+        String effectiveTransferContent = providedTransferContent;
+        if ((effectiveTransferContent.equals("N/A") || effectiveTransferContent.isBlank())
+                && ocrSnapshot.transferContent != null && !ocrSnapshot.transferContent.isBlank()) {
+            effectiveTransferContent = ocrSnapshot.transferContent;
+        }
+
+        if (!effectiveTransferContent.isBlank() && !"N/A".equalsIgnoreCase(effectiveTransferContent)) {
+            if (!isTransferContentMatchingOrder(candidate.getRentalOrderID(), effectiveTransferContent)) {
                 return new AIDecision("REJECT",
-                        "Nội dung chuyển khoản không khớp mã đơn hàng. expected="
-                                + expectedTransferContent + ", provided=" + providedTransferContent);
+                        "Nội dung chuyển khoản không khớp RentalOrderID. expected="
+                                + expectedTransferContent + ", provided=" + effectiveTransferContent);
             }
+        }
+
+        if (ocrSnapshot.amount > 0 && !isAmountMatching(candidate.getExpectedAmount(), ocrSnapshot.amount)) {
+            return new AIDecision("REJECT",
+                    "Số tiền OCR không khớp hệ thống. expected="
+                            + MONEY_FORMAT.format(candidate.getExpectedAmount())
+                            + ", ocr=" + MONEY_FORMAT.format(ocrSnapshot.amount));
+        }
+
+        if (ocrSnapshot.transferTime != null && candidate.getSubmittedAt() != null
+                && ocrSnapshot.transferTime.isAfter(candidate.getSubmittedAt().plusMinutes(10))) {
+            return new AIDecision("REJECT",
+                    "Thời gian chuyển khoản trong ảnh xảy ra sau thời điểm gửi minh chứng.");
         }
 
         String systemPrompt = "Bạn là AI kiểm duyệt thanh toán cho WearConnect. "
@@ -108,8 +127,12 @@ public class AIPaymentVerificationService {
                 + "- Thời gian gửi thanh toán: " + submittedAtText + "\n"
                 + "- Số tiền hệ thống kỳ vọng: " + MONEY_FORMAT.format(candidate.getExpectedAmount()) + "\n"
                 + "- Số tiền đã ghi nhận: " + MONEY_FORMAT.format(candidate.getPaidAmount()) + "\n"
+                + "- Số tiền OCR từ ảnh: " + (ocrSnapshot.amount > 0 ? MONEY_FORMAT.format(ocrSnapshot.amount) : "N/A") + "\n"
+                + "- Thời gian OCR từ ảnh: "
+                + (ocrSnapshot.transferTime != null ? ocrSnapshot.transferTime.format(DATE_TIME_FORMATTER) : "N/A") + "\n"
                 + "- Nội dung chuyển khoản kỳ vọng: " + expectedTransferContent + "\n"
-                + "- Nội dung chuyển khoản nhận được: " + providedTransferContent + "\n"
+                + "- Nội dung chuyển khoản nhận được: " + effectiveTransferContent + "\n"
+                + "- Nội dung OCR từ ảnh: " + safeText(ocrSnapshot.transferContent) + "\n"
                 + "- Có ảnh minh chứng: " + (candidate.isHasProofImage() ? "Có" : "Không") + "\n"
                 + "Chỉ trả JSON, không thêm giải thích ngoài JSON.";
 
@@ -236,11 +259,132 @@ public class AIPaymentVerificationService {
         return trimmed.length() > 200 ? trimmed.substring(0, 200) : trimmed;
     }
 
-    private static String normalizeTransferContent(String value) {
-        if (value == null) {
-            return "";
+    private static boolean isTransferContentMatchingOrder(int rentalOrderId, String providedContent) {
+        if (rentalOrderId <= 0 || providedContent == null || providedContent.trim().isEmpty()) {
+            return false;
         }
-        return value.toUpperCase().replaceAll("[^A-Z0-9]", "");
+
+        String digits = providedContent.replaceAll("\\D", "");
+        if (digits.isEmpty()) {
+            return false;
+        }
+
+        try {
+            int providedOrderId = Integer.parseInt(digits);
+            return providedOrderId == rentalOrderId;
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+    }
+
+    private static boolean isAmountMatching(double expected, double observed) {
+        if (expected <= 0 || observed <= 0) {
+            return false;
+        }
+        double diff = Math.abs(expected - observed);
+        return diff <= Math.max(1000.0, expected * 0.01);
+    }
+
+    private static OcrSnapshot extractFromProofImage(PaymentVerificationCandidate candidate) {
+        OcrSnapshot snapshot = new OcrSnapshot();
+        if (candidate == null || !candidate.isHasProofImage()) {
+            return snapshot;
+        }
+
+        String path = candidate.getProofImagePath();
+        if (path == null || path.trim().isEmpty()) {
+            return snapshot;
+        }
+
+        byte[] imageBytes = RentalOrderDAO.getAnyProofImageDataByPath(path);
+        if (imageBytes == null || imageBytes.length == 0) {
+            return snapshot;
+        }
+
+        String systemPrompt = "Bạn là bộ OCR cho ảnh chuyển khoản ngân hàng. "
+                + "Trả về JSON duy nhất theo mẫu: "
+                + "{\"amount\":number_or_0,\"transferTime\":\"dd/MM/yyyy HH:mm:ss|N/A\",\"transferContent\":\"...|N/A\"}.";
+
+        String userPrompt = "Đọc ảnh minh chứng chuyển khoản và trích xuất: số tiền, thời gian chuyển khoản, nội dung chuyển khoản. "
+                + "Nếu không thấy trường nào thì trả về N/A hoặc 0 tương ứng.";
+
+        String raw = LLMClientService.generateReplyWithImage(systemPrompt, userPrompt, imageBytes, "image/png");
+        if (raw == null || raw.isBlank()) {
+            return snapshot;
+        }
+
+        String jsonText = extractJsonObject(raw);
+        if (jsonText == null) {
+            return snapshot;
+        }
+
+        try {
+            JsonObject json = JsonParser.parseString(jsonText).getAsJsonObject();
+
+            if (json.has("amount") && !json.get("amount").isJsonNull()) {
+                try {
+                    snapshot.amount = json.get("amount").getAsDouble();
+                } catch (Exception ignored) {
+                    snapshot.amount = parseAmountFromText(json.get("amount").getAsString());
+                }
+            }
+
+            if (json.has("transferContent") && !json.get("transferContent").isJsonNull()) {
+                snapshot.transferContent = safeText(json.get("transferContent").getAsString());
+            }
+
+            if (json.has("transferTime") && !json.get("transferTime").isJsonNull()) {
+                snapshot.transferTime = parseDateTimeFlexible(json.get("transferTime").getAsString());
+            }
+        } catch (Exception ignored) {
+            return snapshot;
+        }
+
+        return snapshot;
+    }
+
+    private static double parseAmountFromText(String amountText) {
+        if (amountText == null || amountText.trim().isEmpty()) {
+            return 0;
+        }
+        String numeric = amountText.replaceAll("[^0-9.]", "");
+        if (numeric.isEmpty()) {
+            return 0;
+        }
+        try {
+            return Double.parseDouble(numeric);
+        } catch (NumberFormatException ex) {
+            return 0;
+        }
+    }
+
+    private static LocalDateTime parseDateTimeFlexible(String value) {
+        if (value == null || value.trim().isEmpty() || "N/A".equalsIgnoreCase(value.trim())) {
+            return null;
+        }
+
+        String v = value.trim();
+        DateTimeFormatter[] formatters = new DateTimeFormatter[] {
+                DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"),
+                DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"),
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+        };
+
+        for (DateTimeFormatter formatter : formatters) {
+            try {
+                LocalDateTime dt = LocalDateTime.parse(v, formatter);
+                return dt.truncatedTo(ChronoUnit.SECONDS);
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
+    }
+
+    private static class OcrSnapshot {
+        private double amount;
+        private LocalDateTime transferTime;
+        private String transferContent;
     }
 
     private static class AIDecision {

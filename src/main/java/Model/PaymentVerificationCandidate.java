@@ -13,6 +13,7 @@ public class PaymentVerificationCandidate {
     private LocalDateTime transferTime;
     private LocalDateTime submittedAt;
     private boolean hasProofImage;
+    private String proofImagePath;
     private String expectedTransferContent;
     private String providedTransferContent;
 
@@ -86,6 +87,14 @@ public class PaymentVerificationCandidate {
 
     public void setHasProofImage(boolean hasProofImage) {
         this.hasProofImage = hasProofImage;
+    }
+
+    public String getProofImagePath() {
+        return proofImagePath;
+    }
+
+    public void setProofImagePath(String proofImagePath) {
+        this.proofImagePath = proofImagePath;
     }
 
     public String getExpectedTransferContent() {

@@ -12,6 +12,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.time.Duration;
 import java.util.List;
 
@@ -32,6 +33,23 @@ public class LLMClientService {
             return callOpenAI(systemPrompt, recentMessages, userMessage);
         } catch (Exception exception) {
             System.err.println("[LLMClientService] LLM call failed: " + exception.getMessage());
+            return null;
+        }
+    }
+
+    public static String generateReplyWithImage(String systemPrompt, String userMessage, byte[] imageBytes, String mimeType) {
+        if (!AIProviderConfig.isEnabled() || imageBytes == null || imageBytes.length == 0) {
+            return null;
+        }
+
+        String provider = AIProviderConfig.getProvider();
+        try {
+            if ("gemini".equals(provider)) {
+                return callGeminiWithImage(systemPrompt, userMessage, imageBytes, mimeType);
+            }
+            return null;
+        } catch (Exception exception) {
+            System.err.println("[LLMClientService] Vision LLM call failed: " + exception.getMessage());
             return null;
         }
     }
@@ -144,6 +162,81 @@ public class LLMClientService {
         HttpResponse<String> response = createClient().send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
             System.err.println("[LLMClientService] Gemini HTTP " + response.statusCode() + " body=" + response.body());
+            return null;
+        }
+
+        JsonObject responseJson = GSON.fromJson(response.body(), JsonObject.class);
+        if (responseJson == null || !responseJson.has("candidates") || responseJson.getAsJsonArray("candidates").isEmpty()) {
+            return null;
+        }
+
+        JsonObject candidate = responseJson.getAsJsonArray("candidates").get(0).getAsJsonObject();
+        if (!candidate.has("content")) {
+            return null;
+        }
+
+        JsonObject content = candidate.getAsJsonObject("content");
+        if (!content.has("parts") || content.getAsJsonArray("parts").isEmpty()) {
+            return null;
+        }
+
+        JsonObject firstPart = content.getAsJsonArray("parts").get(0).getAsJsonObject();
+        if (!firstPart.has("text")) {
+            return null;
+        }
+
+        return sanitizeReply(firstPart.get("text").getAsString());
+    }
+
+    private static String callGeminiWithImage(String systemPrompt, String userMessage, byte[] imageBytes, String mimeType)
+            throws IOException, InterruptedException {
+        JsonObject payload = new JsonObject();
+
+        JsonObject systemInstruction = new JsonObject();
+        JsonArray systemParts = new JsonArray();
+        JsonObject systemText = new JsonObject();
+        systemText.addProperty("text", systemPrompt);
+        systemParts.add(systemText);
+        systemInstruction.add("parts", systemParts);
+        payload.add("systemInstruction", systemInstruction);
+
+        JsonArray contents = new JsonArray();
+        JsonObject userContent = new JsonObject();
+        userContent.addProperty("role", "user");
+
+        JsonArray userParts = new JsonArray();
+        JsonObject userText = new JsonObject();
+        userText.addProperty("text", userMessage);
+        userParts.add(userText);
+
+        JsonObject imagePart = new JsonObject();
+        JsonObject inlineData = new JsonObject();
+        inlineData.addProperty("mimeType", (mimeType == null || mimeType.isBlank()) ? "image/png" : mimeType);
+        inlineData.addProperty("data", Base64.getEncoder().encodeToString(imageBytes));
+        imagePart.add("inlineData", inlineData);
+        userParts.add(imagePart);
+
+        userContent.add("parts", userParts);
+        contents.add(userContent);
+        payload.add("contents", contents);
+
+        JsonObject generationConfig = new JsonObject();
+        generationConfig.addProperty("temperature", Math.min(0.2, AIProviderConfig.getTemperature()));
+        generationConfig.addProperty("maxOutputTokens", AIProviderConfig.getMaxTokens());
+        payload.add("generationConfig", generationConfig);
+
+        String endpoint = AIProviderConfig.getEndpoint() + "?key=" + URLEncoder.encode(AIProviderConfig.getApiKey(), StandardCharsets.UTF_8);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(endpoint))
+                .timeout(Duration.ofSeconds(Math.max(25, AIProviderConfig.getTimeoutSeconds())))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(GSON.toJson(payload)))
+                .build();
+
+        HttpResponse<String> response = createClient().send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() < 200 || response.statusCode() >= 300) {
+            System.err.println("[LLMClientService] Gemini Vision HTTP " + response.statusCode() + " body=" + response.body());
             return null;
         }
 

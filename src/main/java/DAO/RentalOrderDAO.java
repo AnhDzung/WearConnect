@@ -626,6 +626,7 @@ public class RentalOrderDAO {
                     + "COALESCE(p.PaymentDate, p.CreatedAt, ro.CreatedAt) AS TransferTime, "
                     + "ro.CreatedAt AS SubmittedAt, "
                     + "CASE WHEN ro.PaymentProofImage IS NULL OR LTRIM(RTRIM(ro.PaymentProofImage)) = '' THEN 0 ELSE 1 END AS HasProofImage, "
+                    + "ISNULL(ro.PaymentProofImage, '') AS ProofImagePath, "
                     + "('WRC' + RIGHT('00000' + CAST(ro.RentalOrderID AS VARCHAR(20)), 5)) AS ExpectedTransferContent, "
                     + transferContentSelect + " "
                     + "FROM RentalOrder ro "
@@ -663,6 +664,7 @@ public class RentalOrderDAO {
                     }
 
                     candidate.setHasProofImage(rs.getInt("HasProofImage") == 1);
+                    candidate.setProofImagePath(rs.getString("ProofImagePath"));
                     candidate.setExpectedTransferContent(rs.getString("ExpectedTransferContent"));
                     candidate.setProvidedTransferContent(rs.getString("TransferContentProvided"));
                     list.add(candidate);
