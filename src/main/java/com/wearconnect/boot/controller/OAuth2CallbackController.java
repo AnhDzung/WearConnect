@@ -262,7 +262,7 @@ public class OAuth2CallbackController {
                 }
             } catch (Exception e) {
                 isIncomplete = true;
-                missingFields.append("Số tài khoản ngân hàng, ");
+                missingFields.append("Số tài khoản ngân hàng ");
             }
             try {
                 if (account.getBankName() == null || account.getBankName().trim().isEmpty()) {
@@ -278,8 +278,8 @@ public class OAuth2CallbackController {
                 String fields = missingFields.substring(0, missingFields.length() - 2);
                 String role = account.getUserRole() == null ? "" : account.getUserRole().trim();
                 String chatbotGuidance = "Manager".equals(role)
-                        ? "Bên cạnh đó nếu bạn muốn tìm hiểu về quy trình đăng tải quần áo lên website thì có thể vào phần chatbot và hỏi về quy trình đăng tải quần áo."
-                        : "Bên cạnh đó nếu bạn muốn tìm hiểu về quy trình thuê hàng thì có thể vào phần chatbot và hỏi về quy trình đặt thuê.";
+                        ? ". Bên cạnh đó nếu bạn muốn tìm hiểu về quy trình đăng tải quần áo lên website thì có thể vào phần chatbot và hỏi về quy trình đăng tải quần áo."
+                        : ". Bên cạnh đó nếu bạn muốn tìm hiểu về quy trình thuê hàng thì có thể vào phần chatbot và hỏi về quy trình đặt thuê.";
 
                 String message = "Cảm ơn bạn đã tin tưởng và sử dụng WearConnect. Hãy cập nhật đầy đủ thông tin của bạn trong profile để trải nghiệm tốt hơn!"
                         + "\n\nThông tin chưa đầy đủ: " + fields + "\n\n" + chatbotGuidance;

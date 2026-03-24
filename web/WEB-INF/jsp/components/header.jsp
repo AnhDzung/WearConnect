@@ -697,7 +697,7 @@
                                         </div>
                                 </div>
                                     <% if ("User".equals(userRole)) { %>
-                                        <a href="${pageContext.request.contextPath}/advisor-chat" class="advisor-prompt-btn">Hãy để AI tư vấn cho bạn.</a>
+                                        <a href="${pageContext.request.contextPath}/advisor-chat" class="advisor-prompt-btn">AI Picks</a>
                                     <% } %>
                                 <div class="header-user-name">
                             <% 
