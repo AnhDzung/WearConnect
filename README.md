@@ -4,7 +4,6 @@
 
 WearConnect is a full-cycle C2C fashion rental platform where users can list their clothing items for rent and book outfits from other users. The platform manages the entire rental lifecycle — from discovery and booking to payment verification, shipping, returns, refunds, and AI-powered support.
 
-🌐 **Live Demo**: [wear-connect.vercel.app](https://wear-connect.vercel.app)
 
 ---
 
