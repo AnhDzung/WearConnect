@@ -105,6 +105,72 @@
     const params = new URLSearchParams(window.location.search);
     let currentConversationID = params.get('conversationID') ? parseInt(params.get('conversationID'), 10) : null;
     const initialQuestion = params.get('q');
+    const suggestionCacheKey = 'advisorProductSuggestionCacheV1';
+    let suggestionCache = loadSuggestionCache();
+
+    function loadSuggestionCache() {
+        try {
+            const raw = sessionStorage.getItem(suggestionCacheKey);
+            if (!raw) {
+                return {};
+            }
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (error) {
+            console.warn('Cannot parse suggestion cache:', error);
+            return {};
+        }
+    }
+
+    function saveSuggestionCache() {
+        try {
+            sessionStorage.setItem(suggestionCacheKey, JSON.stringify(suggestionCache));
+        } catch (error) {
+            console.warn('Cannot persist suggestion cache:', error);
+        }
+    }
+
+    function toConversationKey(conversationID) {
+        if (!conversationID) {
+            return null;
+        }
+        return String(conversationID);
+    }
+
+    function cacheProductSuggestions(conversationID, assistantMessageID, products) {
+        const conversationKey = toConversationKey(conversationID);
+        if (!conversationKey || !assistantMessageID || !products || !products.length) {
+            return;
+        }
+
+        if (!suggestionCache[conversationKey]) {
+            suggestionCache[conversationKey] = {};
+        }
+        suggestionCache[conversationKey][String(assistantMessageID)] = products;
+        saveSuggestionCache();
+    }
+
+    function getCachedProductSuggestions(conversationID, assistantMessageID) {
+        const conversationKey = toConversationKey(conversationID);
+        if (!conversationKey || !assistantMessageID || !suggestionCache[conversationKey]) {
+            return [];
+        }
+        return suggestionCache[conversationKey][String(assistantMessageID)] || [];
+    }
+
+    function removeConversationSuggestionCache(conversationID) {
+        const conversationKey = toConversationKey(conversationID);
+        if (!conversationKey || !suggestionCache[conversationKey]) {
+            return;
+        }
+        delete suggestionCache[conversationKey];
+        saveSuggestionCache();
+    }
+
+    function clearAllSuggestionCache() {
+        suggestionCache = {};
+        saveSuggestionCache();
+    }
 
     function syncConversationInUrl() {
         const url = new URL(window.location.href);
@@ -280,7 +346,15 @@
                     addMessage('bot', 'Hội thoại này chưa có nội dung. Bạn có thể bắt đầu đặt câu hỏi.');
                 } else {
                     messages.forEach(function(message){
-                        addMessage((message.role || '').toUpperCase() === 'USER' ? 'user' : 'bot', message.content || '');
+                        const role = (message.role || '').toUpperCase() === 'USER' ? 'user' : 'bot';
+                        addMessage(role, message.content || '');
+
+                        if (role === 'bot') {
+                            const cachedProducts = getCachedProductSuggestions(conversationID, message.messageID);
+                            if (cachedProducts.length > 0) {
+                                addProductSuggestions(cachedProducts);
+                            }
+                        }
                     });
                 }
                 loadConversations(false);
@@ -344,6 +418,7 @@
             }
 
             currentConversationID = null;
+            removeConversationSuggestionCache(targetConversationID);
             syncConversationInUrl();
             clearMessages();
             addMessage('bot', 'Mình đã xóa hội thoại #' + targetConversationID + '. Bạn có thể chọn hội thoại khác hoặc tạo tư vấn mới.');
@@ -384,6 +459,7 @@
             }
 
             currentConversationID = null;
+            clearAllSuggestionCache();
             syncConversationInUrl();
             clearMessages();
             addMessage('bot', 'Mình đã xóa toàn bộ lịch sử hội thoại của bạn.');
@@ -432,7 +508,9 @@
             currentConversationID = payload.conversationID || currentConversationID;
             syncConversationInUrl();
             addMessage('bot', payload.assistantMessage || 'Mình đang xử lý, bạn thử lại nhé.');
-            addProductSuggestions(payload.productSuggestions || []);
+            const products = payload.productSuggestions || [];
+            cacheProductSuggestions(currentConversationID, payload.assistantMessageID, products);
+            addProductSuggestions(products);
             loadConversations(false);
         })
         .catch(error => {

@@ -7,16 +7,17 @@
 
 /* ===== CSS VARIABLES ===== */
 :root {
-    /* Brand Colors - Gradient chính */
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --primary-color: #667eea;
-    --primary-dark: #764ba2;
+    /* Brand Colors - Minimalist Sleek */
+    --primary-color: #0a84ff;
+    --primary-hover: #0670dc;
+    --primary-gradient: linear-gradient(90deg, #00d084 0%, #0a84ff 100%);
+    --primary-dark: #0670dc;
     
     /* Secondary Colors */
-    --secondary-color: #48bb78;
-    --warning-color: #ed8936;
-    --danger-color: #dc3545;
-    --info-color: #4299e1;
+    --secondary-color: #00d084;
+    --warning-color: #ffc107;
+    --danger-color: #ff4757;
+    --info-color: #0a84ff;
     
     /* User Role Colors */
     --user-color: #cc3399;
@@ -183,10 +184,11 @@ a:hover {
     text-align: center;
     text-decoration: none;
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all var(--transition-base);
     white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(10, 132, 255, 0.15);
 }
 
 .wc-btn:disabled {
@@ -202,7 +204,7 @@ a:hover {
 
 .wc-btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
 }
 
 .wc-btn-secondary {
@@ -211,25 +213,31 @@ a:hover {
 }
 
 .wc-btn-secondary:hover {
-    background-color: #38a169;
+    background-color: #00b865;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 208, 132, 0.25);
 }
 
 .wc-btn-danger {
-    background-color: var(--danger-color);
-    color: var(--white);
+    background-color: #ffffff;
+    color: var(--danger-color);
+    border: 1.5px solid var(--danger-color);
 }
 
 .wc-btn-danger:hover {
-    background-color: #c82333;
+    background-color: #fff5f5;
+    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.2);
 }
 
 .wc-btn-warning {
     background-color: var(--warning-color);
-    color: var(--white);
+    color: #000000;
 }
 
 .wc-btn-warning:hover {
-    background-color: #dd6b20;
+    background-color: #e6ae00;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
 }
 
 .wc-btn-info {
@@ -238,7 +246,9 @@ a:hover {
 }
 
 .wc-btn-info:hover {
-    background-color: #3182ce;
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
 }
 
 /* Button Sizes */

@@ -241,9 +241,6 @@
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
 
 <div class="container">
-    <div class="breadcrumb">
-        <a href="${pageContext.request.contextPath}/">WearConnect</a> › Cửa Hàng
-    </div>
 
     <%-- Hero Slider --%>
     <div class="hero-slider" id="homeHeroSlider">

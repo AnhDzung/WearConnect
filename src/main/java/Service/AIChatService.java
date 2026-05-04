@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,6 +73,11 @@ public class AIChatService {
         IntentAnalysis intentAnalysis = analyzeIntent(normalizedMessage);
         RedirectDecision redirectDecision = determineRedirect(normalizedMessage, intentAnalysis.intent);
         boolean directProductBrowseRequest = isDirectProductBrowseRequest(normalizedForMatching);
+        ProductSearchContext currentSearchContext = extractProductSearchContext(normalizedForMatching);
+        ProductSearchContext historySearchContext = extractProductSearchContextFromHistory(contextMessages);
+        ProductSearchContext mergedSearchContext = mergeProductSearchContext(currentSearchContext, historySearchContext);
+        UserProfile mergedProfile = mergeUserProfile(extractUserProfile(normalizedMessage), extractUserProfileFromHistory(contextMessages));
+        BigDecimal maxDailyPrice = mergedProfile.budgetVnd == null ? null : BigDecimal.valueOf(mergedProfile.budgetVnd);
         List<AIProductSuggestion> productSuggestions = buildProductSuggestions(normalizedMessage, intentAnalysis.intent, contextMessages);
         int userMessageID = AIChatDAO.addMessage(resolvedConversationID, "USER", normalizedMessage, intentAnalysis.intent, intentAnalysis.confidence, "USER_INPUT");
 
@@ -135,6 +142,37 @@ public class AIChatService {
                 assistantMessage = "Mình chưa tìm thấy sản phẩm phù hợp ngay lúc này. Bạn cho mình thêm chiều cao, cân nặng và ngân sách để mình lọc chính xác hơn nhé.";
                 responseSource = "RULE";
             }
+        }
+
+        if (!needsHandoff && "SIZE_ADVICE".equals(intentAnalysis.intent)) {
+            if (mergedProfile.heightCm != null && mergedProfile.weightKg != null && !productSuggestions.isEmpty()) {
+                String size = suggestGenericSize(mergedProfile.heightCm, mergedProfile.weightKg);
+                assistantMessage = "Mình đã ghi nhận số đo của bạn: cao " + mergedProfile.heightCm + "cm, nặng " + mergedProfile.weightKg
+                        + "kg. Size tham khảo là " + size
+                        + ". Mình cũng đã lọc các sản phẩm theo phong cách bạn đã chọn ở trên, bạn xem ngay bên dưới nhé.";
+                responseSource = "RULE";
+            }
+        }
+
+        if (!needsHandoff
+                && productSuggestions.isEmpty()
+                && shouldOfferSimilarStyle(normalizedForMatching, intentAnalysis.intent, mergedSearchContext)) {
+            SimilarStyleSuggestion similarStyleSuggestion = findSimilarStyleSuggestions(mergedSearchContext, maxDailyPrice);
+            if (!similarStyleSuggestion.suggestions.isEmpty()) {
+                productSuggestions = similarStyleSuggestion.suggestions;
+                assistantMessage = "Hiện tại web chưa có sản phẩm đúng phong cách '" + similarStyleSuggestion.requestedStyle
+                        + "'. Bạn có thể xem các sản phẩm phong cách tương tự ('" + similarStyleSuggestion.suggestedStyle
+                        + "') ngay bên dưới nhé.";
+                responseSource = "RULE";
+            }
+        }
+
+        if (!needsHandoff
+                && productSuggestions.isEmpty()
+                && ("CONSULT_ADVICE".equals(intentAnalysis.intent) || "RENTAL_ADVICE".equals(intentAnalysis.intent))
+                && mentionsProductSuggestions(assistantMessage)) {
+            assistantMessage = "Hiện tại mình chưa tìm thấy sản phẩm khớp hoàn toàn với tiêu chí bạn đưa ra. Bạn có thể nới nhẹ tiêu chí (màu/style/ngân sách) hoặc cho mình xem thêm mẫu tương tự để mình gợi ý ngay.";
+            responseSource = "RULE";
         }
 
         if (!productSuggestions.isEmpty() && looksLikeNoProductInfoResponse(assistantMessage)) {
@@ -668,6 +706,18 @@ public class AIChatService {
     }
 
     private static Long extractBudgetVnd(String normalizedMessage) {
+        Matcher compactRangeMatcher = Pattern.compile("\\b(\\d{1,2})\\s*tr\\s*(\\d{1,2})?\\s*(?:-|den|toi)\\s*(\\d{1,2})\\s*tr\\s*(\\d{1,2})?\\b").matcher(normalizedMessage);
+        if (compactRangeMatcher.find()) {
+            long minValue = toCompactMillionValue(compactRangeMatcher.group(1), compactRangeMatcher.group(2));
+            long maxValue = toCompactMillionValue(compactRangeMatcher.group(3), compactRangeMatcher.group(4));
+            return Math.max(minValue, maxValue);
+        }
+
+        Matcher compactMillionMatcher = Pattern.compile("\\b(\\d{1,2})\\s*tr\\s*(\\d{1,2})\\b").matcher(normalizedMessage);
+        if (compactMillionMatcher.find()) {
+            return toCompactMillionValue(compactMillionMatcher.group(1), compactMillionMatcher.group(2));
+        }
+
         Matcher millionAndThousandMatcher = Pattern.compile("\\b(\\d{1,2})\\s*trieu\\s*(\\d{1,3})\\s*nghin\\b").matcher(normalizedMessage);
         if (millionAndThousandMatcher.find()) {
             long million = Long.parseLong(millionAndThousandMatcher.group(1));
@@ -687,7 +737,33 @@ public class AIChatService {
             return thousand * 1_000L;
         }
 
+        Matcher shorthandThousandMatcher = Pattern.compile("\\b(\\d{2,4})\\s*k\\b").matcher(normalizedMessage);
+        if (shorthandThousandMatcher.find()) {
+            long thousand = Long.parseLong(shorthandThousandMatcher.group(1));
+            return thousand * 1_000L;
+        }
+
+        Matcher shorthandMillionMatcher = Pattern.compile("\\b(\\d+(?:[\\.,]\\d+)?)\\s*tr\\b").matcher(normalizedMessage);
+        if (shorthandMillionMatcher.find()) {
+            double million = Double.parseDouble(shorthandMillionMatcher.group(1).replace(',', '.'));
+            return Math.round(million * 1_000_000L);
+        }
+
         return null;
+    }
+
+    private static long toCompactMillionValue(String millionPart, String decimalPart) {
+        long million = Long.parseLong(millionPart);
+        if (decimalPart == null || decimalPart.isBlank()) {
+            return million * 1_000_000L;
+        }
+
+        String digits = decimalPart.trim();
+        if (digits.length() == 1) {
+            return million * 1_000_000L + Long.parseLong(digits) * 100_000L;
+        }
+
+        return million * 1_000_000L + Long.parseLong(digits.substring(0, 2)) * 10_000L;
     }
 
     private static String suggestGenericSize(int heightCm, int weightKg) {
@@ -740,12 +816,38 @@ public class AIChatService {
             return Collections.emptyList();
         }
 
-        ProductSearchContext context = extractProductSearchContext(normalizedMessage);
-        if (context.isEmpty()) {
-            context = extractProductSearchContextFromHistory(contextMessages);
-        }
-        if (context.isEmpty()) {
+        boolean explicitBrowseRequest = isDirectProductBrowseRequest(normalizedMessage);
+
+        ProductSearchContext currentContext = extractProductSearchContext(normalizedMessage);
+        ProductSearchContext historyContext = extractProductSearchContextFromHistory(contextMessages);
+        ProductSearchContext context = mergeProductSearchContext(currentContext, historyContext);
+        boolean strictStyleMode = (isStyleFocusedRequest(normalizedMessage) || "SIZE_ADVICE".equals(intent))
+                && context.style != null
+                && !context.style.isBlank();
+
+        boolean hasConcreteContext = (context.keyword != null && !context.keyword.isBlank())
+                || (context.occasion != null && !context.occasion.isBlank())
+                || (context.style != null && !context.style.isBlank())
+                || (context.category != null && !context.category.isBlank());
+
+        if (!explicitBrowseRequest
+                && !hasConcreteContext
+                && ("CONSULT_ADVICE".equals(intent) || "RENTAL_ADVICE".equals(intent))) {
             return Collections.emptyList();
+        }
+
+        if (context.isEmpty()) {
+            if (!explicitBrowseRequest) {
+                return Collections.emptyList();
+            }
+
+            UserProfile profile = mergeUserProfile(extractUserProfile(message), extractUserProfileFromHistory(contextMessages));
+            BigDecimal maxDailyPrice = profile.budgetVnd == null ? null : BigDecimal.valueOf(profile.budgetVnd);
+            List<Clothing> latestProducts = ClothingDAO.getLatestActiveProductsForAI(6, maxDailyPrice);
+            if ((latestProducts == null || latestProducts.isEmpty()) && maxDailyPrice != null) {
+                latestProducts = ClothingDAO.getLatestActiveProductsForAI(6, null);
+            }
+            return mapToSuggestions(latestProducts);
         }
 
         UserProfile profile = mergeUserProfile(extractUserProfile(message), extractUserProfileFromHistory(contextMessages));
@@ -759,8 +861,47 @@ public class AIChatService {
                 6,
                 maxDailyPrice
         );
+        products = filterProductsByRequestedContext(products, context, strictStyleMode);
 
-        if ((products == null || products.isEmpty()) && maxDailyPrice != null) {
+        if ((products == null || products.isEmpty()) && strictStyleMode) {
+            products = ClothingDAO.searchProductsForAI(
+                null,
+                null,
+                context.style,
+                null,
+                6,
+                maxDailyPrice
+            );
+            products = filterProductsByRequestedContext(products, context, true);
+        }
+
+        if ((products == null || products.isEmpty())
+            && !strictStyleMode
+            && (context.keyword != null && !context.keyword.isBlank())) {
+            products = ClothingDAO.searchProductsForAI(
+                context.keyword,
+                context.occasion,
+                null,
+                context.category,
+                6,
+                maxDailyPrice
+            );
+        }
+
+        if ((products == null || products.isEmpty())
+            && !strictStyleMode
+                && (context.occasion != null && !context.occasion.isBlank())) {
+            products = ClothingDAO.searchProductsForAI(
+                    null,
+                    context.occasion,
+                    null,
+                    null,
+                    6,
+                    maxDailyPrice
+            );
+        }
+
+        if ((products == null || products.isEmpty()) && maxDailyPrice != null && !strictStyleMode) {
             products = ClothingDAO.searchProductsForAI(
                 context.keyword,
                 context.occasion,
@@ -769,13 +910,152 @@ public class AIChatService {
                 6,
                 null
             );
+
+            if ((products == null || products.isEmpty())
+                    && (context.occasion != null && !context.occasion.isBlank())) {
+                products = ClothingDAO.searchProductsForAI(
+                        null,
+                        context.occasion,
+                        null,
+                        null,
+                        6,
+                        null
+                );
+            }
         }
 
         if ((products == null || products.isEmpty())
+            && !strictStyleMode
             && shouldSuggestProducts(normalizedMessage, intent)
             && context.isEmpty()) {
             products = ClothingDAO.getLatestActiveProductsForAI(6, maxDailyPrice);
         }
+
+        return mapToSuggestions(products);
+    }
+
+    private static boolean isStyleFocusedRequest(String normalizedMessage) {
+        return containsAny(normalizedMessage,
+                "phong cach", "style", "theo phong cach", "kieu co dien", "co dien", "ca tinh", "thanh lich", "sang trong");
+    }
+
+    private static boolean shouldOfferSimilarStyle(String normalizedMessage,
+                                                   String intent,
+                                                   ProductSearchContext context) {
+        if (context == null || context.style == null || context.style.isBlank()) {
+            return false;
+        }
+        boolean consultFlowIntent = "CONSULT_ADVICE".equals(intent)
+                || "RENTAL_ADVICE".equals(intent)
+                || "SIZE_ADVICE".equals(intent);
+        return consultFlowIntent || isStyleFocusedRequest(normalizedMessage);
+    }
+
+    private static SimilarStyleSuggestion findSimilarStyleSuggestions(ProductSearchContext context,
+                                                                      BigDecimal maxDailyPrice) {
+        if (context == null || context.style == null || context.style.isBlank()) {
+            return SimilarStyleSuggestion.empty();
+        }
+
+        String requestedStyle = context.style;
+        List<String> similarStyles = getSimilarStyles(requestedStyle);
+        for (String styleCandidate : similarStyles) {
+            List<Clothing> products = ClothingDAO.searchProductsForAI(
+                    context.keyword,
+                    context.occasion,
+                    styleCandidate,
+                    context.category,
+                    6,
+                    maxDailyPrice
+            );
+
+            if ((products == null || products.isEmpty()) && context.keyword != null && !context.keyword.isBlank()) {
+                products = ClothingDAO.searchProductsForAI(
+                        null,
+                        context.occasion,
+                        styleCandidate,
+                        context.category,
+                        6,
+                        maxDailyPrice
+                );
+            }
+
+            if ((products == null || products.isEmpty()) && maxDailyPrice != null) {
+                products = ClothingDAO.searchProductsForAI(
+                        context.keyword,
+                        context.occasion,
+                        styleCandidate,
+                        context.category,
+                        6,
+                        null
+                );
+            }
+
+            List<AIProductSuggestion> suggestions = mapToSuggestions(products);
+            if (!suggestions.isEmpty()) {
+                return new SimilarStyleSuggestion(requestedStyle, styleCandidate, suggestions);
+            }
+        }
+
+        return SimilarStyleSuggestion.empty();
+    }
+
+    private static List<String> getSimilarStyles(String requestedStyle) {
+        String normalized = normalizeForMatching(requestedStyle);
+        Set<String> styles = new LinkedHashSet<>();
+
+        if (normalized.contains("co dien") || normalized.contains("vintage") || normalized.contains("retro")) {
+            styles.add("thanh lich");
+            styles.add("truyen thong");
+            styles.add("trang trong");
+        } else if (normalized.contains("ca tinh") || normalized.contains("cool") || normalized.contains("ngau")) {
+            styles.add("street");
+            styles.add("tre trung");
+            styles.add("thuong ngay");
+        } else if (normalized.contains("sang trong") || normalized.contains("thanh lich") || normalized.contains("quy phai")) {
+            styles.add("trang trong");
+            styles.add("du tiec");
+            styles.add("thanh lich");
+        } else if (normalized.contains("truyen thong") || normalized.contains("ao dai")) {
+            styles.add("ao dai");
+            styles.add("truyen thong");
+            styles.add("cach tan");
+        } else {
+            styles.add("thanh lich");
+            styles.add("trang trong");
+            styles.add("thuong ngay");
+        }
+
+        styles.remove(normalized);
+        return new ArrayList<>(styles);
+    }
+
+    private static List<Clothing> filterProductsByRequestedContext(List<Clothing> products,
+                                                                    ProductSearchContext context,
+                                                                    boolean enforceStyleMatch) {
+        if (products == null || products.isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (!enforceStyleMatch || context == null || context.style == null || context.style.isBlank()) {
+            return products;
+        }
+
+        String styleNeedle = normalizeForMatching(context.style);
+        List<Clothing> filtered = new ArrayList<>();
+        for (Clothing product : products) {
+            if (product == null) {
+                continue;
+            }
+
+            String productStyle = normalizeForMatching(product.getStyle());
+            if (!productStyle.isBlank() && (productStyle.contains(styleNeedle) || styleNeedle.contains(productStyle))) {
+                filtered.add(product);
+            }
+        }
+        return filtered;
+    }
+
+    private static List<AIProductSuggestion> mapToSuggestions(List<Clothing> products) {
         if (products == null || products.isEmpty()) {
             return Collections.emptyList();
         }
@@ -794,11 +1074,12 @@ public class AIChatService {
             suggestion.setDailyPrice(product.getDailyPriceBigDecimal());
             suggestions.add(suggestion);
         }
+
         return suggestions;
     }
 
     private static boolean shouldSuggestProducts(String normalizedMessage, String intent) {
-        if ("CONSULT_ADVICE".equals(intent) || "RENTAL_ADVICE".equals(intent)) {
+        if ("CONSULT_ADVICE".equals(intent) || "RENTAL_ADVICE".equals(intent) || "SIZE_ADVICE".equals(intent)) {
             return true;
         }
         return containsAny(normalizedMessage,
@@ -850,27 +1131,7 @@ public class AIChatService {
             }
         }
 
-        String compact = normalizedMessage.replaceAll("[^a-z0-9\\s]", " ").trim();
-        if (compact.isBlank()) {
-            return "";
-        }
-
-        String[] words = compact.split("\\s+");
-        StringBuilder builder = new StringBuilder();
-        for (String word : words) {
-            if (word.length() < 3 || containsAny(word, "cho", "toi", "xem", "cac", "san", "pham", "lien", "quan", "nhe")) {
-                continue;
-            }
-            if (builder.length() > 0) {
-                builder.append(" ");
-            }
-            builder.append(word);
-            if (builder.length() >= 20) {
-                break;
-            }
-        }
-
-        return builder.toString().trim();
+        return null;
     }
 
     private static String extractOccasionHint(String normalizedMessage) {
@@ -893,8 +1154,14 @@ public class AIChatService {
     }
 
     private static String extractStyleHint(String normalizedMessage) {
+        if (containsAny(normalizedMessage, "co dien", "vintage", "retro")) {
+            return "co dien";
+        }
         if (containsAny(normalizedMessage, "sang trong", "thanh lich", "quy phai")) {
             return "sang";
+        }
+        if (containsAny(normalizedMessage, "tong mau sang", "mau sang", "tong sang", "tone sang")) {
+            return "tong mau sang";
         }
         if (containsAny(normalizedMessage, "ca tinh", "cool", "ngau")) {
             return "ca tinh";
@@ -936,8 +1203,11 @@ public class AIChatService {
                 continue;
             }
 
-            ProductSearchContext derived = extractProductSearchContext(normalizeForMatching(message.getContent()));
-            if (derived.keyword != null && !derived.keyword.isBlank()) {
+            String normalized = normalizeForMatching(message.getContent());
+            ProductSearchContext derived = extractProductSearchContext(normalized);
+            if (hasExplicitProductKeyword(normalized)
+                    && derived.keyword != null
+                    && !derived.keyword.isBlank()) {
                 keyword = derived.keyword;
             }
             if (derived.occasion != null && !derived.occasion.isBlank()) {
@@ -954,6 +1224,37 @@ public class AIChatService {
         return new ProductSearchContext(keyword, occasion, style, category);
     }
 
+    private static ProductSearchContext mergeProductSearchContext(ProductSearchContext currentContext,
+                                                                  ProductSearchContext historyContext) {
+        if (currentContext == null) {
+            return historyContext == null ? new ProductSearchContext(null, null, null, null) : historyContext;
+        }
+        if (historyContext == null) {
+            return currentContext;
+        }
+
+        String keyword = (currentContext.keyword != null && !currentContext.keyword.isBlank())
+                ? currentContext.keyword
+                : historyContext.keyword;
+        String occasion = (currentContext.occasion != null && !currentContext.occasion.isBlank())
+                ? currentContext.occasion
+                : historyContext.occasion;
+        String style = (currentContext.style != null && !currentContext.style.isBlank())
+                ? currentContext.style
+                : historyContext.style;
+        String category = (currentContext.category != null && !currentContext.category.isBlank())
+                ? currentContext.category
+                : historyContext.category;
+
+        return new ProductSearchContext(keyword, occasion, style, category);
+    }
+
+    private static boolean hasExplicitProductKeyword(String normalizedMessage) {
+        return containsAny(normalizedMessage,
+                "ao dai", "cosplay", "vest", "blazer", "dam", "vay",
+                "xem san pham", "goi y san pham", "tim san pham", "muon tim", "cho toi xem");
+    }
+
     private static boolean looksLikeNoProductInfoResponse(String text) {
         if (text == null || text.isBlank()) {
             return true;
@@ -966,6 +1267,19 @@ public class AIChatService {
             && containsAny(normalized, "hien thi", "xem")
             && containsAny(normalized, "san pham", "hinh anh", "anh");
         return genericNoInfo || cannotDisplayProducts;
+    }
+
+    private static boolean mentionsProductSuggestions(String text) {
+        if (text == null || text.isBlank()) {
+            return false;
+        }
+        String normalized = normalizeForMatching(text);
+        return containsAny(normalized,
+                "san pham goi y",
+                "xem cac san pham",
+                "xem san pham",
+                "goi y san pham",
+                "ngay ben duoi");
     }
 
     private static String buildProductAvailabilityMessage(List<AIProductSuggestion> suggestions) {
@@ -1162,6 +1476,22 @@ public class AIChatService {
                     && (occasion == null || occasion.isBlank())
                     && (style == null || style.isBlank())
                     && (category == null || category.isBlank());
+        }
+    }
+
+    private static class SimilarStyleSuggestion {
+        private final String requestedStyle;
+        private final String suggestedStyle;
+        private final List<AIProductSuggestion> suggestions;
+
+        private SimilarStyleSuggestion(String requestedStyle, String suggestedStyle, List<AIProductSuggestion> suggestions) {
+            this.requestedStyle = requestedStyle;
+            this.suggestedStyle = suggestedStyle;
+            this.suggestions = suggestions;
+        }
+
+        private static SimilarStyleSuggestion empty() {
+            return new SimilarStyleSuggestion("", "", Collections.emptyList());
         }
     }
 
