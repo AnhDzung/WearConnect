@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+    <action>
+        <actionName>run</actionName>
+        <packagings>
+            <packaging>war</packaging>
+        </packagings>
+        <goals>
+            <goal>process-classes</goal>
+            <goal>spring-boot:run</goal>
+        </goals>
+        <properties>
+            <spring-boot.run.jvmArguments>-Dfile.encoding=UTF-8</spring-boot.run.jvmArguments>
+        </properties>
+    </action>
+    <action>
+        <actionName>debug</actionName>
+        <packagings>
+            <packaging>war</packaging>
+        </packagings>
+        <goals>
+            <goal>process-classes</goal>
+            <goal>spring-boot:run</goal>
+        </goals>
+        <properties>
+            <jpda.listen>true</jpda.listen>
+            <spring-boot.run.jvmArguments>-Dfile.encoding=UTF-8 -agentlib:jdwp=transport=dt_socket,server=n,suspend=n,address=${jpda.address}</spring-boot.run.jvmArguments>
+        </properties>
+    </action>
+    <action>
+        <actionName>profile</actionName>
+        <packagings>
+            <packaging>war</packaging>
+        </packagings>
+        <goals>
+            <goal>clean</goal>
+            <goal>package</goal>
+        </goals>
+    </action>
+</actions>
