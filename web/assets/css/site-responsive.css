@@ -1,0 +1,82 @@
+/* Small site-wide responsive helpers */
+:root{
+  --site-max-width:1320px;
+}
+html,body{height:100%;}
+/* Make container responsive on small screens */
+.container{padding-left:12px; padding-right:12px;}
+/* Ensure images are responsive */
+img{max-width:100%;height:auto;}
+/* Utility: reduce large paddings on small screens */
+@media(max-width:820px){
+  .container{padding:14px 12px 48px;}
+  header .header-container{padding:10px 12px;}
+  .footer{padding:18px 12px;}
+}
+/* Make forms inputs larger tappable on mobile */
+input[type=text], input[type=password], select, button, .wc-form-input{padding:12px 14px; font-size:15px;}
+/* Fix fixed header overlap when using anchor links */
+body{scroll-padding-top:72px;}
+
+/* ---- Extracted from login.jsp (moved from inline) ---- */
+.login-container {
+    background: var(--white);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    width: 100%;
+    max-width: 450px;
+    padding: var(--spacing-4xl);
+}
+.login-header { text-align: center; margin-bottom: var(--spacing-3xl); }
+.login-header h1 { font-size: var(--font-size-3xl); color: var(--gray-900); margin-bottom: var(--spacing-md); }
+.login-header p { color: var(--gray-600); font-size: var(--font-size-base); }
+@media (max-width: 480px) {
+  .login-container { padding: var(--spacing-2xl); }
+  .login-header h1 { font-size: 24px; }
+}
+.error-message { background-color: #fee2e2; color: #991b1b; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-xl); font-size: var(--font-size-base); border-left: 4px solid var(--danger-color); }
+.btn-login { width:100%; padding:var(--spacing-md); background:var(--primary-gradient); color:#fff; border:none; border-radius:var(--radius-md); font-size:var(--font-size-lg); font-weight:600; cursor:pointer; transition:all var(--transition-base); min-height:44px; }
+.btn-login:hover { transform:translateY(-2px); box-shadow: var(--shadow-lg); }
+.register-link { text-align:center; margin-top:20px; color:#666; font-size:14px; }
+.register-link a { color:#667eea; text-decoration:none; font-weight:600; }
+.register-link a:hover { text-decoration:underline; }
+.button-group { display:flex; gap:10px; margin-top:20px; }
+.btn-home { flex:1; padding:12px; background-color:#6c757d; color:#fff; border:none; border-radius:5px; font-size:14px; font-weight:600; cursor:pointer; text-decoration:none; text-align:center; }
+.btn-home:hover { background-color:#5a6268; }
+.divider { display:flex; align-items:center; margin:20px 0; color:#999; }
+.divider::before, .divider::after { content:""; flex:1; border-bottom:1px solid #ddd; }
+.divider::before { margin-right:10px; }
+.divider::after { margin-left:10px; }
+.btn-google { width:100%; padding:12px; background:#fff; color:#333; border:1px solid #ddd; border-radius:5px; font-size:15px; font-weight:600; cursor:pointer; transition:all .3s ease; display:flex; align-items:center; justify-content:center; gap:10px; min-height:44px; }
+.btn-google:hover { background:#f8f9fa; border-color:#999; transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+.btn-google img { width:20px; height:20px; }
+/* ---- end login.jsp ---- */
+
+/* helper for login background + centering (body gets inline background-image) */
+.login-bg { display:flex; justify-content:center; align-items:center; padding:var(--spacing-lg); min-height:100vh; }
+
+/* ---- Extracted from register.jsp (moved from inline) ---- */
+.register-container { background: var(--white); border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width:100%; max-width:500px; padding:var(--spacing-4xl); }
+.register-header { text-align:center; margin-bottom:var(--spacing-3xl); }
+.register-header h1 { font-size:var(--font-size-3xl); color:var(--gray-900); margin-bottom:var(--spacing-md); }
+.register-header p { color:var(--gray-600); font-size:var(--font-size-base); }
+@media (max-width:480px){ .register-container{ padding:var(--spacing-2xl); } .register-header h1{ font-size:24px; } }
+.error-message{ background-color:#fee; color:#c33; padding:12px; border-radius:5px; margin-bottom:20px; font-size:14px; border-left:4px solid #c33; }
+.success-message{ background-color:#efe; color:#3c3; padding:12px; border-radius:5px; margin-bottom:20px; font-size:14px; border-left:4px solid #3c3; }
+.button-group{ display:flex; gap:10px; margin-top:20px; }
+.form-group{ margin-bottom:12px; }
+.form-group label{ display:block; margin-bottom:6px; font-weight:600; color:#333; }
+.form-group input[type="text"], .form-group input[type="email"], .form-group input[type="password"], .form-group select{ width:100%; padding:8px 10px; border:1px solid #dcdcdc; border-radius:6px; font-size:14px; box-sizing:border-box; }
+.radio-group{ display:flex; gap:12px; align-items:center; }
+.radio-group label{ font-weight:600; color:#333; }
+.btn-register{ flex:1; padding:12px; background-color:#28a745; color:#fff; border:none; border-radius:5px; font-size:16px; font-weight:600; cursor:pointer; transition:background-color .3s; }
+.btn-register:hover{ background-color:#218838; }
+.btn-back{ flex:1; padding:12px; background-color:#6c757d; color:#fff; border:none; border-radius:5px; font-size:16px; font-weight:600; cursor:pointer; transition:background-color .3s; }
+.btn-back:hover{ background-color:#5a6268; }
+.login-link{ text-align:center; margin-top:20px; color:#666; font-size:14px; }
+.login-link a{ color:#667eea; text-decoration:none; font-weight:600; }
+.login-link a:hover{ text-decoration:underline; }
+.btn-home{ display:inline-block; width:100%; padding:12px; background-color:#6c757d; color:#fff; border:none; border-radius:5px; font-size:14px; font-weight:600; cursor:pointer; text-align:center; text-decoration:none; margin-top:10px; }
+.btn-home:hover{ background-color:#5a6268; }
+.register-bg{ display:flex; justify-content:center; align-items:center; padding:var(--spacing-lg); min-height:100vh; }
+/* ---- end register.jsp ---- */

@@ -5,6 +5,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <jsp:include page="/WEB-INF/jsp/components/head.jsp" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xét Duyệt Sản Phẩm Cosplay - Admin</title>

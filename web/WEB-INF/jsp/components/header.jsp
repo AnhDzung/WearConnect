@@ -40,6 +40,58 @@
         overflow: visible;
     }
 
+    /* Mobile hamburger and compact user button */
+    .mobile-hamburger {
+        display: none;
+        background: transparent;
+        border: none;
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 22px;
+    }
+    .mobile-user-btn {
+        display: none;
+        background: rgba(255,255,255,0.95);
+        border: 1px solid rgba(0,0,0,0.06);
+        padding: 6px 10px;
+        border-radius: 10px;
+        font-weight:700;
+    }
+
+    /* Mobile menu panel animation */
+    #wcMobileMenu { display: none; }
+    .wc-mobile-panel {
+        width: 92%;
+        max-width: 420px;
+        background: #fff;
+        height: 100%;
+        overflow: auto;
+        padding: 18px;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+        transform: translateX(-105%);
+        transition: transform 320ms cubic-bezier(.2,.9,.2,1);
+    }
+    .wc-mobile-panel.open {
+        transform: translateX(0%);
+    }
+
+    /* hamburger open state */
+    .mobile-hamburger.open {
+        transform: rotate(90deg) scale(1.02);
+        background: rgba(0,0,0,0.06);
+    }
+
+    /* compact header on small screens */
+    @media (max-width: 768px) {
+        .wearconnect-header { padding: 8px 0; min-height: 64px; }
+        .header-container { min-height: 64px; grid-template-columns: auto 1fr auto; }
+        .header-logo img.logo-img { width: 120px; height: 80px; }
+    }
+
     .header-right {
         grid-column: 3;
         display: flex;
@@ -424,20 +476,14 @@
             gap: 15px;
             padding: 0 12px;
         }
-        
         .header-nav {
-            width: 100%;
-            margin-left: 0;
-            justify-content: center;
-            flex-wrap: wrap; /* allow wrap on mobile */
-            overflow: visible;
-            white-space: normal;
+            display: none; /* hide full nav on small screens */
         }
-        
-        .header-nav a, .header-nav button {
-            padding: 10px 15px;
-            font-size: 15px;
-        }
+
+        .header-right { display: none; } /* hide full user actions on mobile */
+
+        .mobile-hamburger { display: inline-flex; }
+        .mobile-user-btn { display: inline-flex; }
 
         .advisor-prompt-btn {
             width: 100%;
@@ -1003,5 +1049,90 @@
                 sendChatMessage(input.value);
             }
         });
+    })();
+</script>
+
+<!-- Mobile menu overlay -->
+<div id="wcMobileMenu" style="display:none; position:fixed; inset:0; z-index:5000; background:rgba(0,0,0,0.6);">
+    <div class="wc-mobile-panel">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <a href="<%= logoHref %>" style="display:flex; align-items:center; gap:8px; text-decoration:none; color:#111;">
+                <img src="${pageContext.request.contextPath}/assets/images/wear-connect-logo.png" alt="logo" style="height:40px;">
+                <strong>WearConnect</strong>
+            </a>
+            <button id="wcMobileClose" style="background:none;border:none;font-size:28px;cursor:pointer;">×</button>
+        </div>
+        <nav style="display:flex; flex-direction:column; gap:10px;">
+            <a href="${pageContext.request.contextPath}/home" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Cửa Hàng</a>
+            <a href="${pageContext.request.contextPath}/cosplay" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Cosplay & Fes</a>
+            <a href="${pageContext.request.contextPath}/rental?action=myOrders" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Đơn Thuê Của Tôi</a>
+            <a href="${pageContext.request.contextPath}/user?action=favorites" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Yêu Thích</a>
+            <c:if test="${sessionScope.userRole == 'Manager'}">
+                <a href="${pageContext.request.contextPath}/manager" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Dashboard</a>
+            </c:if>
+            <hr style="border:none; height:1px; background:#eee; margin:12px 0;">
+            <c:choose>
+                <c:when test="${not empty sessionScope.userRole}">
+                    <a href="${pageContext.request.contextPath}/user?action=profile" style="padding:12px 10px; border-radius:8px; background:#fff; text-decoration:none; color:#111;">Hồ sơ</a>
+                    <a href="${pageContext.request.contextPath}/user?action=notifications" style="padding:12px 10px; border-radius:8px; background:#fff; text-decoration:none; color:#111;">Thông báo</a>
+                    <a href="${pageContext.request.contextPath}/logout" style="padding:12px 10px; border-radius:8px; background:#fff; text-decoration:none; color:#d33;">Đăng Xuất</a>
+                </c:when>
+                <c:otherwise>
+                    <a href="${pageContext.request.contextPath}/login" style="padding:12px 10px; border-radius:8px; background:#fff; text-decoration:none; color:#111;">Đăng Nhập</a>
+                    <a href="${pageContext.request.contextPath}/register" style="padding:12px 10px; border-radius:8px; background:#fff; text-decoration:none; color:#111;">Đăng Ký</a>
+                </c:otherwise>
+            </c:choose>
+        </nav>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // mobile menu toggle
+        const openBtn = document.createElement('button');
+        openBtn.className = 'mobile-hamburger';
+        openBtn.id = 'wcMobileOpen';
+        openBtn.setAttribute('aria-label','Mở menu');
+        openBtn.innerHTML = '☰';
+
+        // inject into header (before logo)
+        const headerContainer = document.querySelector('.header-container');
+        if (headerContainer) {
+            headerContainer.insertBefore(openBtn, headerContainer.firstChild);
+        }
+
+        const mobileMenu = document.getElementById('wcMobileMenu');
+        const closeBtn = document.getElementById('wcMobileClose');
+        if (openBtn && mobileMenu) {
+            const panel = mobileMenu.querySelector('.wc-mobile-panel');
+            openBtn.addEventListener('click', function(){ 
+                mobileMenu.style.display = 'block';
+                // allow overlay to paint then slide in panel
+                setTimeout(function(){ panel.classList.add('open'); openBtn.classList.add('open'); }, 20);
+                document.body.style.overflow='hidden';
+            });
+
+            // close when clicking outside panel
+            mobileMenu.addEventListener('click', function(e){
+                if (e.target === mobileMenu) {
+                    panel.classList.remove('open'); openBtn.classList.remove('open');
+                    setTimeout(function(){ mobileMenu.style.display = 'none'; document.body.style.overflow=''; }, 340);
+                }
+            });
+        }
+        if (closeBtn && mobileMenu) {
+            const panel = mobileMenu.querySelector('.wc-mobile-panel');
+            closeBtn.addEventListener('click', function(){ 
+                panel.classList.remove('open'); openBtn.classList.remove('open');
+                setTimeout(function(){ mobileMenu.style.display = 'none'; document.body.style.overflow=''; }, 340);
+            });
+        }
+
+        // Also add a compact user button on small screens
+        const userBtn = document.createElement('a');
+        userBtn.className = 'mobile-user-btn';
+        userBtn.href = '${pageContext.request.contextPath}/user?action=profile';
+        userBtn.textContent = 'Tài khoản';
+        if (headerContainer) headerContainer.appendChild(userBtn);
     })();
 </script>

@@ -4,6 +4,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <jsp:include page="/WEB-INF/jsp/components/head.jsp" />
+    <jsp:include page="/WEB-INF/jsp/components/head.jsp" />
     <title>Danh sách trả hàng - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>

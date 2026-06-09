@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Base64;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Controller;
@@ -48,20 +49,26 @@ public class SearchPageController {
             throws ServletException, IOException {
         List<Clothing> results = new ArrayList<>();
         String searchMessage;
+        byte[] cameraBytes = resolveCameraBytes(request.getParameter("cameraImageData"));
         MultipartFile imageFile = resolveImageFile(request);
 
-        if (imageFile == null || imageFile.isEmpty()) {
-            searchMessage = "Vui lòng chọn một ảnh để tìm kiếm.";
-        } else {
+        if (cameraBytes != null && cameraBytes.length > 0) {
+            results = ClothingController.searchByImage(cameraBytes);
+            searchMessage = results.isEmpty()
+                ? "Không tìm thấy sản phẩm phù hợp với ảnh bạn vừa chụp."
+                : "Đây là những sản phẩm khớp gần nhất với ảnh bạn vừa chụp.";
+        } else if (imageFile != null && !imageFile.isEmpty()) {
             results = ClothingController.searchByImage(imageFile.getBytes());
             searchMessage = results.isEmpty()
-                    ? "Không tìm thấy sản phẩm phù hợp với ảnh bạn tải lên."
-                    : "Đây là những sản phẩm khớp gần nhất với ảnh bạn tải lên.";
+                ? "Không tìm thấy sản phẩm phù hợp với ảnh bạn tải lên."
+                : "Đây là những sản phẩm khớp gần nhất với ảnh bạn tải lên.";
+        } else {
+            searchMessage = "Vui lòng mở camera rồi chụp ảnh để tìm kiếm.";
         }
 
         request.setAttribute("searchResults", results);
         request.setAttribute("searchType", "image");
-        request.setAttribute("query", imageFile != null ? imageFile.getOriginalFilename() : null);
+        request.setAttribute("query", imageFile != null ? imageFile.getOriginalFilename() : "camera");
         request.setAttribute("searchMessage", searchMessage);
         request.getRequestDispatcher("/WEB-INF/jsp/user/search-results.jsp").forward(request, response);
     }
@@ -71,5 +78,22 @@ public class SearchPageController {
             return ((MultipartHttpServletRequest) request).getFile("image");
         }
         return null;
+    }
+
+    private byte[] resolveCameraBytes(String cameraImageData) {
+        if (cameraImageData == null || cameraImageData.isBlank()) {
+            return null;
+        }
+
+        try {
+            String payload = cameraImageData;
+            int markerIndex = cameraImageData.indexOf(",");
+            if (markerIndex >= 0 && markerIndex < cameraImageData.length() - 1) {
+                payload = cameraImageData.substring(markerIndex + 1);
+            }
+            return Base64.getDecoder().decode(payload);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
     }
 }

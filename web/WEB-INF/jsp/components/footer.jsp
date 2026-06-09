@@ -30,6 +30,7 @@
     display: block;
   }
   .footer-title { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; }
+  .footer-toggle-btn { display:none; background:none; border:none; font-weight:700; font-size:16px; cursor:pointer; }
   .footer-links { list-style: none; margin: 0; padding: 0; }
   .footer-links li { margin: 8px 0; }
   .footer-links a { color: #eaeef6; text-decoration: none; opacity: 0.9; }
@@ -44,6 +45,8 @@
   @media (max-width: 768px) {
     .footer-container { grid-template-columns: 1fr; }
     .wearconnect-footer { padding: 20px 16px; }
+    .footer-toggle-btn { display:inline-block; }
+    .footer-links { display:none; }
   }
 </style>
 
@@ -61,7 +64,10 @@
     </div>
 
     <div>
-      <div class="footer-title">Liên kết nhanh</div>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div class="footer-title">Liên kết nhanh</div>
+        <button class="footer-toggle-btn" aria-expanded="false">▾</button>
+      </div>
       <ul class="footer-links">
         <li><a href="${pageContext.request.contextPath}/home">Cửa Hàng</a></li>
         <li><a href="${pageContext.request.contextPath}/login">Đăng Nhập</a></li>
@@ -71,7 +77,10 @@
     </div>
 
     <div>
-      <div class="footer-title">Hỗ trợ</div>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div class="footer-title">Hỗ trợ</div>
+        <button class="footer-toggle-btn" aria-expanded="false">▾</button>
+      </div>
       <ul class="footer-links">
         <li><a href="#" onclick="return false;">Điều Khoản</a></li>
         <li><a href="#" onclick="return false;">Chính Sách Bảo Mật</a></li>
@@ -84,3 +93,18 @@
     &copy; <%= java.time.Year.now() %> Wear Connect. All rights reserved.
   </div>
 </footer>
+
+<script>
+  (function(){
+    if (window.matchMedia && window.matchMedia('(max-width:768px)').matches) {
+      document.querySelectorAll('.footer-toggle-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          const ul = this.parentElement.nextElementSibling;
+          const open = ul.style.display !== 'block';
+          ul.style.display = open ? 'block' : 'none';
+          this.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+      });
+    }
+  })();
+</script>

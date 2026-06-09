@@ -102,9 +102,9 @@
     
     <c:if test="${not empty myOrders}">
         <table>
-            <thead>
-                <tr>
-                    <th>Mã đơn hàng</th>
+            <head>
+                <jsp:include page="/WEB-INF/jsp/components/head.jsp" />
+                <title>Đơn hàng của tôi - WearConnect</title>
                     <th>Quần áo</th>
                     <th>Ngày bắt đầu</th>
                     <th>Ngày kết thúc</th>

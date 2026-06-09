@@ -48,9 +48,9 @@
         .color-option { padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
         .color-swatch { display: inline-block; width: 20px; height: 20px; border-radius: 3px; border: 1px solid #999; margin-right: 8px; vertical-align: middle; }
     </style>
-</head>
-<body>
-<jsp:include page="/WEB-INF/jsp/components/header.jsp" />
+<head>
+    <jsp:include page="/WEB-INF/jsp/components/head.jsp" />
+    <title>Đặt thuê - WearConnect</title>
 
 <div class="form-container">
     <h1>Đặt thuê quần áo</h1>

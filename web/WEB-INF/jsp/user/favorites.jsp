@@ -162,9 +162,9 @@
             background-color: #b8278a;
         }
     </style>
-</head>
-<body>
-    <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
+<head>
+    <jsp:include page="/WEB-INF/jsp/components/head.jsp" />
+    <title>Yêu thích - WearConnect</title>
     
     <%
         Account user = (Account) session.getAttribute("account");

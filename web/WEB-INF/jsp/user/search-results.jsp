@@ -3,8 +3,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Tìm kiếm quần áo - WearConnect</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+    <jsp:include page="/WEB-INF/jsp/components/head.jsp" />
+    <title>Tìm kiếm - WearConnect</title>
     <style>
         body { margin: 0; background: linear-gradient(180deg, #f6f1e8 0%, #faf7f2 40%, #f3efe8 100%); }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
@@ -16,6 +16,11 @@
         .search-card input, .search-card select { padding: 11px 12px; border: 1px solid #d7d0c4; border-radius: 12px; font-size: 14px; }
         .search-card button { padding: 11px 16px; background: #1f6f5b; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; }
         .search-card button:hover { background: #185845; }
+        .camera-preview-wrap { display: none; width: 100%; border-radius: 12px; overflow: hidden; background: #111; }
+        .camera-preview { width: 100%; height: 240px; object-fit: cover; display: block; }
+        .camera-hint { font-size: 12px; color: #666; }
+        .btn-capture { background: #0f172a !important; }
+        .btn-capture:hover { background: #0b1220 !important; }
         .clothing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
         .clothing-item { background: rgba(255,255,255,0.96); border: 1px solid rgba(0,0,0,0.06); padding: 12px; border-radius: 18px; box-shadow: 0 10px 30px rgba(33, 32, 28, 0.07); }
         .clothing-item img { width: 100%; height: 220px; object-fit: cover; border-radius: 14px; background: #f2eee7; }
@@ -30,7 +35,7 @@
 <div class="container">
     <h1>Tìm kiếm quần áo</h1>
     <button onclick="history.back()" style="padding: 8px 15px; background-color: #6c757d; color: white; border: none; cursor: pointer; margin-bottom: 15px;">Quay lại</button>
-    
+
     <div class="search-panel">
         <div class="search-card">
             <h3>Tìm theo từ khóa</h3>
@@ -49,11 +54,15 @@
 
         <div class="search-card">
             <h3>Tìm bằng ảnh</h3>
-            <p>Chụp hoặc tải ảnh sản phẩm để tìm mẫu giống hoặc gần giống nhất.</p>
-            <form method="POST" action="${pageContext.request.contextPath}/search" enctype="multipart/form-data">
-                <input type="hidden" name="type" value="image">
-                <input type="file" name="image" accept="image/*" capture="environment" required>
-                <button type="submit">Tìm bằng ảnh</button>
+            <p>Mở camera, chụp sản phẩm và tìm ngay kết quả tương tự.</p>
+            <form method="POST" action="${pageContext.request.contextPath}/search" id="cameraSearchFormResult">
+                <input type="hidden" name="cameraImageData" id="cameraImageDataResult">
+                <button type="button" id="startCameraBtnResult">Mở camera</button>
+                <button type="button" class="btn-capture" id="captureSearchBtnResult">Chụp và tìm ngay</button>
+                <div class="camera-preview-wrap" id="cameraPreviewWrapResult">
+                    <video id="cameraPreviewResult" class="camera-preview" autoplay playsinline muted></video>
+                </div>
+                <div class="camera-hint" id="cameraHintResult">Nhấn "Mở camera", căn sản phẩm vào khung hình, rồi bấm "Chụp và tìm ngay".</div>
             </form>
         </div>
     </div>
@@ -83,6 +92,67 @@
         </div>
     </c:if>
 </div>
+
 <jsp:include page="/WEB-INF/jsp/components/footer.jsp" />
+
+<script>
+(() => {
+    const form = document.getElementById('cameraSearchFormResult');
+    const startBtn = document.getElementById('startCameraBtnResult');
+    const captureBtn = document.getElementById('captureSearchBtnResult');
+    const previewWrap = document.getElementById('cameraPreviewWrapResult');
+    const video = document.getElementById('cameraPreviewResult');
+    const imageDataInput = document.getElementById('cameraImageDataResult');
+    const hint = document.getElementById('cameraHintResult');
+    let stream = null;
+
+    async function startCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            hint.textContent = 'Thiết bị hoặc trình duyệt chưa hỗ trợ camera trực tiếp.';
+            return;
+        }
+
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' } },
+                audio: false
+            });
+            video.srcObject = stream;
+            previewWrap.style.display = 'block';
+            hint.textContent = 'Camera đã sẵn sàng. Nhấn "Chụp và tìm ngay" để tìm sản phẩm.';
+        } catch (error) {
+            hint.textContent = 'Không thể mở camera. Vui lòng cấp quyền camera trong trình duyệt.';
+        }
+    }
+
+    function stopCamera() {
+        if (!stream) {
+            return;
+        }
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+
+    function captureAndSubmit() {
+        if (!video.videoWidth || !video.videoHeight) {
+            hint.textContent = 'Camera chưa sẵn sàng. Hãy mở camera trước khi chụp.';
+            return;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        imageDataInput.value = canvas.toDataURL('image/jpeg', 0.9);
+        stopCamera();
+        form.submit();
+    }
+
+    startBtn.addEventListener('click', startCamera);
+    captureBtn.addEventListener('click', captureAndSubmit);
+    window.addEventListener('beforeunload', stopCamera);
+})();
+</script>
 </body>
 </html>
