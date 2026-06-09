@@ -37,6 +37,10 @@ public class ClothingController {
         return ClothingService.searchClothing(keyword);
     }
 
+    public static List<Clothing> searchByImage(byte[] imageData) {
+        return ClothingService.searchByImage(imageData);
+    }
+
     public static List<Clothing> getMyClothing(int renterID) {
         return ClothingService.getMyClothing(renterID);
     }

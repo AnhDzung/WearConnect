@@ -24,13 +24,8 @@ public class LLMClientService {
         if (!AIProviderConfig.isEnabled()) {
             return null;
         }
-
-        String provider = AIProviderConfig.getProvider();
         try {
-            if ("gemini".equals(provider)) {
-                return callGemini(systemPrompt, recentMessages, userMessage);
-            }
-            return callOpenAI(systemPrompt, recentMessages, userMessage);
+            return callGemini(systemPrompt, recentMessages, userMessage);
         } catch (Exception exception) {
             System.err.println("[LLMClientService] LLM call failed: " + exception.getMessage());
             return null;
@@ -54,56 +49,7 @@ public class LLMClientService {
         }
     }
 
-    private static String callOpenAI(String systemPrompt, List<AIMessage> recentMessages, String userMessage)
-            throws IOException, InterruptedException {
-        JsonObject payload = new JsonObject();
-        payload.addProperty("model", AIProviderConfig.getModel());
-        payload.addProperty("temperature", AIProviderConfig.getTemperature());
-        payload.addProperty("max_tokens", AIProviderConfig.getMaxTokens());
 
-        JsonArray messages = new JsonArray();
-        messages.add(createMessage("system", systemPrompt));
-
-        if (recentMessages != null) {
-            for (AIMessage message : recentMessages) {
-                String mappedRole = mapRoleToLLM(message.getRole());
-                if ("system".equals(mappedRole) || message.getContent() == null || message.getContent().isBlank()) {
-                    continue;
-                }
-                messages.add(createMessage(mappedRole, message.getContent()));
-            }
-        }
-
-        messages.add(createMessage("user", userMessage));
-        payload.add("messages", messages);
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(AIProviderConfig.getEndpoint()))
-                .timeout(Duration.ofSeconds(AIProviderConfig.getTimeoutSeconds()))
-                .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer " + AIProviderConfig.getApiKey())
-                .POST(HttpRequest.BodyPublishers.ofString(GSON.toJson(payload)))
-                .build();
-
-        HttpResponse<String> response = createClient().send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            System.err.println("[LLMClientService] OpenAI HTTP " + response.statusCode() + " body=" + response.body());
-            return null;
-        }
-
-        JsonObject responseJson = GSON.fromJson(response.body(), JsonObject.class);
-        if (responseJson == null || !responseJson.has("choices") || responseJson.getAsJsonArray("choices").isEmpty()) {
-            return null;
-        }
-
-        JsonObject firstChoice = responseJson.getAsJsonArray("choices").get(0).getAsJsonObject();
-        JsonObject message = firstChoice.getAsJsonObject("message");
-        if (message == null || !message.has("content")) {
-            return null;
-        }
-
-        return sanitizeReply(message.get("content").getAsString());
-    }
 
     private static String callGemini(String systemPrompt, List<AIMessage> recentMessages, String userMessage)
             throws IOException, InterruptedException {

@@ -62,6 +62,10 @@
         .search-bar select, .search-bar input[type=text] { padding:10px 12px; border:1px solid #e3ddd5; border-radius:10px; background:#fcfaf7; font-size:13px; flex:1; min-width:120px; }
         .search-bar button { padding:10px 24px; background:var(--accent); color:#fff; border:none; cursor:pointer; border-radius:999px; font-weight:600; font-size:13px; transition:background .2s,transform .2s; white-space:nowrap; }
         .search-bar button:hover { background:var(--accent-strong); transform:translateY(-1px); }
+        .search-by-image { margin-top:10px; padding-top:10px; border-top:1px dashed #e3ddd5; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+        .search-by-image input[type=file] { padding:8px 10px; border:1px solid #e3ddd5; border-radius:10px; background:#fcfaf7; font-size:12px; flex:1; min-width:190px; }
+        .search-by-image .btn-image-search { background:#0f172a; }
+        .search-by-image .btn-image-search:hover { background:#0b1220; }
 
         /* ── Layout ── */
         .main-content { display:flex; gap:18px; align-items:flex-start; }
@@ -286,6 +290,11 @@
             </select>
             <input type="text" name="query" placeholder="Tìm kiếm sản phẩm..." value="${param.query}">
             <button type="submit">Tìm Kiếm</button>
+        </form>
+
+        <form method="POST" action="${pageContext.request.contextPath}/search" enctype="multipart/form-data" class="search-by-image">
+            <input type="file" name="image" accept="image/*" capture="environment" required>
+            <button type="submit" class="btn-image-search">Tìm bằng ảnh</button>
         </form>
     </div>
 

@@ -109,7 +109,13 @@ Controller Layer  →  Service Layer  →  DAO Layer  →  SQL Server
    > If port 8080 is busy, change `server.port` in `application.properties`
 
 ### AI Chat Setup
-Refer to `AI_LLM_SETUP.md` for configuring OpenAI or Gemini API keys and loading the RAG knowledge base.
+Use environment variables for the AI provider (Gemini preferred):
+
+- Gemini: set `AI_PROVIDER=gemini` and `GEMINI_API_KEY`.
+
+The app also accepts the legacy alias `AI_GEMINI_API_KEY`.
+
+Refer to `AI_LLM_SETUP.md` for loading the RAG knowledge base.
 
 ---
 

@@ -2,8 +2,7 @@ package config;
 
 public class AIProviderConfig {
 
-    private static final String DEFAULT_PROVIDER = "openai";
-    private static final String DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
+    private static final String DEFAULT_PROVIDER = "gemini";
     private static final String DEFAULT_GEMINI_MODEL = "gemini-1.5-flash";
     private static final int DEFAULT_TIMEOUT_SECONDS = 15;
     private static final double DEFAULT_TEMPERATURE = 0.3;
@@ -14,19 +13,11 @@ public class AIProviderConfig {
     }
 
     public static String getApiKey() {
-        String provider = getProvider();
-        if ("gemini".equals(provider)) {
-            return getConfig("AI_GEMINI_API_KEY", getConfig("AI_API_KEY", ""));
-        }
-        return getConfig("AI_OPENAI_API_KEY", getConfig("AI_API_KEY", ""));
+        return getConfig("GEMINI_API_KEY", getConfig("AI_GEMINI_API_KEY", getConfig("AI_API_KEY", "")));
     }
 
     public static String getModel() {
-        String provider = getProvider();
-        if ("gemini".equals(provider)) {
-            return getConfig("AI_MODEL", DEFAULT_GEMINI_MODEL);
-        }
-        return getConfig("AI_MODEL", DEFAULT_OPENAI_MODEL);
+        return getConfig("AI_MODEL", DEFAULT_GEMINI_MODEL);
     }
 
     public static String getEndpoint() {
@@ -36,10 +27,7 @@ public class AIProviderConfig {
             return customEndpoint;
         }
 
-        if ("gemini".equals(provider)) {
-            return "https://generativelanguage.googleapis.com/v1beta/models/" + getModel() + ":generateContent";
-        }
-        return "https://api.openai.com/v1/chat/completions";
+        return "https://generativelanguage.googleapis.com/v1beta/models/" + getModel() + ":generateContent";
     }
 
     public static int getTimeoutSeconds() {

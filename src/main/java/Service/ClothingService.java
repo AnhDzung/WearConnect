@@ -4,9 +4,15 @@ import DAO.ClothingDAO;
 import DAO.ClothingImageDAO;
 import Model.Clothing;
 import Model.ClothingImage;
+import util.ImageSearchUtil;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class ClothingService {
+
+    private static final int DEFAULT_IMAGE_SEARCH_LIMIT = 6;
     
     public static int uploadClothing(Clothing clothing) {
         if (clothing.getClothingName() == null || clothing.getClothingName().isEmpty()) {
@@ -37,6 +43,53 @@ public class ClothingService {
 
     public static List<Clothing> searchClothing(String keyword) {
         return ClothingDAO.searchByName(keyword);
+    }
+
+    public static List<Clothing> searchByImage(byte[] imageData) {
+        return searchByImage(imageData, DEFAULT_IMAGE_SEARCH_LIMIT);
+    }
+
+    public static List<Clothing> searchByImage(byte[] imageData, int limit) {
+        List<Clothing> results = new ArrayList<>();
+        if (imageData == null || imageData.length == 0) {
+            return results;
+        }
+
+        try {
+            long queryHash = ImageSearchUtil.averageHash(imageData);
+            List<ImageMatch> matches = new ArrayList<>();
+
+            for (Clothing clothing : ClothingDAO.getAllActiveClothing()) {
+                byte[] candidateImage = clothing.getImageData();
+                if (candidateImage == null || candidateImage.length == 0) {
+                    candidateImage = loadPrimaryImageBytes(clothing.getClothingID());
+                }
+
+                if (candidateImage == null || candidateImage.length == 0) {
+                    continue;
+                }
+
+                try {
+                    long candidateHash = ImageSearchUtil.averageHash(candidateImage);
+                    int distance = ImageSearchUtil.hammingDistance(queryHash, candidateHash);
+                    matches.add(new ImageMatch(clothing, distance));
+                } catch (IOException ignored) {
+                }
+            }
+
+            matches.sort(Comparator
+                    .comparingInt(ImageMatch::getDistance)
+                    .thenComparing((left, right) -> Integer.compare(right.getClothing().getClothingID(), left.getClothing().getClothingID())));
+
+            int safeLimit = limit <= 0 ? DEFAULT_IMAGE_SEARCH_LIMIT : limit;
+            for (int index = 0; index < matches.size() && index < safeLimit; index++) {
+                results.add(matches.get(index).getClothing());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return results;
     }
 
     public static List<Clothing> getMyClothing(int renterID) {
@@ -83,5 +136,38 @@ public class ClothingService {
         }
         
         return results;
+    }
+
+    private static byte[] loadPrimaryImageBytes(int clothingID) {
+        List<ClothingImage> images = ClothingImageDAO.getImagesByClothing(clothingID);
+        if (images == null || images.isEmpty()) {
+            return null;
+        }
+
+        for (ClothingImage image : images) {
+            if (image != null && image.getImageData() != null && image.getImageData().length > 0) {
+                return image.getImageData();
+            }
+        }
+
+        return null;
+    }
+
+    private static final class ImageMatch {
+        private final Clothing clothing;
+        private final int distance;
+
+        private ImageMatch(Clothing clothing, int distance) {
+            this.clothing = clothing;
+            this.distance = distance;
+        }
+
+        private Clothing getClothing() {
+            return clothing;
+        }
+
+        private int getDistance() {
+            return distance;
+        }
     }
 }
