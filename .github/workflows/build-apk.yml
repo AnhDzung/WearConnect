@@ -17,7 +17,11 @@ jobs:
           node-version: '20'
           
       - name: Cài đặt thư viện Capacitor
-        run: npm install
+        run: |
+          npm install
+          mkdir -p www
+          echo "" > www/index.html
+          npx cap sync android
         
       - name: Build APK (Sử dụng máy chủ GitHub)
         run: |
