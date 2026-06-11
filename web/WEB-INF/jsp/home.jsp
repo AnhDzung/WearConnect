@@ -7,6 +7,104 @@
     <jsp:include page="/WEB-INF/jsp/components/head.jsp" />
     <title>Cửa hàng - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/home.css">
+    
+    <!-- Cấu hình biến Web thành App (PWA) -->
+    <link rel="manifest" href="${pageContext.request.contextPath}/manifest.json">
+    <meta name="theme-color" content="#0a84ff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        @media (max-width: 768px) {
+            /* Ẩn nút chuyển và dấu chấm slide trên thiết bị di động */
+            .slider-dots, .slider-btn { display: none !important; }
+            .hero-slider { touch-action: pan-y; } /* Giữ cuộn dọc mượt mà, nhưng ưu tiên vuốt ngang */
+
+            /* Fix lỗi hiển thị Bộ lọc trên Mobile */
+            .mobile-filter-toggle {
+                display: block !important;
+                width: calc(100% - 32px);
+                margin: 0 auto 16px auto;
+                padding: 12px;
+                background: #0a84ff;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 600;
+                text-align: center;
+                box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3);
+            }
+            .filter-overlay {
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 9998;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s, visibility 0.3s;
+            }
+            .filter-overlay.open {
+                opacity: 1;
+                visibility: visible;
+            }
+            .filter-panel {
+                position: fixed !important;
+                top: auto !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                max-height: 85vh !important;
+                background: white !important;
+                z-index: 9999 !important;
+                border-radius: 20px 20px 0 0 !important;
+                padding: 20px 20px 40px 20px !important;
+                overflow-y: auto !important;
+                transform: translateY(100%);
+                transition: transform 0.3s ease-out;
+                display: block !important;
+                visibility: hidden;
+                box-sizing: border-box !important;
+            }
+            .filter-panel.open {
+                transform: translateY(0);
+                visibility: visible;
+            }
+
+            /* Tối ưu giao diện Camera trên Mobile */
+            .search-by-image {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-top: 12px;
+                justify-content: space-between;
+            }
+            .btn-start-camera, .btn-image-search {
+                flex: 1;
+                min-width: 45%;
+                padding: 12px 8px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                border: none;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            }
+            .btn-start-camera { background: #f8f9fa; color: #212529; border: 1px solid #dee2e6; }
+            .btn-image-search { background: #198754; color: white; }
+            .camera-preview-wrap { width: 100%; margin-top: 8px; }
+            .camera-preview { width: 100%; border-radius: 12px; background: #000; }
+            .camera-hint { width: 100%; font-size: 13px; text-align: center; color: #6c757d; line-height: 1.4; }
+        }
+        @media (min-width: 769px) {
+            .mobile-filter-toggle, .filter-overlay { display: none !important; }
+            .filter-panel { transform: none !important; visibility: visible !important; display: block !important; }
+        }
+    </style>
 </head>
 <body>
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
@@ -61,8 +159,8 @@
 
         <form method="POST" action="${pageContext.request.contextPath}/search" class="search-by-image" id="cameraSearchFormHome">
             <input type="hidden" name="cameraImageData" id="cameraImageDataHome">
-            <button type="button" class="btn-start-camera" id="startCameraBtnHome">Mở camera</button>
-            <button type="button" class="btn-image-search" id="captureSearchBtnHome">Chụp và tìm ngay</button>
+            <button type="button" class="btn-start-camera" id="startCameraBtnHome">📸 Mở camera</button>
+            <button type="button" class="btn-image-search" id="captureSearchBtnHome">🔍 Chụp & Tìm</button>
             <div class="camera-preview-wrap" id="cameraPreviewWrapHome">
                 <video id="cameraPreviewHome" class="camera-preview" autoplay playsinline muted></video>
             </div>
@@ -207,6 +305,25 @@
     nextBtn.addEventListener('click',()=>{next();restart();});
     slider.addEventListener('mouseenter',()=>clearInterval(autoTimer));
     slider.addEventListener('mouseleave',start);
+
+    // Hỗ trợ vuốt slide trên màn hình cảm ứng
+    let touchStartX = 0;
+    let touchEndX = 0;
+    slider.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+        clearInterval(autoTimer);
+    }, {passive: true});
+    slider.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        if (touchEndX < touchStartX - 50) {
+            next(); restart();
+        } else if (touchEndX > touchStartX + 50) {
+            prev(); restart();
+        } else {
+            start();
+        }
+    }, {passive: true});
+
     start();
 })();
 
@@ -291,7 +408,25 @@ function clearFilters() {
 
     async function startCamera() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            hint.textContent = 'Thiết bị hoặc trình duyệt chưa hỗ trợ camera trực tiếp.';
+            // Fallback: Mở ứng dụng Camera mặc định của điện thoại nếu bị chặn do dùng HTTP (mạng LAN)
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.capture = 'environment'; // Ưu tiên mở camera sau
+            
+            fileInput.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    hint.textContent = 'Đang phân tích hình ảnh, vui lòng chờ...';
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        imageDataInput.value = event.target.result;
+                        form.submit();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            fileInput.click();
             return;
         }
 
@@ -345,40 +480,47 @@ function clearFilters() {
     const overlay = document.getElementById('filterOverlay');
     if (!btn || !panel || !overlay) return;
 
-    function openSheet(){
-        panel.classList.add('filter-bottom','open');
-        overlay.classList.add('open');
-        btn.setAttribute('aria-expanded','true');
-        overlay.addEventListener('click', closeSheet);
-        // add swipe-down to close
-        let startY=0;
-        function onTouchStart(e){ startY = e.touches ? e.touches[0].clientY : e.clientY; }
-        function onTouchMove(e){
-            const y = e.touches ? e.touches[0].clientY : e.clientY;
-            const dy = y - startY;
-            if (dy>0) panel.style.transform = `translateY(${Math.min(dy, window.innerHeight)}px)`;
-        }
-        function onTouchEnd(e){ panel.style.transform=''; }
-        panel.addEventListener('touchstart', onTouchStart);
-        panel.addEventListener('touchmove', onTouchMove);
-        panel.addEventListener('touchend', onTouchEnd);
-    }
-
     function closeSheet(){
         panel.classList.remove('open');
         overlay.classList.remove('open');
-        // keep filter-bottom class so desktop styling unaffected when resizing
         btn.setAttribute('aria-expanded','false');
-        overlay.removeEventListener('click', closeSheet);
     }
+
+        function openSheet(){
+            panel.classList.add('filter-bottom','open');
+            overlay.classList.add('open');
+            btn.setAttribute('aria-expanded','true');
+        }
 
     btn.addEventListener('click', function(){
         const isOpen = panel.classList.contains('open');
         if (isOpen) closeSheet(); else openSheet();
     });
 
-    // close on Escape
+        overlay.addEventListener('click', closeSheet);
     document.addEventListener('keydown', function(e){ if (e.key==='Escape') closeSheet(); });
+
+        // Vuốt xuống để đóng trên mobile (Chỉ gắn sự kiện 1 lần)
+        let startY = 0;
+        panel.addEventListener('touchstart', function(e) {
+            panel.style.transition = 'none'; // Tắt hiệu ứng mượt khi kéo để bám sát ngón tay
+            startY = e.touches ? e.touches[0].clientY : e.clientY;
+        }, {passive: true});
+        
+        panel.addEventListener('touchmove', function(e) {
+            if (panel.scrollTop > 0) return; // Nếu đang cuộn nội dung bên trong thì không kéo panel xuống
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            const dy = y - startY;
+            if (dy > 0) panel.style.transform = 'translateY(' + Math.min(dy, window.innerHeight) + 'px)';
+        }, {passive: true});
+
+        panel.addEventListener('touchend', function(e) {
+            panel.style.transition = 'transform 0.3s ease-out'; // Bật lại hiệu ứng mượt khi thả tay
+            panel.style.transform = '';
+            if (panel.scrollTop > 0) return;
+            const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+            if (y - startY > 100) closeSheet(); // Nếu vuốt xuống quá 100px thì thực sự đóng panel
+        }, {passive: true});
 })();
 </script>
 </body>

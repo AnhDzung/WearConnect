@@ -236,6 +236,58 @@
         .btn-cancel {
             background-color: #6c757d;
         }
+        
+        /* Responsive Table for Mobile */
+        @media (max-width: 768px) {
+            table { background: transparent; box-shadow: none; border-radius: 0; }
+            table thead { display: none; }
+            table tbody tr {
+                display: flex;
+                flex-direction: column;
+                background: white;
+                margin-bottom: 16px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                overflow: hidden;
+            }
+            table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 16px;
+                text-align: right;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            table td:last-child { border-bottom: none; }
+            table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #555;
+                text-align: left;
+                padding-right: 10px;
+                flex-shrink: 0;
+            }
+            /* Điều chỉnh cột Thao tác cho mobile */
+            table td.actions-cell {
+                flex-direction: column;
+                align-items: flex-start;
+                background-color: #fafafa;
+            }
+            table td.actions-cell::before {
+                margin-bottom: 12px;
+                width: 100%;
+            }
+            .actions-wrap {
+                width: 100%;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .actions-wrap form, .actions-wrap .btn {
+                width: 100%;
+                text-align: center;
+                box-sizing: border-box;
+            }
+        }
     </style>
 <body>
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
@@ -278,14 +330,14 @@
         <tbody>
             <c:forEach var="order" items="${rentalOrders}">
                 <tr>
-                    <td>${order.orderCode}</td>
-                    <td>
+                    <td data-label="Mã đơn hàng">${order.orderCode}</td>
+                    <td data-label="Quần áo">
                         <c:choose>
                             <c:when test="${not empty order.clothingName}">${order.clothingName}</c:when>
                             <c:otherwise>${order.clothingID}</c:otherwise>
                         </c:choose>
                     </td>
-                    <td>
+                    <td data-label="Người thuê">
                         <c:choose>
                             <c:when test="${not empty order.renterFullName}">
                                 ${order.renterFullName}
@@ -298,10 +350,10 @@
                             </c:otherwise>
                         </c:choose>
                     </td>
-                    <td>${order.formattedStartDate}</td>
-                    <td>${order.formattedEndDate}</td>
-                    <td><fmt:formatNumber value="${order.totalPrice * 0.9}" pattern="#,##0"/> VNĐ</td>
-                    <td>
+                    <td data-label="Ngày bắt đầu">${order.formattedStartDate}</td>
+                    <td data-label="Ngày kết thúc">${order.formattedEndDate}</td>
+                    <td data-label="Tổng giá (thực nhận)"><fmt:formatNumber value="${order.totalPrice * 0.9}" pattern="#,##0"/> VNĐ</td>
+                    <td data-label="Trạng thái">
                         <span class="status ${order.status.toLowerCase()}">
                             <c:choose>
                                 <c:when test="${order.status == 'PENDING'}">Chờ duyệt</c:when>
@@ -316,7 +368,7 @@
                             </c:choose>
                         </span>
                     </td>
-                    <td class="actions-cell">
+                    <td class="actions-cell" data-label="Thao tác">
                         <div class="actions-wrap">
                         <a href="${pageContext.request.contextPath}/rental?action=viewOrder&id=${order.rentalOrderID}" class="btn btn-info">Chi tiết</a>
                         <c:if test="${order.status == 'SHIPPING'}">

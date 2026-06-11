@@ -1,0 +1,30 @@
+{
+  "name": "wearconnect",
+  "version": "1.0.0",
+  "description": "> **C2C Fashion Rental Platform** — Rent outfits, not just clothes.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnhDzung/WearConnect.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AnhDzung/WearConnect/issues"
+  },
+  "homepage": "https://github.com/AnhDzung/WearConnect#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0"
+  }
+}
