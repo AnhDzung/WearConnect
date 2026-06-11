@@ -1,20 +1,23 @@
 package com.wearconnect.boot.controller;
 
-import Controller.ClothingController;
-import Model.Clothing;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Base64;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
+
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import Controller.ClothingController;
+import Model.Clothing;
+import Service.ImageSearchService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Controller
 @RequestMapping("/search")
@@ -49,21 +52,27 @@ public class SearchPageController {
             throws ServletException, IOException {
         List<Clothing> results = new ArrayList<>();
         String searchMessage;
-        byte[] cameraBytes = resolveCameraBytes(request.getParameter("cameraImageData"));
+        String cameraImageData = request.getParameter("cameraImageData");
         MultipartFile imageFile = resolveImageFile(request);
 
-        if (cameraBytes != null && cameraBytes.length > 0) {
-            results = ClothingController.searchByImage(cameraBytes);
-            searchMessage = results.isEmpty()
-                ? "Không tìm thấy sản phẩm phù hợp với ảnh bạn vừa chụp."
-                : "Đây là những sản phẩm khớp gần nhất với ảnh bạn vừa chụp.";
-        } else if (imageFile != null && !imageFile.isEmpty()) {
-            results = ClothingController.searchByImage(imageFile.getBytes());
-            searchMessage = results.isEmpty()
-                ? "Không tìm thấy sản phẩm phù hợp với ảnh bạn tải lên."
-                : "Đây là những sản phẩm khớp gần nhất với ảnh bạn tải lên.";
-        } else {
-            searchMessage = "Vui lòng mở camera rồi chụp ảnh để tìm kiếm.";
+        try {
+            if (cameraImageData != null && !cameraImageData.isBlank()) {
+                results = ImageSearchService.searchByImage(cameraImageData);
+                searchMessage = results.isEmpty()
+                    ? "AI không tìm thấy sản phẩm nào trên hệ thống khớp với ảnh bạn vừa chụp."
+                    : "AI đã phân tích ảnh và tìm thấy các sản phẩm tương tự dưới đây.";
+            } else if (imageFile != null && !imageFile.isEmpty()) {
+                String base64Image = Base64.getEncoder().encodeToString(imageFile.getBytes());
+                results = ImageSearchService.searchByImage(base64Image);
+                searchMessage = results.isEmpty()
+                    ? "AI không tìm thấy sản phẩm nào trên hệ thống khớp với ảnh bạn tải lên."
+                    : "AI đã phân tích ảnh và tìm thấy các sản phẩm tương tự dưới đây.";
+            } else {
+                searchMessage = "Vui lòng mở camera hoặc tải ảnh lên để tìm kiếm.";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            searchMessage = "Xin lỗi, đã xảy ra lỗi trong quá trình AI phân tích hình ảnh.";
         }
 
         request.setAttribute("searchResults", results);

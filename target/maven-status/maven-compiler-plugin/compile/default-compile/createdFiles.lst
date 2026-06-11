@@ -4,6 +4,7 @@ Service\DashboardService.class
 Service\ClothingService$ImageMatch.class
 Service\AIChatService.class
 Model\AIProductSuggestion.class
+Service\ImageSearchService.class
 Service\AIPaymentVerificationService$OcrSnapshot.class
 Model\OrderIssue.class
 com\wearconnect\chatbot\dto\ProductAvailabilityResponse.class
