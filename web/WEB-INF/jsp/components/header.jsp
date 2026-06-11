@@ -1127,12 +1127,5 @@
                 setTimeout(function(){ mobileMenu.style.display = 'none'; document.body.style.overflow=''; }, 340);
             });
         }
-
-        // Also add a compact user button on small screens
-        const userBtn = document.createElement('a');
-        userBtn.className = 'mobile-user-btn';
-        userBtn.href = '${pageContext.request.contextPath}/user?action=profile';
-        userBtn.textContent = 'Tài khoản';
-        if (headerContainer) headerContainer.appendChild(userBtn);
     })();
 </script>
