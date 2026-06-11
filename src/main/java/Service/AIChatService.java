@@ -7,6 +7,8 @@ import Model.AIConversation;
 import Model.AIKnowledgeDoc;
 import Model.AIMessage;
 import Model.AIProductSuggestion;
+import Model.IntentAnalysis;
+import Model.UserProfile;
 import Model.Clothing;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -70,14 +72,14 @@ public class AIChatService {
         List<AIMessage> contextMessages = AIChatDAO.getRecentMessages(resolvedConversationID, PROFILE_CONTEXT_MESSAGE_LIMIT);
         List<AIMessage> llmContextMessages = AIChatDAO.getRecentMessages(resolvedConversationID, LLM_CONTEXT_MESSAGE_LIMIT);
         String normalizedForMatching = normalizeForMatching(normalizedMessage);
-        IntentAnalysis intentAnalysis = analyzeIntent(normalizedMessage);
+        IntentAnalysis intentAnalysis = AIIntentAnalyzer.analyze(normalizedForMatching);
         RedirectDecision redirectDecision = determineRedirect(normalizedMessage, intentAnalysis.intent);
         boolean directProductBrowseRequest = isDirectProductBrowseRequest(normalizedForMatching);
         ProductSearchContext currentSearchContext = extractProductSearchContext(normalizedForMatching);
         ProductSearchContext historySearchContext = extractProductSearchContextFromHistory(contextMessages);
         ProductSearchContext mergedSearchContext = mergeProductSearchContext(currentSearchContext, historySearchContext);
-        UserProfile mergedProfile = mergeUserProfile(extractUserProfile(normalizedMessage), extractUserProfileFromHistory(contextMessages));
-        BigDecimal maxDailyPrice = mergedProfile.budgetVnd == null ? null : BigDecimal.valueOf(mergedProfile.budgetVnd);
+        UserProfile mergedProfile = mergeUserProfile(AIUserProfileExtractor.extract(normalizedMessage), extractUserProfileFromHistory(contextMessages));
+        BigDecimal maxDailyPrice = mergedProfile.getBudgetVnd() == null ? null : BigDecimal.valueOf(mergedProfile.getBudgetVnd());
         List<AIProductSuggestion> productSuggestions = buildProductSuggestions(normalizedMessage, intentAnalysis.intent, contextMessages);
         int userMessageID = AIChatDAO.addMessage(resolvedConversationID, "USER", normalizedMessage, intentAnalysis.intent, intentAnalysis.confidence, "USER_INPUT");
 
@@ -145,9 +147,9 @@ public class AIChatService {
         }
 
         if (!needsHandoff && "SIZE_ADVICE".equals(intentAnalysis.intent)) {
-            if (mergedProfile.heightCm != null && mergedProfile.weightKg != null && !productSuggestions.isEmpty()) {
-                String size = suggestGenericSize(mergedProfile.heightCm, mergedProfile.weightKg);
-                assistantMessage = "Mình đã ghi nhận số đo của bạn: cao " + mergedProfile.heightCm + "cm, nặng " + mergedProfile.weightKg
+            if (mergedProfile.getHeightCm() != null && mergedProfile.getWeightKg() != null && !productSuggestions.isEmpty()) {
+                String size = suggestGenericSize(mergedProfile.getHeightCm(), mergedProfile.getWeightKg());
+                assistantMessage = "Mình đã ghi nhận số đo của bạn: cao " + mergedProfile.getHeightCm() + "cm, nặng " + mergedProfile.getWeightKg()
                         + "kg. Size tham khảo là " + size
                         + ". Mình cũng đã lọc các sản phẩm theo phong cách bạn đã chọn ở trên, bạn xem ngay bên dưới nhé.";
                 responseSource = "RULE";
@@ -284,62 +286,6 @@ public class AIChatService {
         return createdConversationID == null ? -1 : createdConversationID;
     }
 
-    private static IntentAnalysis analyzeIntent(String message) {
-        String normalizedMessage = normalizeForMatching(message);
-
-        if (containsAny(normalizedMessage,
-                "quy trinh dang tai", "dang tai quan ao", "dang san pham", "them trang phuc", "listing", "dang bai")) {
-            return new IntentAnalysis("LISTING_SUPPORT", new BigDecimal("0.8800"));
-        }
-
-        if (containsAny(normalizedMessage,
-            "ao dai", "thue ao dai", "ao dai truyen thong", "ao dai cach tan")) {
-            return new IntentAnalysis("RENTAL_ADVICE", new BigDecimal("0.8600"));
-        }
-
-        if (containsAny(normalizedMessage,
-            "tu van", "goi y", "phoi do", "phong cach", "style", "chon do",
-            "di du tiec", "du tiec", "tiec", "tiec sang trong", "sang trong", "thanh lich", "ca tinh", "vui nhon",
-            "tiec sinh nhat", "tiec cong ty", "chup anh", "di chup anh", "quay phim", "concept",
-            "trang phuc", "outfit", "set do", "bo de thue", "thue di")) {
-            return new IntentAnalysis("CONSULT_ADVICE", new BigDecimal("0.9000"));
-        }
-
-        if (containsAny(normalizedMessage,
-                "tim san pham", "muon tim san pham", "tim ao", "tim dam", "tim vest", "tim ao khoac", "tim ao dai")) {
-            return new IntentAnalysis("CONSULT_ADVICE", new BigDecimal("0.8200"));
-        }
-
-        if (containsAny(normalizedMessage,
-                "ngan sach", "budget", "trieu", "nghin", "khoang", "tam", "duoi", "tren")) {
-            return new IntentAnalysis("CONSULT_ADVICE", new BigDecimal("0.7600"));
-        }
-
-        if (containsAny(normalizedMessage, "hoan tien", "refund", "tra hang", "return", "khieu nai")) {
-            return new IntentAnalysis("RETURN_REFUND", new BigDecimal("0.8600"));
-        }
-
-        if (containsAny(normalizedMessage,
-            "quy trinh", "dat thue", "quy trinh thue", "quy trinh dat thue", "thu tuc thue", "thue do")) {
-            return new IntentAnalysis("BOOKING_SUPPORT", new BigDecimal("0.8600"));
-        }
-
-        if (containsAny(normalizedMessage,
-            "don hang", "order", "trang thai", "giao hang")) {
-            return new IntentAnalysis("ORDER_SUPPORT", new BigDecimal("0.8200"));
-        }
-
-        if (containsAny(normalizedMessage, "size", "kich co", "vong", "cao", "nang")) {
-            return new IntentAnalysis("SIZE_ADVICE", new BigDecimal("0.7800"));
-        }
-
-        if (containsAny(normalizedMessage, "thanh toan", "payment", "chuyen khoan", "coc")) {
-            return new IntentAnalysis("PAYMENT_SUPPORT", new BigDecimal("0.8000"));
-        }
-
-        return new IntentAnalysis("GENERAL_FAQ", new BigDecimal("0.5500"));
-    }
-
     private static String buildAssistantMessage(String intent, boolean handoff) {
         if (handoff) {
             return "Mình đã ghi nhận yêu cầu và đang chuyển đến nhân viên CSKH để hỗ trợ chi tiết hơn.";
@@ -438,22 +384,22 @@ public class AIChatService {
     }
 
     private static String buildSizeAdviceMessage(String message) {
-        UserProfile profile = extractUserProfile(message);
-        if (profile.heightCm != null && profile.weightKg != null) {
-            String size = suggestGenericSize(profile.heightCm, profile.weightKg);
-            return "Mình đã ghi nhận số đo của bạn: cao " + profile.heightCm + "cm, nặng " + profile.weightKg
+        UserProfile profile = AIUserProfileExtractor.extract(message);
+        if (profile.getHeightCm() != null && profile.getWeightKg() != null) {
+            String size = suggestGenericSize(profile.getHeightCm(), profile.getWeightKg());
+            return "Mình đã ghi nhận số đo của bạn: cao " + profile.getHeightCm() + "cm, nặng " + profile.getWeightKg()
                     + "kg. Với form phổ thông, bạn có thể bắt đầu thử size " + size
                     + ". Nếu muốn mặc ôm hơn thì giảm 1 size, muốn thoải mái thì tăng 1 size. "
                     + "Nếu bạn muốn, mình sẽ gợi ý luôn 2-3 kiểu outfit phù hợp cho dịp của bạn.";
         }
 
-        if (profile.heightCm != null) {
-            return "Mình đã nhận chiều cao " + profile.heightCm
+        if (profile.getHeightCm() != null) {
+            return "Mình đã nhận chiều cao " + profile.getHeightCm()
                     + "cm. Bạn cho mình thêm cân nặng để mình chốt size chính xác hơn nhé.";
         }
 
-        if (profile.weightKg != null) {
-            return "Mình đã nhận cân nặng " + profile.weightKg
+        if (profile.getWeightKg() != null) {
+            return "Mình đã nhận cân nặng " + profile.getWeightKg()
                     + "kg. Bạn cho mình thêm chiều cao để mình chốt size chính xác hơn nhé.";
         }
 
@@ -464,23 +410,23 @@ public class AIChatService {
                                                     boolean hasConsultPurposeFromHistory,
                                                     boolean hasConsultStyleFromHistory,
                                                     UserProfile profileFromHistory) {
-        UserProfile profile = mergeUserProfile(extractUserProfile(message), profileFromHistory);
+        UserProfile profile = mergeUserProfile(AIUserProfileExtractor.extract(message), profileFromHistory);
         String normalizedMessage = normalizeForMatching(message);
         if (shouldAskConsultPurposeFirst(normalizedMessage) && !hasConsultPurposeFromHistory) {
             return buildConsultPurposeFirstMessage();
         }
 
-        if (profile.heightCm == null || profile.weightKg == null) {
+        if (profile.getHeightCm() == null || profile.getWeightKg() == null) {
             return "Cảm ơn bạn! Mình đã ghi nhận nhu cầu về dịp/phong cách. "
                     + "Bây giờ bạn cho mình chiều cao và cân nặng để mình gợi ý size và sản phẩm phù hợp nhé.";
         }
 
         boolean isParty = containsAny(normalizedMessage, "du tiec", "di tiec", "party", "su kien");
 
-        if (isParty && profile.heightCm != null && profile.weightKg != null && profile.budgetVnd != null) {
-            String size = suggestGenericSize(profile.heightCm, profile.weightKg);
-            String budgetText = formatBudgetVnd(profile.budgetVnd);
-            return "Dựa trên thông tin bạn cung cấp (" + profile.heightCm + "cm, " + profile.weightKg + "kg, ngân sách "
+        if (isParty && profile.getHeightCm() != null && profile.getWeightKg() != null && profile.getBudgetVnd() != null) {
+            String size = suggestGenericSize(profile.getHeightCm(), profile.getWeightKg());
+            String budgetText = formatBudgetVnd(profile.getBudgetVnd());
+            return "Dựa trên thông tin bạn cung cấp (" + profile.getHeightCm() + "cm, " + profile.getWeightKg() + "kg, ngân sách "
                     + budgetText + "), mình gợi ý 3 hướng đồ dự tiệc dễ thuê:\n"
                     + "1) Blazer tối màu + áo sơ mi sáng + quần tây, size tham khảo " + size + ".\n"
                     + "2) Set vest basic tông đen/xanh navy, ưu tiên form vừa vai để lên dáng gọn.\n"
@@ -488,7 +434,7 @@ public class AIChatService {
                     + "Nếu bạn chọn tông màu muốn mặc (đen, navy, be...), mình sẽ chốt phương án phù hợp nhất ngay.";
         }
 
-        if (profile.budgetVnd == null) {
+        if (profile.getBudgetVnd() == null) {
             return "Mình đã có chiều cao/cân nặng của bạn. Bạn cho mình thêm ngân sách thuê để mình lọc đúng các sản phẩm phù hợp nhé.";
         }
 
@@ -511,22 +457,22 @@ public class AIChatService {
             return primary;
         }
 
-        Integer mergedHeight = primary.heightCm != null ? primary.heightCm : fallback.heightCm;
-        Integer mergedWeight = primary.weightKg != null ? primary.weightKg : fallback.weightKg;
-        Long mergedBudget = primary.budgetVnd != null ? primary.budgetVnd : fallback.budgetVnd;
+        Integer mergedHeight = primary.getHeightCm() != null ? primary.getHeightCm() : fallback.getHeightCm();
+        Integer mergedWeight = primary.getWeightKg() != null ? primary.getWeightKg() : fallback.getWeightKg();
+        Long mergedBudget = primary.getBudgetVnd() != null ? primary.getBudgetVnd() : fallback.getBudgetVnd();
         return new UserProfile(mergedHeight, mergedWeight, mergedBudget);
     }
 
     private static String buildRentalAdviceMessage(String message, UserProfile profileFromHistory) {
-        UserProfile profile = mergeUserProfile(extractUserProfile(message), profileFromHistory);
+        UserProfile profile = mergeUserProfile(AIUserProfileExtractor.extract(message), profileFromHistory);
         String normalizedMessage = normalizeForMatching(message);
         boolean isAoDai = containsAny(normalizedMessage, "ao dai");
         boolean asksViewProducts = containsAny(normalizedMessage, "xem", "goi y", "san pham", "mau", "cho toi xem");
 
         if (isAoDai && asksViewProducts) {
-            if (profile.heightCm != null && profile.weightKg != null && profile.budgetVnd != null) {
+            if (profile.getHeightCm() != null && profile.getWeightKg() != null && profile.getBudgetVnd() != null) {
                 return "Mình đã lọc sản phẩm áo dài theo thông tin của bạn ("
-                        + profile.heightCm + "cm, " + profile.weightKg + "kg, ngân sách " + formatBudgetVnd(profile.budgetVnd)
+                        + profile.getHeightCm() + "cm, " + profile.getWeightKg() + "kg, ngân sách " + formatBudgetVnd(profile.getBudgetVnd())
                         + "). Bạn xem các sản phẩm ngay bên dưới, nếu muốn mình sẽ chốt 2-3 mẫu nổi bật nhất theo phong cách bạn thích.";
             }
 
@@ -534,15 +480,15 @@ public class AIChatService {
                     + "Nếu bạn muốn lọc chuẩn hơn, bạn cho mình thêm chiều cao-cân nặng và ngân sách thuê nhé.";
         }
 
-        if (isAoDai && profile.heightCm != null && profile.weightKg != null) {
-            String size = suggestGenericSize(profile.heightCm, profile.weightKg);
-            if (profile.budgetVnd != null) {
-                return "Với áo dài và số đo của bạn (" + profile.heightCm + "cm, " + profile.weightKg
-                        + "kg), bạn có thể thử size " + size + ". Ngân sách " + formatBudgetVnd(profile.budgetVnd)
+        if (isAoDai && profile.getHeightCm() != null && profile.getWeightKg() != null) {
+            String size = suggestGenericSize(profile.getHeightCm(), profile.getWeightKg());
+            if (profile.getBudgetVnd() != null) {
+                return "Với áo dài và số đo của bạn (" + profile.getHeightCm() + "cm, " + profile.getWeightKg()
+                        + "kg), bạn có thể thử size " + size + ". Ngân sách " + formatBudgetVnd(profile.getBudgetVnd())
                         + " là phù hợp để chọn mẫu basic đến premium tùy chất liệu. Bạn muốn kiểu truyền thống hay cách tân để mình gợi ý cụ thể hơn?";
             }
 
-            return "Với áo dài và số đo của bạn (" + profile.heightCm + "cm, " + profile.weightKg
+            return "Với áo dài và số đo của bạn (" + profile.getHeightCm() + "cm, " + profile.getWeightKg()
                     + "kg), bạn có thể thử size " + size
                     + ". Bạn cho mình thêm ngân sách thuê và màu sắc mong muốn để mình gợi ý mẫu phù hợp nhất.";
         }
@@ -665,107 +611,6 @@ public class AIChatService {
         return RoleRestriction.allow();
     }
 
-    private static UserProfile extractUserProfile(String message) {
-        String normalized = normalizeForMatching(message);
-        Integer heightCm = extractHeightCm(normalized);
-        Integer weightKg = extractWeightKg(normalized);
-        Long budgetVnd = extractBudgetVnd(normalized);
-        return new UserProfile(heightCm, weightKg, budgetVnd);
-    }
-
-    private static Integer extractHeightCm(String normalizedMessage) {
-        Matcher metricMatcher = Pattern.compile("\\b(1|2)\\s*(?:m|met)\\s*(\\d{1,2})?\\b").matcher(normalizedMessage);
-        if (metricMatcher.find()) {
-            int meter = Integer.parseInt(metricMatcher.group(1));
-            String centimeterPart = metricMatcher.group(2);
-            if (centimeterPart == null || centimeterPart.isBlank()) {
-                return meter * 100;
-            }
-
-            int centimeter = Integer.parseInt(centimeterPart);
-            if (centimeterPart.length() == 1) {
-                centimeter = centimeter * 10;
-            }
-            return meter * 100 + centimeter;
-        }
-
-        Matcher cmMatcher = Pattern.compile("\\b(1\\d{2}|2\\d{2})\\s*cm\\b").matcher(normalizedMessage);
-        if (cmMatcher.find()) {
-            return Integer.parseInt(cmMatcher.group(1));
-        }
-
-        return null;
-    }
-
-    private static Integer extractWeightKg(String normalizedMessage) {
-        Matcher weightMatcher = Pattern.compile("\\b(3\\d|[4-9]\\d|1\\d{2})\\s*(?:kg|kilogram|ky|can)\\b").matcher(normalizedMessage);
-        if (weightMatcher.find()) {
-            return Integer.parseInt(weightMatcher.group(1));
-        }
-        return null;
-    }
-
-    private static Long extractBudgetVnd(String normalizedMessage) {
-        Matcher compactRangeMatcher = Pattern.compile("\\b(\\d{1,2})\\s*tr\\s*(\\d{1,2})?\\s*(?:-|den|toi)\\s*(\\d{1,2})\\s*tr\\s*(\\d{1,2})?\\b").matcher(normalizedMessage);
-        if (compactRangeMatcher.find()) {
-            long minValue = toCompactMillionValue(compactRangeMatcher.group(1), compactRangeMatcher.group(2));
-            long maxValue = toCompactMillionValue(compactRangeMatcher.group(3), compactRangeMatcher.group(4));
-            return Math.max(minValue, maxValue);
-        }
-
-        Matcher compactMillionMatcher = Pattern.compile("\\b(\\d{1,2})\\s*tr\\s*(\\d{1,2})\\b").matcher(normalizedMessage);
-        if (compactMillionMatcher.find()) {
-            return toCompactMillionValue(compactMillionMatcher.group(1), compactMillionMatcher.group(2));
-        }
-
-        Matcher millionAndThousandMatcher = Pattern.compile("\\b(\\d{1,2})\\s*trieu\\s*(\\d{1,3})\\s*nghin\\b").matcher(normalizedMessage);
-        if (millionAndThousandMatcher.find()) {
-            long million = Long.parseLong(millionAndThousandMatcher.group(1));
-            long thousand = Long.parseLong(millionAndThousandMatcher.group(2));
-            return million * 1_000_000L + thousand * 1_000L;
-        }
-
-        Matcher millionMatcher = Pattern.compile("\\b(\\d+(?:[\\.,]\\d+)?)\\s*trieu\\b").matcher(normalizedMessage);
-        if (millionMatcher.find()) {
-            double million = Double.parseDouble(millionMatcher.group(1).replace(',', '.'));
-            return Math.round(million * 1_000_000L);
-        }
-
-        Matcher thousandMatcher = Pattern.compile("\\b(\\d{2,4})\\s*nghin\\b").matcher(normalizedMessage);
-        if (thousandMatcher.find()) {
-            long thousand = Long.parseLong(thousandMatcher.group(1));
-            return thousand * 1_000L;
-        }
-
-        Matcher shorthandThousandMatcher = Pattern.compile("\\b(\\d{2,4})\\s*k\\b").matcher(normalizedMessage);
-        if (shorthandThousandMatcher.find()) {
-            long thousand = Long.parseLong(shorthandThousandMatcher.group(1));
-            return thousand * 1_000L;
-        }
-
-        Matcher shorthandMillionMatcher = Pattern.compile("\\b(\\d+(?:[\\.,]\\d+)?)\\s*tr\\b").matcher(normalizedMessage);
-        if (shorthandMillionMatcher.find()) {
-            double million = Double.parseDouble(shorthandMillionMatcher.group(1).replace(',', '.'));
-            return Math.round(million * 1_000_000L);
-        }
-
-        return null;
-    }
-
-    private static long toCompactMillionValue(String millionPart, String decimalPart) {
-        long million = Long.parseLong(millionPart);
-        if (decimalPart == null || decimalPart.isBlank()) {
-            return million * 1_000_000L;
-        }
-
-        String digits = decimalPart.trim();
-        if (digits.length() == 1) {
-            return million * 1_000_000L + Long.parseLong(digits) * 100_000L;
-        }
-
-        return million * 1_000_000L + Long.parseLong(digits.substring(0, 2)) * 10_000L;
-    }
-
     private static String suggestGenericSize(int heightCm, int weightKg) {
         if (heightCm >= 175 && weightKg >= 75) {
             return "L";
@@ -841,8 +686,8 @@ public class AIChatService {
                 return Collections.emptyList();
             }
 
-            UserProfile profile = mergeUserProfile(extractUserProfile(message), extractUserProfileFromHistory(contextMessages));
-            BigDecimal maxDailyPrice = profile.budgetVnd == null ? null : BigDecimal.valueOf(profile.budgetVnd);
+            UserProfile profile = mergeUserProfile(AIUserProfileExtractor.extract(message), extractUserProfileFromHistory(contextMessages));
+            BigDecimal maxDailyPrice = profile.getBudgetVnd() == null ? null : BigDecimal.valueOf(profile.getBudgetVnd());
             List<Clothing> latestProducts = ClothingDAO.getLatestActiveProductsForAI(6, maxDailyPrice);
             if ((latestProducts == null || latestProducts.isEmpty()) && maxDailyPrice != null) {
                 latestProducts = ClothingDAO.getLatestActiveProductsForAI(6, null);
@@ -850,8 +695,8 @@ public class AIChatService {
             return mapToSuggestions(latestProducts);
         }
 
-        UserProfile profile = mergeUserProfile(extractUserProfile(message), extractUserProfileFromHistory(contextMessages));
-        BigDecimal maxDailyPrice = profile.budgetVnd == null ? null : BigDecimal.valueOf(profile.budgetVnd);
+        UserProfile profile = mergeUserProfile(AIUserProfileExtractor.extract(message), extractUserProfileFromHistory(contextMessages));
+        BigDecimal maxDailyPrice = profile.getBudgetVnd() == null ? null : BigDecimal.valueOf(profile.getBudgetVnd());
 
         List<Clothing> products = ClothingDAO.searchProductsForAI(
                 context.keyword,
@@ -1375,15 +1220,15 @@ public class AIChatService {
                 continue;
             }
 
-            UserProfile profile = extractUserProfile(message.getContent());
-            if (profile.heightCm != null) {
-                heightCm = profile.heightCm;
+            UserProfile profile = AIUserProfileExtractor.extract(message.getContent());
+            if (profile.getHeightCm() != null) {
+                heightCm = profile.getHeightCm();
             }
-            if (profile.weightKg != null) {
-                weightKg = profile.weightKg;
+            if (profile.getWeightKg() != null) {
+                weightKg = profile.getWeightKg();
             }
-            if (profile.budgetVnd != null) {
-                budgetVnd = profile.budgetVnd;
+            if (profile.getBudgetVnd() != null) {
+                budgetVnd = profile.getBudgetVnd();
             }
         }
 
@@ -1426,16 +1271,6 @@ public class AIChatService {
         return new RedirectDecision(false, null);
     }
 
-    private static class IntentAnalysis {
-        private final String intent;
-        private final BigDecimal confidence;
-
-        private IntentAnalysis(String intent, BigDecimal confidence) {
-            this.intent = intent;
-            this.confidence = confidence;
-        }
-    }
-
     private static class RedirectDecision {
         private final boolean redirectToAdvisor;
         private final String redirectReason;
@@ -1443,18 +1278,6 @@ public class AIChatService {
         private RedirectDecision(boolean redirectToAdvisor, String redirectReason) {
             this.redirectToAdvisor = redirectToAdvisor;
             this.redirectReason = redirectReason;
-        }
-    }
-
-    private static class UserProfile {
-        private final Integer heightCm;
-        private final Integer weightKg;
-        private final Long budgetVnd;
-
-        private UserProfile(Integer heightCm, Integer weightKg, Long budgetVnd) {
-            this.heightCm = heightCm;
-            this.weightKg = weightKg;
-            this.budgetVnd = budgetVnd;
         }
     }
 
