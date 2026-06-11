@@ -22,6 +22,7 @@ jobs:
       - name: Build APK (Sử dụng máy chủ GitHub)
         run: |
           cd android
+          chmod +x ./gradlew
           ./gradlew assembleDebug
           
       - name: Trả về file APK cho bạn tải xuống
