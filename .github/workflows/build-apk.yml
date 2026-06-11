@@ -35,9 +35,11 @@ jobs:
           cd android
           chmod +x ./gradlew
           ./gradlew assembleDebug
+          # Đổi tên file APK ngay sau khi build xong
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/WearConnect.apk
           
       - name: Trả về file APK cho bạn tải xuống
         uses: actions/upload-artifact@v4
         with:
           name: WearConnect-App
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/debug/WearConnect.apk
