@@ -1,8 +1,9 @@
-package Controller;
+package com.wearconnect.boot.controller;
 
 import Service.AuthService;
 import Service.EmailService;
 import Service.UserService;
+import util.PasswordUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -12,12 +13,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import util.PasswordUtil;
 import java.util.Random;
 
 @Controller
 @RequestMapping("/forgot-password")
-public class ForgotPasswordController {
+public class ForgotPasswordWebController {
     
     @GetMapping
     public String doGet(@RequestParam(value = "action", required = false) String action) {

@@ -12,8 +12,8 @@ import javax.mail.internet.MimeMessage;
 
 public class EmailService {
     // TODO: Thay thế bằng Email và App Password (Mật khẩu ứng dụng) của bạn
-    private static final String SENDER_EMAIL = "your-email@gmail.com"; 
-    private static final String SENDER_PASSWORD = "your-app-password"; 
+    private static final String SENDER_EMAIL = "email_cua_ban@gmail.com"; // VD: nguyenvanA@gmail.com
+    private static final String SENDER_PASSWORD = "mat_khau_ung_dung"; // VD: abcdefghijklmnop (Không có dấu cách)
 
     public static boolean sendOTP(String recipientEmail, String otp) {
         Properties props = new Properties();

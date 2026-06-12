@@ -68,8 +68,7 @@ public class UserService {
     public static boolean resetPassword(String email, String newPassword) {
         Account account = AccountDAO.findByEmail(email);
         if (account != null) {
-            account.setPassword(newPassword);
-            return AccountDAO.update(account);
+            return AccountDAO.updatePassword(account.getAccountID(), newPassword);
         }
         return false;
     }
