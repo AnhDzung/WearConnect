@@ -12,6 +12,55 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/clothing-details.css">
+    <style>
+        /* Responsive adjustments for mobile */
+        @media (max-width: 768px) {
+            .top-card {
+                display: flex !important;
+                flex-direction: column !important;
+                padding: 15px !important;
+            }
+            .gallery-wrap {
+                display: flex !important;
+                flex-direction: column-reverse !important; /* Đẩy thumbnails xuống dưới ảnh chính */
+                width: 100% !important;
+            }
+            .thumb-list {
+                display: flex !important;
+                flex-direction: row !important;
+                overflow-x: auto !important;
+                margin-top: 15px !important;
+                gap: 10px !important;
+                padding-bottom: 5px; /* Tránh bị cắt thanh cuộn */
+            }
+            .thumb-btn {
+                flex-shrink: 0 !important; /* Không cho thumbnail bị ép nhỏ */
+            }
+            .detail-panel {
+                width: 100% !important;
+                padding-left: 0 !important;
+                padding-top: 20px !important;
+            }
+            .detail-grid {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 15px !important;
+            }
+            .action-row {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+            .action-row .btn {
+                width: 100% !important;
+                margin: 0 !important;
+            }
+            .breadcrumb {
+                white-space: nowrap;
+                overflow-x: auto;
+            }
+        }
+    </style>
 </head>
 <body class="clothing-page">
 <%

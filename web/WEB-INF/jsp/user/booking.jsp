@@ -29,6 +29,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <jsp:include page="/WEB-INF/jsp/components/head.jsp" />
     <title>Đặt thuê - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
@@ -47,10 +48,28 @@
         .form-section.active { display: block; }
         .color-option { padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
         .color-swatch { display: inline-block; width: 20px; height: 20px; border-radius: 3px; border: 1px solid #999; margin-right: 8px; vertical-align: middle; }
+
+        /* Responsive adjustments for mobile */
+        @media (max-width: 768px) {
+            .form-container {
+                margin: 10px;
+                padding: 15px;
+                border-radius: 8px;
+            }
+            .rental-type-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            button {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 10px;
+                padding: 12px;
+            }
+        }
     </style>
-<head>
-    <jsp:include page="/WEB-INF/jsp/components/head.jsp" />
-    <title>Đặt thuê - WearConnect</title>
+</head>
+<body>
 
 <div class="form-container">
     <h1>Đặt thuê quần áo</h1>

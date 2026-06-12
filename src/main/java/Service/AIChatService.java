@@ -102,33 +102,26 @@ public class AIChatService {
             UserProfile profileFromHistory = extractUserProfileFromHistory(contextMessages);
             boolean hasConsultStyleFromHistory = hasConsultStyleFromHistory(contextMessages);
 
-            if ("CONSULT_ADVICE".equals(intentAnalysis.intent)
-                    && shouldAskConsultPurposeFirst(normalizedMessage)
-                    && !hasConsultPurposeFromHistory) {
-                assistantMessage = buildConsultPurposeFirstMessage();
-                responseSource = "RULE";
-            } else {
-                retrievedDocs = AIKnowledgeService.getTopDocsForChat(normalizedMessage, intentAnalysis.intent, 3);
-                String knowledgeContext = AIKnowledgeService.buildKnowledgeContextFromDocs(retrievedDocs);
-                String llmReply = LLMClientService.generateReply(
-                    buildSystemPrompt(intentAnalysis.intent, knowledgeContext),
-                        llmContextMessages,
-                        normalizedMessage
-                );
+            retrievedDocs = AIKnowledgeService.getTopDocsForChat(normalizedMessage, intentAnalysis.intent, 3);
+            String knowledgeContext = AIKnowledgeService.buildKnowledgeContextFromDocs(retrievedDocs);
+            String llmReply = LLMClientService.generateReply(
+                buildSystemPrompt(intentAnalysis.intent, knowledgeContext),
+                    llmContextMessages,
+                    normalizedMessage
+            );
 
-                if (llmReply != null && !llmReply.isBlank()) {
-                    assistantMessage = llmReply;
-                    responseSource = "LLM";
-                } else {
-                    assistantMessage = buildRuleBasedAssistantMessage(
-                            intentAnalysis.intent,
-                            normalizedMessage,
-                            hasConsultPurposeFromHistory,
-                            hasConsultStyleFromHistory,
-                            profileFromHistory
-                    );
-                    responseSource = "RULE";
-                }
+            if (llmReply != null && !llmReply.isBlank()) {
+                assistantMessage = llmReply;
+                responseSource = "LLM";
+            } else {
+                assistantMessage = buildRuleBasedAssistantMessage(
+                        intentAnalysis.intent,
+                        normalizedMessage,
+                        hasConsultPurposeFromHistory,
+                        hasConsultStyleFromHistory,
+                        profileFromHistory
+                );
+                responseSource = "RULE";
             }
         }
 
@@ -331,7 +324,7 @@ public class AIChatService {
                                                          boolean hasConsultStyleFromHistory,
                                                          UserProfile profileFromHistory) {
         if ("SIZE_ADVICE".equals(intent)) {
-            return buildSizeAdviceMessage(message);
+            return buildSizeAdviceMessage(message, profileFromHistory);
         }
 
         if ("ORDER_SUPPORT".equals(intent)) {
@@ -383,8 +376,8 @@ public class AIChatService {
                 + "Nếu cần, mình có thể hướng dẫn chi tiết từng bước theo màn hình bạn đang thao tác.";
     }
 
-    private static String buildSizeAdviceMessage(String message) {
-        UserProfile profile = AIUserProfileExtractor.extract(message);
+    private static String buildSizeAdviceMessage(String message, UserProfile profileFromHistory) {
+        UserProfile profile = mergeUserProfile(AIUserProfileExtractor.extract(message), profileFromHistory);
         if (profile.getHeightCm() != null && profile.getWeightKg() != null) {
             String size = suggestGenericSize(profile.getHeightCm(), profile.getWeightKg());
             return "Mình đã ghi nhận số đo của bạn: cao " + profile.getHeightCm() + "cm, nặng " + profile.getWeightKg()
