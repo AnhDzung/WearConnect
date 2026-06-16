@@ -188,8 +188,15 @@
                     
                     <div id="qrCodeContainer">
                         <p>📱 Mã QR thanh toán:</p>
-                        <img src="${pageContext.request.contextPath}/assets/images/bank-qr-code.PNG" alt="QR Code thanh toán" style="max-width: 300px; border: 2px solid #ddd; border-radius: 8px; padding: 10px; background: white;">
-                        <p style="color: #666; font-size: 12px; margin-top: 10px;">Quét mã QR để chuyển khoản nhanh</p>
+                        <c:choose>
+                            <c:when test="${not empty qrUrl}">
+                                <img src="${qrUrl}" alt="QR Code thanh toán tự động" style="max-width: 300px; border: 2px solid #cc3399; border-radius: 8px; padding: 10px; background: white; box-shadow: 0 4px 12px rgba(204,51,153,0.2);">
+                            </c:when>
+                            <c:otherwise>
+                                <img src="${pageContext.request.contextPath}/assets/images/bank-qr-code.PNG" alt="QR Code thanh toán" style="max-width: 300px; border: 2px solid #ddd; border-radius: 8px; padding: 10px; background: white;">
+                            </c:otherwise>
+                        </c:choose>
+                        <p style="color: #cc3399; font-size: 13px; font-weight: bold; margin-top: 10px;">Quét mã để app ngân hàng tự điền Số tiền & Nội dung</p>
                     </div>
                     
                     <table style="margin: 20px 0; background: #fffbf0; padding: 0; border-radius: 8px;">

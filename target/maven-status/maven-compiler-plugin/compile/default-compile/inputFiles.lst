@@ -4,6 +4,7 @@ D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\config\SecurityConfig.
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\AdminPageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\AIKnowledgeAdminPageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\AuthPageController.java
+D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\BankWebhookController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\ChatPageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\ClothingPageController.java
 D:\Fpt\sm7\WearConnect\src\main\java\com\wearconnect\boot\controller\CosplayPageController.java

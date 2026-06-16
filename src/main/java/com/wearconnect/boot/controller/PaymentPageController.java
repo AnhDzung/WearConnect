@@ -74,6 +74,17 @@ public class PaymentPageController {
             request.setAttribute("payment", payment);
             request.setAttribute("rentalOrder", rentalOrder);
             request.setAttribute("rentalOrderID", rentalOrderID);
+
+            // Tính toán số tiền cuối cùng và tạo mã QR động
+            double baseAmount = rentalOrder.getTotalPrice() + rentalOrder.getAdjustedDepositAmount();
+            Integer discount = null;
+            try { discount = (Integer) badge.get("discount"); } catch (Exception ex) {}
+            double discountPercent = discount != null ? discount.doubleValue() : 0.0;
+            double finalAmount = baseAmount * (1.0 - discountPercent / 100.0);
+            
+            String qrUrl = BankTransferService.generateVietQRUrl(rentalOrderID, finalAmount);
+            request.setAttribute("qrUrl", qrUrl);
+            
             request.getRequestDispatcher("/WEB-INF/jsp/user/payment.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
