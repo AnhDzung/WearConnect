@@ -60,7 +60,7 @@
                             <div style="flex: 1; height: 1px; background: var(--gray-300);"></div>
                         </div>
 
-                        <a href="<%= request.getContextPath() %>/oauth2/authorization/google"
+                    <a href="<%= request.getContextPath() %>/oauth2/authorize/google"
                             class="wc-btn wc-btn-block wc-mb-2"
                             style="background: var(--white); border: 1px solid var(--gray-300); color: var(--gray-700); display: flex; align-items: center; justify-content: center; gap: var(--spacing-sm);">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
