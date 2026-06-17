@@ -66,19 +66,29 @@ public class BankTransferService {
      * Tạo URL mã QR động qua API VietQR
      */
     public static String generateVietQRUrl(int rentalOrderID, double amount) {
-        BankTransferConfig.BankDetails details = getDisplayBankDetails(rentalOrderID, amount);
         try {
             // Tên viết tắt ngân hàng (Do bạn đang dùng MB Bank trong BankTransferConfig)
             String bankId = "MB"; 
-            String accountNo = details.getAccountNumber();
-            // Đảm bảo số tiền không bị dính dấu phẩy do cấu hình Locale (Ví dụ: "500,000" -> lỗi mã QR)
-            String formattedAmount = String.valueOf(Math.round(details.getAmount()));
-            String addInfo = java.net.URLEncoder.encode(details.getOrderReference(), "UTF-8");
-            String accountName = java.net.URLEncoder.encode(details.getAccountHolderName(), "UTF-8");
             
-            return String.format("https://img.vietqr.io/image/%s-%s-compact2.png?amount=%s&addInfo=%s&accountName=%s",
+            // Loại bỏ khoảng trắng ở số tài khoản (nếu có) để tránh lỗi link
+            String accountNo = BankTransferConfig.BANK_ACCOUNT_NUMBER.replaceAll("\\s+", "");
+            
+            // Đảm bảo số tiền không bị dính dấu phẩy do cấu hình Locale (Ví dụ: "500,000" -> lỗi mã QR)
+            String formattedAmount = String.valueOf(Math.round(amount));
+            
+            // Tạo nội dung chuyển khoản chuẩn với giao diện (VD: WRC00001)
+            String orderReference = "WRC" + String.format("%05d", rentalOrderID);
+            
+            String addInfo = java.net.URLEncoder.encode(orderReference, "UTF-8").replace("+", "%20");
+            String accountName = java.net.URLEncoder.encode(BankTransferConfig.ACCOUNT_HOLDER_NAME, "UTF-8").replace("+", "%20");
+            
+            String qrUrl = String.format("https://img.vietqr.io/image/%s-%s-compact2.png?amount=%s&addInfo=%s&accountName=%s",
                     bankId, accountNo, formattedAmount, addInfo, accountName);
+                    
+            System.out.println("[VietQR] Link QR động: " + qrUrl);
+            return qrUrl;
         } catch (Exception e) {
+            System.err.println("[VietQR] Lỗi khi tạo link QR: " + e.getMessage());
             return "";
         }
     }
@@ -128,16 +138,42 @@ public class BankTransferService {
                 return true;
             }
 
-            // 3. Cập nhật trạng thái tự động
-            // Chấp nhận thanh toán nếu số tiền chuyển >= số tiền cần thanh toán
+            // 3. Kiểm tra số tiền chuyển có đủ không (tính cả giảm giá nếu có)
+            double expectedAmount = order.getTotalPrice() + order.getAdjustedDepositAmount();
+            try {
+                java.util.Map<String, Object> badge = Controller.RatingController.getBadgeForUser(order.getRenterUserID());
+                if (badge != null && badge.get("discount") != null) {
+                    double discountPercent = Double.parseDouble(badge.get("discount").toString());
+                    expectedAmount = expectedAmount * (1.0 - discountPercent / 100.0);
+                }
+            } catch (Exception ex) {
+                System.err.println("[Webhook] Lỗi tính discount: " + ex.getMessage());
+            }
+
+            // Chấp nhận sai số làm tròn 1000 VNĐ
+            if (transferAmount < expectedAmount - 1000) {
+                System.out.println("[Webhook] Giao dịch thất bại: Khách chuyển thiếu. Nhận: " + transferAmount + " / Yêu cầu: " + expectedAmount);
+                String errorNotes = "AUTO_WEBHOOK_FAIL | Chuyển thiếu. Cần: " + expectedAmount + ", Nhận: " + transferAmount;
+                RentalOrderDAO.updateRentalOrderStatusWithNotes(rentalOrderID, order.getStatus(), errorNotes);
+                return false;
+            }
+
+            // 4. Cập nhật trạng thái tự động
             String notes = "AUTO_WEBHOOK | amount=" + transferAmount + " | content=" + transferContent;
             
             boolean statusUpdated = RentalOrderDAO.updateRentalOrderStatusWithNotes(rentalOrderID, "PAYMENT_VERIFIED", notes);
             if (statusUpdated) {
                 RentalOrderDAO.markPaymentProcessed(rentalOrderID);
                 
-                // Cập nhật trạng thái bảng Payment thành COMPLETED nếu có
-                // (Bạn cần tự bổ sung hàm lấy PaymentID theo RentalOrderID nếu cần thiết)
+                // Cập nhật hoặc tạo mới bảng Payment thành COMPLETED
+                Payment payment = PaymentDAO.getPaymentByRentalOrder(rentalOrderID);
+                if (payment != null) {
+                    PaymentDAO.updatePaymentStatus(payment.getPaymentID(), "COMPLETED");
+                } else {
+                    Payment newPayment = new Payment(rentalOrderID, transferAmount, "BANK_TRANSFER");
+                    int newPaymentID = PaymentDAO.addPayment(newPayment);
+                    if (newPaymentID > 0) PaymentDAO.updatePaymentStatus(newPaymentID, "COMPLETED");
+                }
                 
                 // Gửi thông báo cho khách hàng
                 if (order.getRenterUserID() > 0) {
@@ -159,7 +195,14 @@ public class BankTransferService {
 
     private static int extractOrderIdFromContent(String content) {
         if (content == null || content.trim().isEmpty()) return -1;
-        // Lấy tất cả các chữ số có trong chuỗi (Cách đơn giản nhất)
+        
+        // 1. Tìm chuỗi có dạng WRC kèm theo chữ số (VD: "MB1234 WRC00001" sẽ lấy ra số 1)
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("WRC\\s*0*(\\d+)").matcher(content.toUpperCase());
+        if (matcher.find()) {
+            return Integer.parseInt(matcher.group(1));
+        }
+        
+        // 2. Dự phòng: Lấy tất cả các chữ số có trong chuỗi
         String digits = content.replaceAll("[^0-9]", "");
         return digits.isEmpty() ? -1 : Integer.parseInt(digits);
     }

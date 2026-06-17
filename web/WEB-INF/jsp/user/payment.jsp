@@ -447,6 +447,21 @@
                 }
             });
         }
+        
+        // Tự động kiểm tra trạng thái thanh toán mỗi 3 giây (AJAX Polling)
+        const currentRentalOrderID = '${rentalOrderID}';
+        if (currentRentalOrderID && currentRentalOrderID !== '') {
+            setInterval(function() {
+                fetch('${pageContext.request.contextPath}/payment?action=checkStatus&rentalOrderID=' + currentRentalOrderID)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.paymentStatus === 'COMPLETED') {
+                            window.location.reload(); // Tự động reload để hiện giao diện Thành công
+                        }
+                    })
+                    .catch(error => console.error('Error polling payment status:', error));
+            }, 3000);
+        }
     });
 </script>
 <jsp:include page="/WEB-INF/jsp/components/footer.jsp" />

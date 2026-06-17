@@ -20,6 +20,8 @@ public class BankWebhookController {
     @PostMapping("/bank-transfer")
     public ResponseEntity<String> handleBankTransferWebhook(@RequestBody Map<String, Object> payload) {
         try {
+            System.out.println("\n[Webhook] === ĐÃ NHẬN ĐƯỢC REQUEST TỪ PAYOS ===");
+            System.out.println("[Webhook] Dữ liệu Payload: " + payload);
             // Lưu ý: Cấu trúc payload sẽ phụ thuộc vào dịch vụ bạn dùng (PayOS/Casso).
             // Dưới đây là ví dụ trích xuất dữ liệu cơ bản.
             
@@ -28,25 +30,42 @@ public class BankWebhookController {
             String description = "";
             double amount = 0.0;
 
-            if (payload.containsKey("data")) {
-                Map<String, Object> data = (Map<String, Object>) payload.get("data");
-                description = String.valueOf(data.getOrDefault("description", ""));
-                amount = Double.parseDouble(String.valueOf(data.getOrDefault("amount", "0")));
-            } else {
-                description = String.valueOf(payload.getOrDefault("description", ""));
-                amount = Double.parseDouble(String.valueOf(payload.getOrDefault("amount", "0")));
+            if (payload != null) {
+                Map<String, Object> targetMap = payload;
+                
+                // PayOS thường bọc dữ liệu thực tế bên trong object "data"
+                if (payload.containsKey("data") && payload.get("data") instanceof Map) {
+                    targetMap = (Map<String, Object>) payload.get("data");
+                }
+                
+                Object descObj = targetMap.get("description");
+                if (descObj != null) {
+                    description = String.valueOf(descObj);
+                }
+                
+                Object amountObj = targetMap.get("amount");
+                if (amountObj != null) {
+                    try {
+                        amount = Double.parseDouble(String.valueOf(amountObj));
+                    } catch (NumberFormatException ex) {
+                        System.err.println("[Webhook] Parse số tiền thất bại, bỏ qua: " + amountObj);
+                    }
+                }
             }
 
             if (!description.isEmpty() && amount > 0) {
                 // Gửi dữ liệu sang Service để xử lý tự động xác nhận đơn hàng
                 BankTransferService.processAutomaticWebhook(description, amount);
+            } else {
+                System.out.println("[Webhook] Dữ liệu mẫu kiểm tra kết nối từ PayOS, không xử lý.");
             }
 
             // Trả về 200 OK để bên dịch vụ biết server đã nhận được thành công
             return ResponseEntity.ok("{\"status\": \"success\"}");
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("{\"status\": \"error\"}");
+            // QUAN TRỌNG: Luôn trả về 200 OK để PayOS chấp nhận URL cấu hình
+            return ResponseEntity.ok("{\"status\": \"error\", \"message\": \"Internal Server Error\"}");
         }
     }
 }
