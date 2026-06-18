@@ -38,6 +38,9 @@ public class OAuth2CallbackController {
     @Value("${spring.security.oauth2.client.registration.google.client-secret:}")
     private String configuredClientSecret;
     
+    @Value("${spring.security.oauth2.client.registration.google.redirect-uri:}")
+    private String configuredRedirectUri;
+
     private static final String GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 
     private String resolveClientId() {
@@ -56,6 +59,25 @@ public class OAuth2CallbackController {
         }
         String envValue = System.getenv("GOOGLE_CLIENT_SECRET");
         return (envValue == null || envValue.isBlank()) ? null : envValue;
+    }
+
+    private String resolveRedirectUri(HttpServletRequest request) {
+        // 1. Ưu tiên biến môi trường/cấu hình cứng (đáng tin cậy nhất cho production)
+        if (configuredRedirectUri != null && !configuredRedirectUri.isBlank()) {
+            return configuredRedirectUri;
+        }
+
+        String envValue = System.getenv("GOOGLE_REDIRECT_URI");
+        if (envValue != null && !envValue.isBlank()) {
+            return envValue;
+        }
+
+        // 2. Dự phòng: Tạo động (chỉ nên dùng cho local dev)
+        // Cảnh báo: Cách này có thể không chính xác sau reverse proxy (như trên Azure)
+        System.out.println("[OAuth2] Cảnh báo: GOOGLE_REDIRECT_URI không được cấu hình. Tự động tạo URI, có thể không chính xác trên production.");
+        return request.getScheme() + "://" + request.getServerName() +
+                ":" + request.getServerPort() +
+                request.getContextPath() + "/oauth2/callback/google";
     }
     
     /**
@@ -159,9 +181,7 @@ public class OAuth2CallbackController {
             // Lấy client credentials từ environment hoặc application.properties
             String clientId = resolveClientId();
             String clientSecret = resolveClientSecret();
-            String redirectUri = request.getScheme() + "://" + request.getServerName() + 
-                               ":" + request.getServerPort() + 
-                               request.getContextPath() + "/oauth2/callback/google";
+            String redirectUri = resolveRedirectUri(request);
             
             if (clientId == null || clientSecret == null) {
                 System.err.println("Missing Google credentials in environment");
@@ -213,10 +233,10 @@ public class OAuth2CallbackController {
     public void authorizeGoogle(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             String clientId = resolveClientId();
-            String redirectUri = request.getScheme() + "://" + request.getServerName() + 
-                               ":" + request.getServerPort() + 
-                               request.getContextPath() + "/oauth2/callback/google";
+            String redirectUri = resolveRedirectUri(request);
             
+            System.out.println("[OAuth2] Đang gọi Google. Client ID hiện tại là: " + clientId);
+
             if (clientId == null) {
                 response.sendRedirect(request.getContextPath() + "/login?error=config_missing");
                 return;
