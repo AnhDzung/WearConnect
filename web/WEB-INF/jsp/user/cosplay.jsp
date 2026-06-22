@@ -83,18 +83,33 @@
             height: 100%;
             object-fit: cover;
             display: block;
-            filter: brightness(0.9);
+            filter: brightness(0.8);
+            transition: transform 6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transform: scale(1);
+        }
+        .hero-slide.active img {
+            transform: scale(1.06);
         }
         .hero-overlay {
             position: absolute;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            padding: 30px;
-            background: linear-gradient(transparent, rgba(15, 23, 42, 0.85));
-            display: grid;
-            gap: 10px;
+            left: 40px;
+            bottom: 40px;
+            max-width: 540px;
+            padding: 28px;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(16px) saturate(140%);
+            -webkit-backdrop-filter: blur(16px) saturate(140%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
             z-index: 2;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .hero-slide.active .hero-overlay {
+            opacity: 1;
+            transform: translateY(0);
         }
         .hero-tag {
             display: inline-flex;
@@ -105,35 +120,55 @@
             background: rgba(255, 255, 255, 0.25);
             backdrop-filter: blur(4px);
             font-size: var(--font-size-xs);
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: 0.5px;
             text-transform: uppercase;
             width: fit-content;
+            margin-bottom: 12px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transition-delay: 0.2s;
         }
         .hero-overlay h1 {
-            font-size: clamp(28px, 4vw, 42px);
+            font-size: clamp(28px, 4vw, 36px);
             font-weight: 800;
             margin: 0;
             text-shadow: 2px 2px 10px rgba(99, 102, 241, 0.4);
             color: var(--white);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transition-delay: 0.3s;
         }
         .hero-overlay p {
-            margin: 0;
+            margin: 8px 0 0;
             font-size: 16px;
             opacity: 0.95;
             max-width: 700px;
             line-height: 1.6;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transition-delay: 0.4s;
+        }
+        .hero-slide.active .hero-tag,
+        .hero-slide.active .hero-overlay h1,
+        .hero-slide.active .hero-overlay p {
+            opacity: 1;
+            transform: translateY(0);
         }
         .slider-btn {
             position: absolute;
             top: 50%;
-            transform: translateY(-50%);
-            width: 44px;
-            height: 44px;
-            border: none;
+            transform: translateY(-50%) scale(0.9);
+            width: 48px;
+            height: 48px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(15, 23, 42, 0.35);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             color: #fff;
             font-size: 24px;
             line-height: 1;
@@ -142,36 +177,46 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            transition: all var(--transition-fast);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.3s, background-color 0.3s, border-color 0.3s;
+        }
+        .hero-slider:hover .slider-btn {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(-50%) scale(1);
         }
         .slider-btn:hover { 
-            background: rgba(255, 255, 255, 0.4);
-            transform: translateY(-50%) scale(1.05);
+            background: var(--primary-gradient);
+            border-color: transparent;
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
         }
-        .slider-btn.prev { left: 16px; }
-        .slider-btn.next { right: 16px; }
+        .slider-btn.prev { left: 20px; }
+        .slider-btn.next { right: 20px; }
         .slider-dots {
             position: absolute;
             left: 50%;
-            bottom: 16px;
+            bottom: 20px;
             transform: translateX(-50%);
             display: flex;
             gap: 8px;
             z-index: 4;
         }
         .slider-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             border: none;
             background: rgba(255, 255, 255, 0.4);
             cursor: pointer;
-            transition: all var(--transition-fast);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .slider-dot.active {
             background: #fff;
-            transform: scale(1.3);
-            box-shadow: 0 0 8px rgba(255,255,255,0.8);
+            width: 24px;
+            border-radius: var(--radius-full);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
         }
 
         /* Search Panel */
@@ -423,9 +468,12 @@
             .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
         @media (max-width: 768px) {
-            .hero-slider { aspect-ratio: 1200 / 500; }
-            .hero-overlay { padding: 20px; }
-            .slider-btn { width: 36px; height: 36px; font-size: 20px; }
+            .hero-slider { aspect-ratio: 16 / 8; }
+            .hero-overlay { left: 16px; bottom: 16px; right: 16px; max-width: none; padding: 14px; border-radius: var(--radius-md); }
+            .hero-overlay h1 { font-size: 18px; margin: 0; }
+            .hero-overlay p { font-size: 12px; margin-top: 4px; }
+            .hero-tag { font-size: 9px; padding: 4px 8px; margin-bottom: 6px; }
+            .slider-btn { width: 36px; height: 36px; font-size: 16px; }
             .main-content { flex-direction: column; }
             .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
