@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
@@ -24,24 +24,29 @@
                 display: block !important;
                 width: calc(100% - 32px);
                 margin: 0 auto 16px auto;
-                padding: 12px;
-                background: #0a84ff;
+                padding: 12px 24px;
+                background: var(--primary-gradient);
                 color: white;
                 border: none;
-                border-radius: 8px;
+                border-radius: var(--radius-full);
                 font-size: 16px;
-                font-weight: 600;
+                font-weight: 700;
                 text-align: center;
-                box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3);
+                box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            .mobile-filter-toggle:active {
+                transform: scale(0.97);
             }
             .filter-overlay {
                 position: fixed;
                 top: 0; left: 0; right: 0; bottom: 0;
-                background: rgba(0,0,0,0.5);
+                background: rgba(15, 23, 42, 0.45);
                 z-index: 9998;
                 opacity: 0;
                 visibility: hidden;
                 transition: opacity 0.3s, visibility 0.3s;
+                backdrop-filter: blur(4px);
             }
             .filter-overlay.open {
                 opacity: 1;
@@ -56,16 +61,20 @@
                 width: 100% !important;
                 height: auto !important;
                 max-height: 85vh !important;
-                background: white !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
                 z-index: 9999 !important;
-                border-radius: 20px 20px 0 0 !important;
-                padding: 20px 20px 40px 20px !important;
+                border-radius: 24px 24px 0 0 !important;
+                padding: 24px 24px 40px 24px !important;
                 overflow-y: auto !important;
                 transform: translateY(100%);
-                transition: transform 0.3s ease-out;
+                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                 display: block !important;
                 visibility: hidden;
                 box-sizing: border-box !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.5) !important;
+                box-shadow: 0 -10px 40px rgba(99, 102, 241, 0.15) !important;
             }
             .filter-panel.open {
                 transform: translateY(0);
@@ -83,22 +92,25 @@
             .btn-start-camera, .btn-image-search {
                 flex: 1;
                 min-width: 45%;
-                padding: 12px 8px;
-                border-radius: 8px;
+                padding: 12px 16px;
+                border-radius: var(--radius-full);
                 font-size: 14px;
-                font-weight: 600;
+                font-weight: 700;
                 border: none;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 gap: 6px;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+                transition: transform 0.2s, box-shadow 0.2s;
             }
-            .btn-start-camera { background: #f8f9fa; color: #212529; border: 1px solid #dee2e6; }
-            .btn-image-search { background: #198754; color: white; }
-            .camera-preview-wrap { width: 100%; margin-top: 8px; }
-            .camera-preview { width: 100%; border-radius: 12px; background: #000; }
-            .camera-hint { width: 100%; font-size: 13px; text-align: center; color: #6c757d; line-height: 1.4; }
+            .btn-start-camera:active, .btn-image-search:active {
+                transform: scale(0.97);
+            }
+            .btn-start-camera { background: var(--gray-200); color: var(--gray-800); border: 1px solid var(--gray-300); }
+            .btn-image-search { background: var(--secondary-color); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+            .camera-preview-wrap { width: 100%; margin-top: 8px; border-radius: var(--radius-lg); overflow: hidden; }
+            .camera-preview { width: 100%; border-radius: var(--radius-lg); background: #000; }
+            .camera-hint { width: 100%; font-size: 13px; text-align: center; color: var(--gray-500); line-height: 1.4; }
         }
         @media (min-width: 769px) {
             .mobile-filter-toggle, .filter-overlay { display: none !important; }

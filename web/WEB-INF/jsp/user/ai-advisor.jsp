@@ -9,54 +9,336 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
 
-        body { font-family: 'Inter', sans-serif; background: #f5f6fb; }
-        h1, h2, h3, h4, h5, h6, .advisor-title, .advisor-side-title { font-family: 'Poppins', sans-serif; }
-        .advisor-wrap { max-width: 1180px; margin: 20px auto; padding: 0 16px; }
-        .advisor-layout { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+        body { font-family: var(--font-family); background-color: var(--gray-100); color: var(--gray-900); }
+        h1, h2, h3, h4, h5, h6, .advisor-title, .advisor-side-title { font-family: var(--heading-font-family); }
+        .advisor-wrap { max-width: 1200px; margin: 30px auto; padding: 0 16px; }
+        .advisor-layout { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
+        
         .advisor-sidebar,
-        .advisor-card { background: white; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); overflow: hidden; }
-        .advisor-side-head { padding: 14px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 10px; }
-        .advisor-side-title { font-size: 15px; font-weight: 700; color: #2d2d2d; }
-        .advisor-side-actions { display: flex; gap: 8px; }
-        .advisor-new-btn { border: none; border-radius: 8px; background: #5c7cfa; color: #fff; padding: 9px 12px; cursor: pointer; font-size: 13px; }
-        .advisor-new-btn:hover { background: #4c6ef5; }
-        .advisor-clear-btn { border: 1px solid #d9534f; border-radius: 8px; background: #fff; color: #d9534f; padding: 9px 12px; cursor: pointer; font-size: 13px; }
-        .advisor-clear-btn:hover { background: #fff5f5; }
-        .advisor-history-list { max-height: 600px; overflow-y: auto; padding: 8px; }
-        .advisor-history-item { border: 1px solid #e6e9f5; border-radius: 10px; padding: 10px; margin-bottom: 8px; cursor: pointer; background: #fff; }
-        .advisor-history-item.active { border-color: #5c7cfa; background: #eef1ff; }
-        .advisor-history-id { font-size: 12px; font-weight: 700; color: #445; }
-        .advisor-history-meta { font-size: 11px; color: #6b7280; margin-top: 4px; }
-        .advisor-empty { padding: 12px; font-size: 12px; color: #666; }
-        .advisor-head { padding: 16px; border-bottom: 1px solid #eee; }
-        .advisor-title { font-size: 20px; font-weight: 700; color: #2d2d2d; }
-        .advisor-sub { font-size: 13px; color: #666; margin-top: 4px; }
-        .advisor-messages { height: 520px; overflow-y: auto; padding: 16px; background: #fafbff; }
-        .advisor-item { margin-bottom: 12px; display: flex; }
+        .advisor-card { 
+            background: rgba(255, 255, 255, 0.75); 
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            border-radius: var(--radius-lg); 
+            box-shadow: var(--shadow-lg); 
+            overflow: hidden; 
+            transition: transform var(--transition-base), box-shadow var(--transition-base);
+        }
+        
+        .advisor-side-head { 
+            padding: 16px; 
+            border-bottom: 1.5px solid rgba(99, 102, 241, 0.1); 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+        }
+        
+        .advisor-side-title { 
+            font-size: var(--font-size-base); 
+            font-weight: 800; 
+            color: var(--gray-800); 
+            letter-spacing: 0.5px;
+        }
+        
+        .advisor-side-actions { 
+            display: flex; 
+            flex-direction: column;
+            gap: 8px; 
+        }
+        
+        .advisor-new-btn { 
+            border: none; 
+            border-radius: var(--radius-full); 
+            background: var(--primary-gradient); 
+            color: var(--white); 
+            padding: 10px 16px; 
+            cursor: pointer; 
+            font-size: var(--font-size-sm); 
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow var(--transition-base);
+            text-align: center;
+        }
+        .advisor-new-btn:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+        }
+        .advisor-new-btn:active {
+            transform: scale(0.96);
+        }
+        
+        .advisor-clear-btn { 
+            border: 1px solid var(--danger-color); 
+            border-radius: var(--radius-full); 
+            background: rgba(255, 255, 255, 0.8); 
+            color: var(--danger-color); 
+            padding: 9px 16px; 
+            cursor: pointer; 
+            font-size: var(--font-size-sm); 
+            font-weight: 600;
+            transition: all var(--transition-base);
+            text-align: center;
+        }
+        .advisor-clear-btn:hover { 
+            background: rgba(244, 63, 94, 0.08); 
+            transform: translateY(-1px);
+        }
+        .advisor-clear-btn:active {
+            transform: scale(0.97);
+        }
+        
+        .advisor-history-list { 
+            max-height: 600px; 
+            overflow-y: auto; 
+            padding: 12px; 
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99, 102, 241, 0.2) transparent;
+        }
+        .advisor-history-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        .advisor-history-list::-webkit-scrollbar-thumb {
+            background-color: rgba(99, 102, 241, 0.2);
+            border-radius: var(--radius-full);
+        }
+        
+        .advisor-history-item { 
+            border: 1px solid rgba(99, 102, 241, 0.1); 
+            border-radius: var(--radius-md); 
+            padding: 12px; 
+            margin-bottom: 10px; 
+            cursor: pointer; 
+            background: rgba(255, 255, 255, 0.4); 
+            transition: all var(--transition-base);
+        }
+        .advisor-history-item:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            background: rgba(255, 255, 255, 0.8);
+            transform: translateX(3px);
+        }
+        .advisor-history-item.active { 
+            border-color: var(--primary-color); 
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
+            box-shadow: inset 0 0 0 1px var(--primary-color), var(--shadow-sm);
+        }
+        .advisor-history-id { 
+            font-size: var(--font-size-sm); 
+            font-weight: 700; 
+            color: var(--gray-800); 
+        }
+        .advisor-history-meta { 
+            font-size: var(--font-size-xs); 
+            color: var(--gray-500); 
+            margin-top: 6px; 
+        }
+        .advisor-empty { 
+            padding: 16px; 
+            font-size: var(--font-size-sm); 
+            color: var(--gray-500); 
+            text-align: center;
+        }
+        
+        .advisor-head { 
+            padding: 20px; 
+            border-bottom: 1.5px solid rgba(99, 102, 241, 0.1); 
+            background: linear-gradient(to right, rgba(99, 102, 241, 0.03), rgba(168, 85, 247, 0.03));
+        }
+        .advisor-title { 
+            font-size: var(--font-size-2xl); 
+            font-weight: 800; 
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .advisor-sub { 
+            font-size: var(--font-size-sm); 
+            color: var(--gray-600); 
+            margin-top: 6px; 
+            line-height: 1.5;
+        }
+        
+        .advisor-messages { 
+            height: 520px; 
+            overflow-y: auto; 
+            padding: 20px; 
+            background: rgba(248, 250, 252, 0.4); 
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99, 102, 241, 0.2) transparent;
+        }
+        .advisor-messages::-webkit-scrollbar {
+            width: 5px;
+        }
+        .advisor-messages::-webkit-scrollbar-thumb {
+            background-color: rgba(99, 102, 241, 0.2);
+            border-radius: var(--radius-full);
+        }
+        
+        .advisor-item { margin-bottom: 16px; display: flex; }
         .advisor-item.user { justify-content: flex-end; }
-        .advisor-bubble { max-width: 75%; padding: 10px 12px; border-radius: 12px; line-height: 1.35; white-space: pre-wrap; }
-        .advisor-item.user .advisor-bubble { background: #5c7cfa; color: white; border-bottom-right-radius: 4px; }
-        .advisor-item.bot .advisor-bubble { background: #eceff8; color: #222; border-bottom-left-radius: 4px; }
-        .advisor-product-wrap { margin: 6px 0 14px 0; }
-        .advisor-products-title { font-size: 12px; color: #4b5563; margin: 0 0 8px 2px; font-weight: 700; }
-        .advisor-products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-        .advisor-product-card { border: 1px solid #dbe1f5; border-radius: 10px; overflow: hidden; background: #fff; text-decoration: none; color: #1f2937; }
-        .advisor-product-thumb { width: 100%; height: 110px; object-fit: cover; display: block; background: #edf2ff; }
-        .advisor-product-body { padding: 8px; }
-        .advisor-product-name { font-size: 12px; font-weight: 700; line-height: 1.35; min-height: 32px; }
-        .advisor-product-meta { font-size: 11px; color: #6b7280; margin-top: 5px; }
-        .advisor-product-price { margin-top: 6px; color: #1d4ed8; font-size: 12px; font-weight: 700; }
-        .advisor-product-cta { margin-top: 8px; display: inline-block; font-size: 11px; font-weight: 700; color: #374151; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 4px 8px; }
-        .advisor-actions { padding: 12px; border-top: 1px solid #eee; display: flex; gap: 8px; }
-        .advisor-input { flex: 1; border: 1px solid #d8dbe8; border-radius: 8px; padding: 10px 12px; font-family: 'Inter', sans-serif; }
-        .advisor-send { border: none; background: #5c7cfa; color: white; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
-        .advisor-send:hover { background: #4c6ef5; }
-        .advisor-note { padding: 0 12px 12px 12px; font-size: 12px; color: #666; }
+        .advisor-bubble { 
+            max-width: 75%; 
+            padding: 12px 16px; 
+            border-radius: var(--radius-lg); 
+            line-height: 1.5; 
+            white-space: pre-wrap; 
+            font-size: var(--font-size-base);
+            box-shadow: var(--shadow-sm);
+        }
+        .advisor-item.user .advisor-bubble { 
+            background: var(--primary-gradient); 
+            color: var(--white); 
+            border-bottom-right-radius: 4px; 
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+        .advisor-item.bot .advisor-bubble { 
+            background: var(--white); 
+            color: var(--gray-800); 
+            border-bottom-left-radius: 4px; 
+            border: 1px solid rgba(99, 102, 241, 0.1);
+        }
+        
+        .advisor-product-wrap { margin: 16px 0; }
+        .advisor-products-title { 
+            font-size: var(--font-size-sm); 
+            color: var(--gray-700); 
+            margin: 0 0 10px 2px; 
+            font-weight: 700; 
+            letter-spacing: 0.3px;
+        }
+        .advisor-products { 
+            display: grid; 
+            grid-template-columns: repeat(2, minmax(0, 1fr)); 
+            gap: 16px; 
+        }
+        .advisor-product-card { 
+            border: 1px solid rgba(99, 102, 241, 0.1); 
+            border-radius: var(--radius-lg); 
+            overflow: hidden; 
+            background: var(--white); 
+            text-decoration: none; 
+            color: var(--gray-800);
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-base);
+            display: flex;
+            flex-direction: column;
+        }
+        .advisor-product-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-md);
+        }
+        .advisor-product-thumb { 
+            width: 100%; 
+            height: 130px; 
+            object-fit: cover; 
+            display: block; 
+            background: var(--gray-100); 
+            transition: transform var(--transition-base);
+        }
+        .advisor-product-card:hover .advisor-product-thumb {
+            transform: scale(1.03);
+        }
+        .advisor-product-body { 
+            padding: 12px; 
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            gap: 6px;
+        }
+        .advisor-product-name { 
+            font-size: var(--font-size-base); 
+            font-weight: 700; 
+            line-height: 1.4; 
+            min-height: 40px;
+            color: var(--gray-900);
+        }
+        .advisor-product-meta { 
+            font-size: var(--font-size-xs); 
+            color: var(--gray-500); 
+        }
+        .advisor-product-price { 
+            margin-top: auto; 
+            color: var(--primary-color); 
+            font-size: var(--font-size-base); 
+            font-weight: 800; 
+        }
+        .advisor-product-cta { 
+            margin-top: 8px; 
+            display: inline-block; 
+            text-align: center;
+            font-size: var(--font-size-xs); 
+            font-weight: 700; 
+            color: var(--white); 
+            background: var(--primary-gradient); 
+            border: none; 
+            border-radius: var(--radius-full); 
+            padding: 8px 12px; 
+            transition: all var(--transition-fast);
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+        }
+        .advisor-product-card:hover .advisor-product-cta {
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            transform: scale(1.02);
+        }
+        
+        .advisor-actions { 
+            padding: 16px; 
+            border-top: 1.5px solid rgba(99, 102, 241, 0.1); 
+            display: flex; 
+            gap: 12px; 
+            background: var(--white);
+        }
+        .advisor-input { 
+            flex: 1; 
+            border: 1px solid var(--gray-300); 
+            border-radius: var(--radius-full); 
+            padding: 12px 20px; 
+            font-family: var(--font-family); 
+            font-size: var(--font-size-base);
+            background-color: var(--gray-50);
+            transition: all var(--transition-base);
+        }
+        .advisor-input:focus {
+            outline: none;
+            background-color: var(--white);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        
+        .advisor-send { 
+            border: none; 
+            background: var(--primary-gradient); 
+            color: var(--white); 
+            border-radius: var(--radius-full); 
+            padding: 12px 24px; 
+            cursor: pointer; 
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+            transition: all var(--transition-base);
+        }
+        .advisor-send:hover { 
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+        }
+        .advisor-send:active {
+            transform: scale(0.96);
+        }
+        
+        .advisor-note { 
+            padding: 0 20px 20px 20px; 
+            font-size: var(--font-size-xs); 
+            color: var(--gray-500); 
+            background: var(--white);
+        }
 
         @media (max-width: 960px) {
-            .advisor-layout { grid-template-columns: 1fr; }
-            .advisor-history-list { max-height: 220px; }
+            .advisor-wrap { margin: 15px auto; }
+            .advisor-layout { grid-template-columns: 1fr; gap: 16px; }
+            .advisor-history-list { max-height: 180px; }
             .advisor-products { grid-template-columns: 1fr; }
+            .advisor-side-actions { flex-direction: row; flex-wrap: wrap; }
+            .advisor-side-actions > * { flex: 1; min-width: 100px; }
         }
     </style>
 </head>

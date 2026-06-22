@@ -6,17 +6,18 @@
 
   .wearconnect-footer {
     font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, #1f2a44 0%, #314a72 100%);
-    color: #eaeef6;
-    padding: 24px 20px;
-    margin-top: 40px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    color: #cbd5e1;
+    padding: 32px 20px;
+    margin-top: 48px;
+    border-top: 1px solid rgba(99, 102, 241, 0.15);
   }
   .footer-container {
     max-width: 1200px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 32px;
     align-items: start;
   }
   .footer-brand {
@@ -25,26 +26,28 @@
     gap: 12px;
   }
   .footer-brand img {
-    height: 32px;
+    height: 36px;
     width: auto;
     display: block;
   }
-  .footer-title { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; }
-  .footer-toggle-btn { display:none; background:none; border:none; font-weight:700; font-size:16px; cursor:pointer; }
+  .footer-title { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; color: #fff; }
+  .footer-toggle-btn { display:none; background:none; border:none; font-weight:700; font-size:16px; cursor:pointer; color: #cbd5e1; }
   .footer-links { list-style: none; margin: 0; padding: 0; }
-  .footer-links li { margin: 8px 0; }
-  .footer-links a { color: #eaeef6; text-decoration: none; opacity: 0.9; }
-  .footer-links a:hover { opacity: 1; text-decoration: underline; }
-  .footer-note { font-size: 13px; opacity: 0.8; }
+  .footer-links li { margin: 10px 0; }
+  .footer-links a { color: #94a3b8; text-decoration: none; transition: all var(--transition-base); }
+  .footer-links a:hover { color: #6366f1; text-shadow: 0 0 10px rgba(99, 102, 241, 0.3); }
+  .footer-note { font-size: 13px; color: #64748b; line-height: 1.5; }
   .footer-bottom {
-    margin-top: 20px;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
     text-align: center;
     font-size: 12px;
-    opacity: 0.7;
+    color: #64748b;
   }
   @media (max-width: 768px) {
-    .footer-container { grid-template-columns: 1fr; }
-    .wearconnect-footer { padding: 20px 16px; }
+    .footer-container { grid-template-columns: 1fr; gap: 20px; }
+    .wearconnect-footer { padding: 24px 16px; }
     .footer-toggle-btn { display:inline-block; }
     .footer-links { display:none; }
   }

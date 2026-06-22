@@ -182,7 +182,7 @@
             <div class="action-row">
                 <% if (!"Manager".equals(role) && !"Admin".equals(role)) { %>
                     <!-- <button class="btn btn-book" onclick="handleBooking()" type="button">Thêm vào giỏ thuê</button> -->
-                    <button class="btn btn-back" onclick="handleBooking()" type="button">Thuê ngay</button>
+                    <button class="btn btn-book" onclick="handleBooking()" type="button">Thuê ngay</button>
                 <% } %>
                 <button class="btn btn-back" onclick="history.back()" type="button">Quay lại</button>
             </div>

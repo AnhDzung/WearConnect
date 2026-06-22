@@ -17,17 +17,15 @@
         </style>
     </head>
 
-    <body class="login-bg wc-flex wc-items-center wc-justify-center"
-        style="min-height: 100vh; padding: var(--spacing-xl) 0;">
+    <body class="login-bg wc-flex wc-items-center wc-justify-center" style="min-height: 100vh; padding: var(--spacing-xl) 0;">
         <div class="wc-container-sm">
-            <div class="wc-card wc-mb-0"
-                style="max-width: 450px; margin: 0 auto; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);">
+            <div class="login-container wc-mb-0">
                 <div class="wc-text-center wc-mb-3">
-                    <h1 style="color: var(--primary-color);">WearConnect</h1>
-                    <p class="wc-mt-1" style="color: var(--gray-600);">Hệ thống quản lý cho thuê đồ</p>
+                    <h1 style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">WearConnect</h1>
+                    <p class="wc-mt-1" style="color: var(--gray-600); font-weight: 600;">Hệ thống quản lý cho thuê đồ</p>
                 </div>
                 <% if (request.getAttribute("error") !=null) { %>
-                    <div class="wc-alert wc-alert-error">
+                    <div class="error-message">
                         <%= request.getAttribute("error") %>
                     </div>
                     <% } %>
@@ -44,25 +42,24 @@
                             </div>
                             
                             <div style="text-align: right; margin-bottom: 15px;">
-                                <a href="${pageContext.request.contextPath}/forgot-password" style="color: #666; text-decoration: none; font-size: 14px;">Quên mật khẩu?</a>
+                                <a href="${pageContext.request.contextPath}/forgot-password" style="color: var(--gray-600); text-decoration: none; font-size: 14px; font-weight: 600;">Quên mật khẩu?</a>
                             </div>
 
-                            <button type="submit" class="wc-btn wc-btn-primary wc-btn-block wc-mb-2">Đăng Nhập</button>
+                            <button type="submit" class="btn-login wc-mb-2">Đăng Nhập</button>
                         </form>
 
-                        <div class="wc-text-center wc-mb-2" style="font-size: var(--font-size-sm);">
-                            Chưa có tài khoản? <a href="<%= request.getContextPath() %>/register">Đăng ký ngay</a>
+                        <div class="wc-text-center wc-mb-2" style="font-size: var(--font-size-sm); color: var(--gray-600); font-weight: 600;">
+                            Chưa có tài khoản? <a href="<%= request.getContextPath() %>/register" style="color: var(--primary-color); text-decoration: none; font-weight: 700;">Đăng ký ngay</a>
                         </div>
 
                         <div class="wc-flex wc-items-center wc-gap-2 wc-mb-2">
-                            <div style="flex: 1; height: 1px; background: var(--gray-300);"></div>
-                            <div style="color: var(--gray-500); font-size: var(--font-size-xs);">hoặc</div>
-                            <div style="flex: 1; height: 1px; background: var(--gray-300);"></div>
+                            <div style="flex: 1; height: 1px; background: var(--gray-200);"></div>
+                            <div style="color: var(--gray-500); font-size: var(--font-size-xs); font-weight: 600;">hoặc</div>
+                            <div style="flex: 1; height: 1px; background: var(--gray-200);"></div>
                         </div>
 
                     <a href="<%= request.getContextPath() %>/oauth2/authorize/google"
-                            class="wc-btn wc-btn-block wc-mb-2"
-                            style="background: var(--white); border: 1px solid var(--gray-300); color: var(--gray-700); display: flex; align-items: center; justify-content: center; gap: var(--spacing-sm);">
+                            class="btn-google wc-mb-2">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
                                 <path fill="#4285F4"
                                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -78,7 +75,7 @@
 
                         <div class="wc-text-center">
                             <a href="<%= request.getContextPath() %>/home"
-                                class="wc-btn wc-btn-secondary wc-btn-block">Quay Về Home</a>
+                                class="btn-home">Quay Về Home</a>
                         </div>
             </div>
     </body>
