@@ -369,6 +369,14 @@
 <div class="container">
     <h1>Chi tiết đơn thuê</h1>
     
+    <!-- Success message for automatic payment verification -->
+    <c:if test="${param.paymentSuccess == 'true'}">
+        <div class="alert alert-success">
+            <strong>Thanh toán thành công!</strong><br>
+            Cảm ơn bạn! Hệ thống đã tự động nhận diện thanh toán thành công cho đơn hàng của bạn. Đơn hàng đã chuyển sang trạng thái <strong>ĐÃ XÁC THỰC</strong>.
+        </div>
+    </c:if>
+    
     <!-- Success message for payment submission -->
     <c:if test="${param.paymentSubmitted == 'true'}">
         <div class="alert alert-success">

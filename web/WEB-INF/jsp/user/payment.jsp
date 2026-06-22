@@ -451,12 +451,24 @@
         // Tự động kiểm tra trạng thái thanh toán mỗi 3 giây (AJAX Polling)
         const currentRentalOrderID = '${rentalOrderID}';
         if (currentRentalOrderID && currentRentalOrderID !== '') {
+            // Nếu thanh toán đã thành công hoặc đơn hàng đã được xác thực từ trước, chuyển hướng ngay lập tức
+            const initialPaymentStatus = '${payment != null ? payment.paymentStatus : ""}';
+            const initialOrderStatus = '${rentalOrder != null ? rentalOrder.status : ""}';
+            const isCompleted = initialPaymentStatus === 'COMPLETED' || 
+                                ['PAYMENT_VERIFIED', 'DELIVERED_PENDING_CONFIRMATION', 'RENTED', 'COMPLETED'].includes(initialOrderStatus);
+            if (isCompleted) {
+                window.location.href = '${pageContext.request.contextPath}/rental?action=viewOrder&id=' + currentRentalOrderID + '&paymentSuccess=true';
+                return;
+            }
+
             setInterval(function() {
                 fetch('${pageContext.request.contextPath}/payment?action=checkStatus&rentalOrderID=' + currentRentalOrderID)
                     .then(response => response.json())
                     .then(data => {
-                        if (data.success && data.paymentStatus === 'COMPLETED') {
-                            window.location.reload(); // Tự động reload để hiện giao diện Thành công
+                        const isSuccess = data.paymentStatus === 'COMPLETED' || 
+                                          ['PAYMENT_VERIFIED', 'DELIVERED_PENDING_CONFIRMATION', 'RENTED', 'COMPLETED'].includes(data.orderStatus);
+                        if (data.success && isSuccess) {
+                            window.location.href = '${pageContext.request.contextPath}/rental?action=viewOrder&id=' + currentRentalOrderID + '&paymentSuccess=true';
                         }
                     })
                     .catch(error => console.error('Error polling payment status:', error));

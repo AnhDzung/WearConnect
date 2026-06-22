@@ -109,14 +109,14 @@ public class PaymentPageController {
             }
             int rentalOrderID = Integer.parseInt(rentalOrderIDParam);
             Payment payment = PaymentController.getPaymentStatus(rentalOrderID);
+            RentalOrder rentalOrder = RentalOrderController.getRentalOrderDetails(rentalOrderID);
+            
+            jsonResponse.put("success", true);
+            jsonResponse.put("paymentStatus", payment != null ? payment.getPaymentStatus() : "PENDING");
+            jsonResponse.put("orderStatus", rentalOrder != null ? rentalOrder.getStatus() : "PENDING_PAYMENT");
             if (payment != null) {
-                jsonResponse.put("success", true);
-                jsonResponse.put("paymentStatus", payment.getPaymentStatus());
                 jsonResponse.put("paymentMethod", payment.getPaymentMethod());
                 jsonResponse.put("paymentID", payment.getPaymentID());
-            } else {
-                jsonResponse.put("success", false);
-                jsonResponse.put("error", "Payment not found");
             }
         } catch (Exception e) {
             jsonResponse.put("success", false);
