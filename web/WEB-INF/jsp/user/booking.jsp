@@ -34,65 +34,406 @@
     <title>Đặt thuê - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
-        body { margin: 0; background-color: #f5f5f5; }
-        .form-container { max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; background: white; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        button { padding: 10px 20px; background-color: #28a745; color: white; border: none; cursor: pointer; margin-right: 10px; border-radius: 4px; }
-        button:hover { background-color: #218838; }
-        .price-summary { background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-top: 20px; }
-        .rental-type-group { display: flex; gap: 20px; margin-bottom: 15px; }
-        .rental-type-group label { display: flex; align-items: center; margin: 0; width: auto; }
-        .rental-type-group input[type="radio"] { width: auto; margin-right: 5px; }
-        .form-section { display: none; }
-        .form-section.active { display: block; }
-        .color-option { padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
-        .color-swatch { display: inline-block; width: 20px; height: 20px; border-radius: 3px; border: 1px solid #999; margin-right: 8px; vertical-align: middle; }
+        body {
+            background:
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.12), transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.08), transparent 45%),
+                linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+        }
 
-        /* Responsive adjustments for mobile */
-        @media (max-width: 768px) {
-            .form-container {
-                margin: 10px;
-                padding: 15px;
-                border-radius: 8px;
+        .booking-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 30px;
+            margin-top: 30px;
+            margin-bottom: 50px;
+            align-items: start;
+        }
+
+        @media (max-width: 992px) {
+            .booking-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                margin-top: 15px;
             }
-            .rental-type-group {
-                flex-direction: column;
-                gap: 10px;
-            }
-            button {
-                width: 100%;
-                margin-right: 0;
-                margin-bottom: 10px;
-                padding: 12px;
-            }
+        }
+
+        .booking-product-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-2xl);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .product-image-wrapper {
+            position: relative;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            aspect-ratio: 4/5;
+            background-color: var(--gray-100);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .product-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform var(--transition-slow);
+        }
+
+        .product-image-wrapper:hover img {
+            transform: scale(1.05);
+        }
+
+        .category-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: var(--primary-gradient);
+            color: white;
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+        }
+
+        .product-title {
+            font-family: var(--heading-font-family);
+            font-size: var(--font-size-2xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+        }
+
+        .product-meta-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .product-meta-item {
+            background: rgba(99, 102, 241, 0.08);
+            color: var(--primary-color);
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+            font-weight: 700;
+        }
+
+        .pricing-card {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px dashed var(--gray-300);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .pricing-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .pricing-label {
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+            font-weight: 600;
+        }
+
+        .pricing-value {
+            font-size: var(--font-size-xl);
+            font-weight: 800;
+            color: var(--gray-900);
+        }
+
+        .policy-box {
+            background: rgba(16, 185, 129, 0.05);
+            border-left: 4px solid var(--secondary-color);
+            padding: 14px 18px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            font-size: var(--font-size-sm);
+            line-height: 1.6;
+            color: #065f46;
+        }
+
+        .booking-form-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-2xl);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .booking-header {
+            margin-bottom: 25px;
+        }
+
+        .booking-header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .booking-header p {
+            font-size: var(--font-size-sm);
+            color: var(--gray-500);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            font-size: var(--font-size-base);
+            color: var(--gray-700);
+        }
+
+        .required-star {
+            color: var(--danger-color);
+            margin-left: 2px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: var(--font-size-base);
+            background: rgba(255, 255, 255, 0.85);
+            box-sizing: border-box;
+            color: var(--gray-900);
+            transition: all var(--transition-fast);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+            background: #ffffff;
+        }
+
+        .rental-type-segmented {
+            display: flex;
+            background: var(--gray-100);
+            border-radius: var(--radius-md);
+            padding: 4px;
+            border: 1px solid var(--gray-200);
+            gap: 4px;
+        }
+
+        .rental-type-segmented label {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: calc(var(--radius-md) - 4px);
+            font-weight: 700;
+            font-size: var(--font-size-base);
+            color: var(--gray-500);
+            transition: all var(--transition-base);
+            margin: 0;
+            display: block;
+        }
+
+        .rental-type-segmented input[type="radio"] {
+            display: none;
+        }
+
+        .rental-type-segmented label:has(input[type="radio"]:checked) {
+            background: #ffffff;
+            color: var(--primary-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .voucher-input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+
+        .voucher-input-wrapper input {
+            flex: 1;
+            text-transform: uppercase;
+        }
+
+        .btn-apply-voucher {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 700;
+            font-size: var(--font-size-base);
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-apply-voucher:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-apply-voucher:active {
+            transform: translateY(0);
+        }
+
+        .price-summary {
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.8), var(--gray-50));
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin: 25px 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .price-summary p {
+            margin: 0;
+            padding: 12px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed rgba(99, 102, 241, 0.15);
+            font-size: var(--font-size-base);
+            color: var(--gray-700);
+        }
+
+        .price-summary p:last-of-type {
+            border-bottom: none;
+        }
+
+        .price-summary p span {
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .price-summary p.payment-row {
+            border-top: 1.5px solid var(--gray-200);
+            padding-top: 15px;
+            margin-top: 5px;
+        }
+
+        .price-summary p.payment-row strong {
+            color: var(--primary-color);
+            font-size: var(--font-size-lg);
+        }
+
+        .price-summary p.payment-row span {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+
+        .summary-disclaimer {
+            color: var(--gray-500);
+            display: block;
+            margin-top: 12px;
+            font-size: var(--font-size-xs);
+            line-height: 1.6;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: var(--radius-full);
+            border: none;
+            cursor: pointer;
+            color: #fff;
+            font-weight: 700;
+            font-size: var(--font-size-lg);
+            background: var(--primary-gradient);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.25);
+            transition: all var(--transition-base);
+            margin-top: 15px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-submit:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-back {
+            width: 100%;
+            padding: 12px 20px;
+            border-radius: var(--radius-full);
+            border: 1.5px solid var(--gray-300);
+            cursor: pointer;
+            color: var(--gray-700);
+            font-weight: 700;
+            font-size: var(--font-size-base);
+            background: #ffffff;
+            transition: all var(--transition-base);
+            margin-top: 10px;
+        }
+
+        .btn-back:hover {
+            background: var(--gray-50);
+            color: var(--gray-900);
+            border-color: var(--gray-400);
+            transform: translateY(-1px);
+        }
+
+        .form-section {
+            display: none;
+            animation: fadeIn var(--transition-base) ease;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
+<jsp:include page="/WEB-INF/jsp/components/header.jsp" />
 
-<div class="form-container">
-    <h1>Đặt thuê quần áo</h1>
-    
+<div class="wc-container wc-mt-4 wc-mb-4">
     <!-- Error message for unavailability -->
     <c:if test="${not empty error and error == 'notAvailable'}">
-        <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 15px; margin-bottom: 20px; color: #856404;">
-            <h3 style="margin-top: 0; color: #d9534f;">Không đủ số lượng</h3>
-            <p><strong>Tất cả sản phẩm cùng loại này đã được thuê hết trong khoảng thời gian bạn chọn.</strong></p>
+        <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 12px; padding: 20px; margin-bottom: 30px; color: #856404; box-shadow: var(--shadow-sm);">
+            <h3 style="margin-top: 0; color: var(--danger-color); font-weight: 700; font-size: 18px;">Không đủ số lượng</h3>
+            <p style="margin-bottom: 10px;"><strong>Tất cả sản phẩm cùng loại này đã được thuê hết trong khoảng thời gian bạn chọn.</strong></p>
             
             <c:if test="${not empty requestedStartDateDate}">
-                <p>Thời gian bạn yêu cầu: 
-                    <fmt:formatDate value="${requestedStartDateDate}" pattern="dd/MM/yyyy HH:mm" /> 
+                <p style="margin-bottom: 10px;">Thời gian bạn yêu cầu: 
+                    <strong style="color: var(--gray-900);"><fmt:formatDate value="${requestedStartDateDate}" pattern="dd/MM/yyyy HH:mm" /></strong> 
                     đến 
-                    <fmt:formatDate value="${requestedEndDateDate}" pattern="dd/MM/yyyy HH:mm" />
+                    <strong style="color: var(--gray-900);"><fmt:formatDate value="${requestedEndDateDate}" pattern="dd/MM/yyyy HH:mm" /></strong>
                 </p>
             </c:if>
             
             <c:if test="${not empty conflictingOrders}">
-                <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 10px; margin: 10px 0;">
+                <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 12px; margin: 15px 0;">
                     <p style="margin: 5px 0; color: #721c24; font-weight: bold;">
-                        Tình trạng: <span style="color: #d9534f;">${conflictingOrders.size()} sản phẩm</span> đang được thuê trong thời gian này
+                        Tình trạng: <span style="color: var(--danger-color);">${conflictingOrders.size()} sản phẩm</span> đang được thuê trong thời gian này
                     </p>
                     <c:if test="${availableQuantity != null}">
                         <p style="margin: 5px 0; color: #721c24;">
@@ -100,22 +441,22 @@
                         </p>
                     </c:if>
                 </div>
-                <h4 style="margin-bottom: 10px;">Các đơn thuê đang xung đột:</h4>
-                <ul style="margin: 10px 0; padding-left: 20px;">
+                <h4 style="margin-bottom: 10px; font-weight: 700; font-size: 15px; color: var(--gray-900);">Các đơn thuê đang xung đột:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: var(--gray-700);">
                     <c:forEach items="${conflictingOrders}" var="order">
                         <li style="margin-bottom: 8px;">
                             <strong>Đơn #${order.rentalOrderID}</strong> - 
                             ${order.formattedStartDate} 
                             đến 
                             ${order.formattedEndDate}
-                            <span style="color: #28a745; font-weight: bold;">(${order.status})</span>
+                            <span style="color: var(--secondary-color); font-weight: bold;">(${order.status})</span>
                         </li>
                     </c:forEach>
                 </ul>
                 
-                <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; padding: 10px; margin-top: 15px;">
-                    <h4 style="margin-top: 0; color: #155724;">💡 Đề xuất thời gian:</h4>
-                    <p style="margin: 5px 0; color: #155724;">
+                <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 12px; margin-top: 15px;">
+                    <h4 style="margin-top: 0; color: #155724; font-weight: 700;">💡 Đề xuất thời gian:</h4>
+                    <p style="margin: 5px 0; color: #155724; line-height: 1.6;">
                         • Chọn thời gian <strong>trước</strong> ${conflictingOrders[0].formattedStartDate}
                         <br>
                         • Hoặc chọn thời gian <strong>sau</strong> 
@@ -129,127 +470,193 @@
         </div>
     </c:if>
     
-    <form method="POST" action="${pageContext.request.contextPath}/rental">
-        <input type="hidden" name="action" value="createOrder">
-        <input type="hidden" name="clothingID" value="${clothingID}">
-        <input type="hidden" name="hourlyPrice" value="${hourlyPrice}">
-        <input type="hidden" name="dailyPrice" value="${dailyPrice}">
-        <input type="hidden" name="itemValue" value="${itemValue}">
-        <input type="hidden" id="isCosplayInput" name="isCosplay" value="<%= isCosplay %>">
+    <div class="booking-layout">
         
-        <% if (isCosplay) { %>
-        <!-- Thông báo cho cosplay -->
-        <div style="background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 5px; padding: 12px; margin-bottom: 20px; color: #0c5460;">
-            <strong>Sản phẩm Cosplay:</strong> Vui lòng chọn size phù hợp. Sản phẩm cosplay không hỗ trợ chọn màu sắc.
-        </div>
-        <% } %>
-
-        <!-- Chọn size -->
-        <div class="form-group">
-            <label for="selectedSize">Chọn size phù hợp: <span style="color: red;">*</span></label>
-            <select id="selectedSize" name="selectedSize">
-                <option value="">-- Chọn size --</option>
-                <% if (availableSizes != null && availableSizes.length > 0) { %>
-                    <% for (String sizeOption : availableSizes) { 
-                        String trimmedSize = sizeOption != null ? sizeOption.trim() : "";
-                        if (!trimmedSize.isEmpty()) {
-                    %>
-                    <option value="<%= trimmedSize %>"><%= trimmedSize %></option>
-                    <%  }
-                    } %>
-                <% } else { %>
-                    <option value="XS">XS</option>
-                    <option value="S">S</option>
-                    <option value="M">M</option>
-                    <option value="L">L</option>
-                    <option value="XL">XL</option>
-                    <option value="XXL">XXL</option>
-                    <option value="One Size">One Size</option>
+        <!-- LEFT COLUMN: Product & Pricing details -->
+        <div class="booking-product-card">
+            <% if (clothing != null) { %>
+            <div class="product-image-wrapper">
+                <span class="category-badge">
+                    <%= isCosplay ? "Trang phục Cosplay" : "Trang phục Thời trang" %>
+                </span>
+                <img src="${pageContext.request.contextPath}/image?id=<%= clothing.getClothingID() %>" alt="<%= clothing.getClothingName() %>" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/images/default.jpg';">
+            </div>
+            
+            <h2 class="product-title"><%= clothing.getClothingName() %></h2>
+            
+            <div class="product-meta-row">
+                <% if (clothing.getStyle() != null && !clothing.getStyle().trim().isEmpty()) { %>
+                    <span class="product-meta-item">Style: <%= clothing.getStyle() %></span>
                 <% } %>
-            </select>
-        </div>
-
-        <% if (!isCosplay) { %>
-        <!-- Chọn màu sắc -->
-        <div class="form-group">
-            <label for="selectedColor">Chọn màu sắc:</label>
-            <select id="selectedColor" name="selectedColor">
-                <option value="">-- Không chọn màu (nếu có) --</option>
-                <% for (Color color : availableColors) { %>
-                <option value="<%= color.getColorID() %>">
-                    <%= color.getColorName() %>
-                </option>
+                <% if (clothing.getOccasion() != null && !clothing.getOccasion().trim().isEmpty()) { %>
+                    <span class="product-meta-item">Dịp: <%= clothing.getOccasion() %></span>
                 <% } %>
-            </select>
-            <% if (availableColors.isEmpty()) { %>
-                <small style="color: #999; display: block; margin-top: 5px;">Sản phẩm này không có lựa chọn màu sắc</small>
+            </div>
+            
+            <% if (clothing.getDescription() != null && !clothing.getDescription().trim().isEmpty()) { %>
+                <p class="product-description"><%= clothing.getDescription() %></p>
             <% } %>
-        </div>
-        <% } // End if (!isCosplay) %>
-        
-        <!-- Lựa chọn loại thuê -->
-        <div class="form-group">
-            <label>Chọn loại thuê:</label>
-            <div class="rental-type-group">
-                <label>
-                    <input type="radio" name="rentalType" value="hourly" checked onchange="toggleRentalType()">
-                    Thuê theo giờ
-                </label>
-                <label>
-                    <input type="radio" name="rentalType" value="daily" onchange="toggleRentalType()">
-                    Thuê theo ngày
-                </label>
+            
+            <div class="pricing-card">
+                <div class="pricing-item">
+                    <span class="pricing-label">Thuê theo giờ</span>
+                    <span class="pricing-value"><fmt:formatNumber value="${hourlyPrice}" type="number" />đ<small style="font-weight: 500; font-size: 11px; color: var(--gray-500);">/giờ</small></span>
+                </div>
+                <div class="pricing-item">
+                    <span class="pricing-label">Thuê theo ngày</span>
+                    <span class="pricing-value"><fmt:formatNumber value="${dailyPrice}" type="number" />đ<small style="font-weight: 500; font-size: 11px; color: var(--gray-500);">/ngày</small></span>
+                </div>
+                <div class="pricing-item" style="grid-column: span 2; border-top: 1px dashed var(--gray-200); padding-top: 10px; margin-top: 5px;">
+                    <span class="pricing-label">Giá trị sản phẩm (tính tiền cọc)</span>
+                    <span class="pricing-value" style="color: var(--warning-color);"><fmt:formatNumber value="${itemValue}" type="number" />đ</span>
+                </div>
+            </div>
+            <% } else { %>
+            <p>Không tìm thấy thông tin sản phẩm.</p>
+            <% } %>
+            
+            <div class="policy-box">
+                <strong style="display: block; margin-bottom: 4px; font-weight: 700;">🛡️ Chính sách đặt thuê của WearConnect:</strong>
+                • Tiền cọc sẽ được tính tự động dựa trên giá trị thực tế của sản phẩm.<br>
+                • Bạn sẽ được hoàn tiền cọc 100% sau khi trả lại hàng sạch sẽ, nguyên vẹn và không hư hỏng.<br>
+                • Vui lòng chọn chính xác khung thời gian bắt đầu và kết thúc thuê.
             </div>
         </div>
         
-        <!-- Phần thuê theo giờ -->
-        <div id="hourlySection" class="form-section active">
-            <div class="form-group">
-                <label for="hourlyStartDate">Ngày giờ bắt đầu: <span style="color: red;">*</span></label>
-                <input type="datetime-local" id="hourlyStartDate" name="startDate" onchange="calculatePrice()">
+        <!-- RIGHT COLUMN: Booking Form -->
+        <div class="booking-form-card">
+            <div class="booking-header">
+                <h1>Đặt thuê của bạn</h1>
+                <p>Cấu hình thời gian thuê và áp dụng voucher giảm giá</p>
             </div>
             
-            <div class="form-group">
-                <label for="hourlyEndDate">Ngày giờ kết thúc: <span style="color: red;">*</span></label>
-                <input type="datetime-local" id="hourlyEndDate" name="endDate" onchange="calculatePrice()">
-            </div>
+            <form method="POST" action="${pageContext.request.contextPath}/rental">
+                <input type="hidden" name="action" value="createOrder">
+                <input type="hidden" name="clothingID" value="${clothingID}">
+                <input type="hidden" name="hourlyPrice" value="${hourlyPrice}">
+                <input type="hidden" name="dailyPrice" value="${dailyPrice}">
+                <input type="hidden" name="itemValue" value="${itemValue}">
+                <input type="hidden" id="isCosplayInput" name="isCosplay" value="<%= isCosplay %>">
+                
+                <% if (isCosplay) { %>
+                <!-- Thông báo cho cosplay -->
+                <div style="background-color: rgba(99, 102, 241, 0.08); border-left: 4px solid var(--primary-color); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 12px 16px; margin-bottom: 20px; color: var(--primary-hover); font-size: 13px; font-weight: 500;">
+                    <strong>Sản phẩm Cosplay:</strong> Vui lòng chọn size phù hợp. Sản phẩm cosplay không hỗ trợ chọn màu sắc.
+                </div>
+                <% } %>
+        
+                <!-- Chọn size -->
+                <div class="form-group">
+                    <label for="selectedSize">Chọn size phù hợp: <span class="required-star">*</span></label>
+                    <select id="selectedSize" name="selectedSize" class="form-control">
+                        <option value="">-- Chọn size --</option>
+                        <% if (availableSizes != null && availableSizes.length > 0) { %>
+                            <% for (String sizeOption : availableSizes) { 
+                                String trimmedSize = sizeOption != null ? sizeOption.trim() : "";
+                                if (!trimmedSize.isEmpty()) {
+                            %>
+                            <option value="<%= trimmedSize %>"><%= trimmedSize %></option>
+                            <%  }
+                            } %>
+                        <% } else { %>
+                            <option value="XS">XS</option>
+                            <option value="S">S</option>
+                            <option value="M">M</option>
+                            <option value="L">L</option>
+                            <option value="XL">XL</option>
+                            <option value="XXL">XXL</option>
+                            <option value="One Size">One Size</option>
+                        <% } %>
+                    </select>
+                </div>
+        
+                <% if (!isCosplay) { %>
+                <!-- Chọn màu sắc -->
+                <div class="form-group">
+                    <label for="selectedColor">Chọn màu sắc:</label>
+                    <select id="selectedColor" name="selectedColor" class="form-control">
+                        <option value="">-- Không chọn màu (nếu có) --</option>
+                        <% for (Color color : availableColors) { %>
+                        <option value="<%= color.getColorID() %>">
+                            <%= color.getColorName() %>
+                        </option>
+                        <% } %>
+                    </select>
+                    <% if (availableColors.isEmpty()) { %>
+                        <small style="color: var(--gray-400); display: block; margin-top: 5px; font-size: 12px;">Sản phẩm này không có lựa chọn màu sắc</small>
+                    <% } %>
+                </div>
+                <% } // End if (!isCosplay) %>
+                
+                <!-- Lựa chọn loại thuê -->
+                <div class="form-group">
+                    <label>Chọn hình thức thuê:</label>
+                    <div class="rental-type-segmented">
+                        <label>
+                            <input type="radio" name="rentalType" value="hourly" checked onchange="toggleRentalType()">
+                            Thuê theo giờ
+                        </label>
+                        <label>
+                            <input type="radio" name="rentalType" value="daily" onchange="toggleRentalType()">
+                            Thuê theo ngày
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Phần thuê theo giờ -->
+                <div id="hourlySection" class="form-section active">
+                    <div class="form-group">
+                        <label for="hourlyStartDate">Ngày giờ bắt đầu: <span class="required-star">*</span></label>
+                        <input type="datetime-local" id="hourlyStartDate" name="startDate" class="form-control" onchange="calculatePrice()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="hourlyEndDate">Ngày giờ kết thúc: <span class="required-star">*</span></label>
+                        <input type="datetime-local" id="hourlyEndDate" name="endDate" class="form-control" onchange="calculatePrice()">
+                    </div>
+                </div>
+                
+                <!-- Phần thuê theo ngày -->
+                <div id="dailySection" class="form-section">
+                    <div class="form-group">
+                        <label for="dailyStartDate">Ngày bắt đầu: <span class="required-star">*</span></label>
+                        <input type="date" id="dailyStartDate" name="dailyStartDate" class="form-control" onchange="calculatePrice()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dailyEndDate">Ngày kết thúc: <span class="required-star">*</span></label>
+                        <input type="date" id="dailyEndDate" name="dailyEndDate" class="form-control" onchange="calculatePrice()">
+                    </div>
+                </div>
+                
+                <!-- Phần nhập Voucher -->
+                <div class="form-group" style="margin-top: 25px; border-top: 1px dashed var(--gray-200); padding-top: 20px;">
+                    <label for="voucherInput">Mã giảm giá (Voucher):</label>
+                    <div class="voucher-input-wrapper">
+                        <input type="text" id="voucherInput" class="form-control" placeholder="Nhập mã voucher (ví dụ: WELCOME100)">
+                        <button type="button" id="btnApplyVoucher" class="btn-apply-voucher" onclick="applyVoucher()">Áp dụng</button>
+                    </div>
+                    <span id="voucherMessage" style="font-size: 13px; display: block; margin-top: 8px; font-weight: 600;"></span>
+                    <input type="hidden" id="submittedVoucherCode" name="voucherCode" value="">
+                </div>
+                
+                <div class="price-summary">
+                    <p><strong id="rentalFeeLabel">Tổng giá thuê:</strong> <span><span id="rentalFee">0</span> VNĐ</span></p>
+                    <p id="discountRow" style="display: none; color: var(--secondary-color);"><strong>Giảm giá Voucher:</strong> <span>-<span id="discountAmountDisplay">0</span> VNĐ</span></p>
+                    <p id="discountedRentalFeeRow" style="display: none; color: var(--primary-color);"><strong>Tiền thuê sau giảm:</strong> <span><span id="discountedRentalFeeDisplay">0</span> VNĐ</span></p>
+                    <p><strong>Tiền cọc:</strong> <span><span id="depositAmount">0</span> VNĐ</span></p>
+                    <p class="payment-row"><strong>Số tiền thanh toán:</strong> <span><span id="paymentAmount">0</span> VNĐ</span></p>
+                    <small class="summary-disclaimer">
+                        Bạn sẽ thanh toán: <strong>Tổng tiền thuê + tiền cọc</strong> trước.<br>Tiền cọc sẽ được hoàn lại sau khi shop nhận sản phẩm không có lỗi gì.
+                    </small>
+                </div>
+                
+                <button type="submit" class="btn-submit" onclick="return validateForm()">Tiến hành thanh toán</button>
+                <button type="button" class="btn-back" onclick="history.back()">Quay lại</button>
+            </form>
         </div>
         
-        <!-- Phần thuê theo ngày -->
-        <div id="dailySection" class="form-section">
-            <div class="form-group">
-                <label for="dailyStartDate">Ngày bắt đầu: <span style="color: red;">*</span></label>
-                <input type="date" id="dailyStartDate" name="dailyStartDate" onchange="calculatePrice()">
-            </div>
-            
-            <div class="form-group">
-                <label for="dailyEndDate">Ngày kết thúc: <span style="color: red;">*</span></label>
-                <input type="date" id="dailyEndDate" name="dailyEndDate" onchange="calculatePrice()">
-            </div>
-        </div>
-        
-        <!-- Phần nhập Voucher -->
-        <div class="form-group" style="margin-top: 20px; border-top: 1px dashed #ddd; padding-top: 15px;">
-            <label for="voucherInput">Mã giảm giá (Voucher):</label>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="voucherInput" placeholder="Nhập mã voucher (ví dụ: WELCOME100)" style="flex: 1; text-transform: uppercase;">
-                <button type="button" id="btnApplyVoucher" onclick="applyVoucher()" style="background-color: #007bff; color: white; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: auto; margin-right: 0;">Áp dụng</button>
-            </div>
-            <span id="voucherMessage" style="font-size: 13px; display: block; margin-top: 5px; font-weight: 500;"></span>
-            <input type="hidden" id="submittedVoucherCode" name="voucherCode" value="">
-        </div>
-        
-        <div class="price-summary">
-            <p><strong>Tổng giá thuê:</strong> <span id="rentalFee">0</span> VNĐ</p>
-            <p id="discountRow" style="display: none; color: #28a745;"><strong>Giảm giá Voucher:</strong> -<span id="discountAmountDisplay">0</span> VNĐ</p>
-            <p><strong>Tiền cọc:</strong> <span id="depositAmount">0</span> VNĐ</p>
-            <p style="color: #d9534f; font-weight: bold; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;"><strong>Số tiền phải thanh toán:</strong> <span id="paymentAmount">0</span> VNĐ</p>
-            <small style="color: #666; display: block; margin-top: 10px;">Bạn sẽ thanh toán tổng tiền thuê + tiền cọc. Tiền cọc sẽ được hoàn lại sau khi trả hàng và sản phẩm không có lỗi gì.</small>
-        </div>
-        
-        <button type="submit" onclick="return validateForm()">Tiến hành thanh toán</button>
-        <button type="button" onclick="history.back()">Quay lại</button>
-    </form>
+    </div>
 </div>
 
 <script>
@@ -315,6 +722,13 @@
                 return false;
             }
         }
+        // Validate voucher application
+        const voucherInput = document.getElementById('voucherInput');
+        const submittedVoucherCode = document.getElementById('submittedVoucherCode');
+        if (voucherInput && voucherInput.value.trim() !== '' && (!submittedVoucherCode || submittedVoucherCode.value.trim() === '')) {
+            alert('Vui lòng click nút "Áp dụng" để kích hoạt mã giảm giá trước khi thanh toán.');
+            return false;
+        }
         return true;
     }
     
@@ -377,7 +791,7 @@
             return;
         }
 
-        const rentalFeeText = document.getElementById('rentalFee').textContent.replace(/\./g, '').trim();
+        const rentalFeeText = document.getElementById('rentalFee').textContent.replace(/\D/g, '');
         const rentalPrice = parseFloat(rentalFeeText) || 0;
         
         if (rentalPrice <= 0) {
@@ -417,10 +831,10 @@
     }
 
     function updatePriceDisplays() {
-        const rentalFeeText = document.getElementById('rentalFee').textContent.replace(/\./g, '').trim();
+        const rentalFeeText = document.getElementById('rentalFee').textContent.replace(/\D/g, '');
         const rentalPrice = parseFloat(rentalFeeText) || 0;
         
-        const depositText = document.getElementById('depositAmount').textContent.replace(/\./g, '').trim();
+        const depositText = document.getElementById('depositAmount').textContent.replace(/\D/g, '');
         const depositPrice = parseFloat(depositText) || 0;
 
         let discount = 0;
@@ -440,10 +854,15 @@
         }
 
         if (discount > 0) {
+            document.getElementById('rentalFeeLabel').textContent = 'Giá thuê gốc:';
             document.getElementById('discountRow').style.display = 'block';
             document.getElementById('discountAmountDisplay').textContent = Math.round(discount).toLocaleString('vi-VN');
+            document.getElementById('discountedRentalFeeRow').style.display = 'block';
+            document.getElementById('discountedRentalFeeDisplay').textContent = Math.round(rentalPrice - discount).toLocaleString('vi-VN');
         } else {
+            document.getElementById('rentalFeeLabel').textContent = 'Tổng giá thuê:';
             document.getElementById('discountRow').style.display = 'none';
+            document.getElementById('discountedRentalFeeRow').style.display = 'none';
         }
 
         const totalPayment = rentalPrice - discount + depositPrice;

@@ -459,7 +459,7 @@
                                     </span>
                                 </div>
                                 <div class="info-row">
-                                    <strong>Tổng giá thuê:</strong> 
+                                    <strong>Tiền thuê sau giảm:</strong> 
                                     <span style="font-weight: 700; color: #1e3a8a;">
                                         <fmt:formatNumber value="${order.totalPrice}" pattern="#,##0"/> VNĐ
                                     </span>

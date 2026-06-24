@@ -30,24 +30,6 @@
     %>
     
     <div class="container">
-        <c:if test="${newOrdersCount > 0}">
-            <div style="background:#fff3cd; border:1px solid #ffeeba; color:#856404; padding:14px 16px; border-radius:8px; margin-bottom:16px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-                <strong>🔔 Có ${newOrdersCount} đơn hàng cần xác nhận.</strong>
-                <span>(PENDING: ${pendingCount}, VERIFYING: ${verifyingCount})</span>
-                <c:choose>
-                    <c:when test="${pendingCount > 0}">
-                        <a href="${pageContext.request.contextPath}/admin?action=orders&status=PENDING" style="margin-left:12px; color:#0d6efd; font-weight:600;">Xem đơn cần duyệt</a>
-                    </c:when>
-                    <c:when test="${verifyingCount > 0}">
-                        <a href="${pageContext.request.contextPath}/admin?action=orders&status=VERIFYING" style="margin-left:12px; color:#0d6efd; font-weight:600;">Xem đơn cần duyệt</a>
-                    </c:when>
-                    <c:otherwise>
-                        <a href="${pageContext.request.contextPath}/admin?action=orders&status=ALL" style="margin-left:12px; color:#0d6efd; font-weight:600;">Xem đơn cần duyệt</a>
-                    </c:otherwise>
-                </c:choose>
-            </div>
-        </c:if>
-
         <div class="tab-navigation">
             <button type="button" class="tab-button ${view eq 'products' ? 'active' : ''}" 
                     onclick="location.href='${pageContext.request.contextPath}/admin'">

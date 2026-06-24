@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <style>
@@ -626,38 +626,86 @@
                                             }
                                         }
                                         int unreadCount = (unreadNotes == null) ? 0 : unreadNotes.size();
+
+                                        int adminPendingCount = 0;
+                                        int adminVerifyingCount = 0;
+                                        int adminNewOrdersCount = 0;
+                                        if ("Admin".equals(userRole)) {
+                                            try {
+                                                adminPendingCount = Service.RentalOrderService.countOrdersByStatus("PENDING_PAYMENT");
+                                                adminVerifyingCount = Service.RentalOrderService.countOrdersByStatus("PAYMENT_SUBMITTED");
+                                                adminNewOrdersCount = adminPendingCount + adminVerifyingCount;
+                                            } catch (Exception e) {
+                                                adminNewOrdersCount = 0;
+                                            }
+                                        }
+
+                                        int displayUnreadCount = "Admin".equals(userRole) ? adminNewOrdersCount : unreadCount;
+
+                                        String notifLink = request.getContextPath() + "/user?action=notifications";
+                                        if ("Admin".equals(userRole)) {
+                                            if (adminPendingCount > 0) {
+                                                notifLink = request.getContextPath() + "/admin?action=orders&status=PENDING";
+                                            } else if (adminVerifyingCount > 0) {
+                                                notifLink = request.getContextPath() + "/admin?action=orders&status=VERIFYING";
+                                            } else {
+                                                notifLink = request.getContextPath() + "/admin?action=orders";
+                                            }
+                                        }
                                     %>
                                     <div class="notif-wrapper" style="position:relative; display:inline-block;">
-                                        <a href="${pageContext.request.contextPath}/user?action=notifications" style="text-decoration:none;">
+                                        <a id="notifBell" href="<%= notifLink %>" style="text-decoration:none;">
                                             Thông báo 🔔
-                                            <% if (unreadCount > 0) { %>
-                                                <span style="position:absolute; top:-6px; right:-8px; background:#ff4757; color:white; border-radius:50%; padding:2px 6px; font-size:12px; font-weight:700;"><%= unreadCount %></span>
+                                            <% if (displayUnreadCount > 0) { %>
+                                                <span style="position:absolute; top:-6px; right:-8px; background:#ff4757; color:white; border-radius:50%; padding:2px 6px; font-size:12px; font-weight:700;"><%= displayUnreadCount %></span>
                                             <% } %>
                                         </a>
                                         <!-- Dropdown preview -->
                                         <div id="notifDropdown" class="notif-dropdown">
                                             <div class="notif-header">Thông Báo Mới Nhận</div>
                                             <div class="notif-list">
-                                                <% if (unreadNotes != null && !unreadNotes.isEmpty()) {
-                                                    for (Model.Notification nn : unreadNotes) { %>
-                                                        <div class="notif-item">
-                                                            <div class="notif-thumb">TB</div>
-                                                            <div class="notif-body">
-                                                                <div class="notif-title"><%= nn.getTitle() %></div>
-                                                                <div class="notif-desc"><%= nn.getMessage() %></div>
-                                                                <div class="notif-time"><%= nn.getFormattedCreatedAt() %></div>
+                                                <% if ("Admin".equals(userRole)) {
+                                                    if (adminNewOrdersCount > 0) {
+                                                %>
+                                                        <a href="<%= notifLink %>" style="text-decoration:none; color:inherit;">
+                                                            <div class="notif-item" style="cursor:pointer; background:#fff3cd; border-left:4px solid #ffeeba;">
+                                                                <div class="notif-thumb" style="background:#ffc107; color:#856404;">🔔</div>
+                                                                <div class="notif-body">
+                                                                    <div class="notif-title" style="font-weight:700; color:#856404;">Đơn hàng cần duyệt</div>
+                                                                    <div class="notif-desc" style="color:#666;">Có <%= adminNewOrdersCount %> đơn hàng cần xác nhận. (PENDING: <%= adminPendingCount %>, VERIFYING: <%= adminVerifyingCount %>)</div>
+                                                                    <div class="notif-time">Nhấp để xem đơn cần duyệt</div>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    <% }
+                                                        </a>
+                                                <%  } else { %>
+                                                        <div style="padding:18px; text-align:center; color:#666;">Không có đơn hàng cần xác nhận</div>
+                                                <%  }
                                                 } else { %>
-                                                    <div style="padding:18px; text-align:center; color:#666;">Không có thông báo mới</div>
+                                                    <% if (unreadNotes != null && !unreadNotes.isEmpty()) {
+                                                        for (Model.Notification nn : unreadNotes) { %>
+                                                            <div class="notif-item">
+                                                                <div class="notif-thumb">TB</div>
+                                                                <div class="notif-body">
+                                                                    <div class="notif-title"><%= nn.getTitle() %></div>
+                                                                    <div class="notif-desc"><%= nn.getMessage() %></div>
+                                                                    <div class="notif-time"><%= nn.getFormattedCreatedAt() %></div>
+                                                                </div>
+                                                            </div>
+                                                        <% }
+                                                    } else { %>
+                                                        <div style="padding:18px; text-align:center; color:#666;">Không có thông báo mới</div>
+                                                    <% } %>
                                                 <% } %>
                                             </div>
                                             <div class="notif-footer">
-                                                <a href="${pageContext.request.contextPath}/user?action=notifications">Xem tất cả</a>
+                                                <% if ("Admin".equals(userRole)) { %>
+                                                    <a href="${pageContext.request.contextPath}/admin?action=orders">Xem tất cả đơn hàng</a>
+                                                <% } else { %>
+                                                    <a href="${pageContext.request.contextPath}/user?action=notifications">Xem tất cả</a>
+                                                <% } %>
                                             </div>
                                         </div>
-                                </div>
+                                    </div>
                                     <% if ("User".equals(userRole)) { %>
                                         <a href="${pageContext.request.contextPath}/advisor-chat" class="advisor-prompt-btn">AI Picks</a>
                                     <% } %>
@@ -731,7 +779,7 @@
 <script>
     // Toggle notifications dropdown on bell click
     (function(){
-        var bell = document.querySelector('.notif-wrapper > a[href$="action=notifications"]');
+        var bell = document.getElementById('notifBell');
         var dd = document.getElementById('notifDropdown');
         if (!bell || !dd) return;
         // position container relative to header

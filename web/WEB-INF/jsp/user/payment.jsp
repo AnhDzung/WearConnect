@@ -101,12 +101,36 @@
                 <strong>Mã đơn hàng:</strong>
                 <span>WRC<fmt:formatNumber value="${rentalOrderID}" pattern="00000"/></span>
             </div>
-            <div class="payment-info-row">
-                <strong>Tiền thuê:</strong>
-                <span style="color: #333; font-weight: bold;">
-                    <fmt:formatNumber value="${rentalOrder.totalPrice}" pattern="#,##0"/> VNĐ
-                </span>
-            </div>
+            <c:choose>
+                <c:when test="${not empty rentalOrder.voucherCode and rentalOrder.discountAmount > 0}">
+                    <div class="payment-info-row">
+                        <strong>Giá thuê gốc:</strong>
+                        <span>
+                            <fmt:formatNumber value="${rentalOrder.totalPrice + rentalOrder.discountAmount}" pattern="#,##0"/> VNĐ
+                        </span>
+                    </div>
+                    <div class="payment-info-row" style="background-color: #eafcf0; padding: 8px; border-radius: 4px; border-left: 3px solid #28a745; display: flex; justify-content: space-between;">
+                        <strong style="color: #2563eb;">Voucher áp dụng:</strong>
+                        <span style="font-weight: 700; color: #28a745;">
+                            ${rentalOrder.voucherCode} (-<fmt:formatNumber value="${rentalOrder.discountAmount}" pattern="#,##0"/> VNĐ)
+                        </span>
+                    </div>
+                    <div class="payment-info-row">
+                        <strong>Tiền thuê sau giảm:</strong>
+                        <span style="color: #333; font-weight: bold;">
+                            <fmt:formatNumber value="${rentalOrder.totalPrice}" pattern="#,##0"/> VNĐ
+                        </span>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <div class="payment-info-row">
+                        <strong>Tiền thuê:</strong>
+                        <span style="color: #333; font-weight: bold;">
+                            <fmt:formatNumber value="${rentalOrder.totalPrice}" pattern="#,##0"/> VNĐ
+                        </span>
+                    </div>
+                </c:otherwise>
+            </c:choose>
             
             <!-- Tiền cọc chi tiết -->
             <c:choose>
