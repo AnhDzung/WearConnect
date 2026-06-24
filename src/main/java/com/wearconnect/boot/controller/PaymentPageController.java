@@ -165,6 +165,10 @@ public class PaymentPageController {
                             PaymentController.updatePaymentProof(paymentID, proofPath, proofData);
                             RentalOrderController.setPaymentProofPath(rentalOrderID, proofPath, proofData);
                             RentalOrderController.updateOrderStatus(rentalOrderID, "PAYMENT_SUBMITTED");
+                             
+                            // Trigger AI verification immediately & asynchronously
+                            Service.AIPaymentVerificationService.verifyOrderAsync(rentalOrderID);
+                             
                             response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&paymentSubmitted=true");
                         } else {
                             response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderID + "&error=uploadfailed");

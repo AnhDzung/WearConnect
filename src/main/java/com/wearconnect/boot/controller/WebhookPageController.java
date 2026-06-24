@@ -101,6 +101,8 @@ public class WebhookPageController {
 
             boolean updated = PaymentDAO.updatePaymentStatus(payment.getPaymentID(), "COMPLETED");
             if (updated) {
+                DAO.RentalOrderDAO.updateRentalOrderStatus(rentalOrderID, "PAYMENT_VERIFIED");
+                DAO.RentalOrderDAO.markPaymentProcessed(rentalOrderID);
                 System.out.println("[WEBHOOK] Payment marked as COMPLETED. PaymentID: " + payment.getPaymentID()
                         + ", RentalOrderID: " + rentalOrderID + ", Sender: " + senderName + " (" + senderAccount + ")");
                 return true;

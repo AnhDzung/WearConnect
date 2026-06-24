@@ -74,6 +74,48 @@ public class AIPaymentVerificationService {
         return summary;
     }
 
+    public static void verifyOrderAsync(int rentalOrderID) {
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                if (!AIProviderConfig.isEnabled()) {
+                    System.out.println("[AI Async Verify] AI is disabled, skipping async verification for order " + rentalOrderID);
+                    return;
+                }
+                // Chờ 1.5 giây để đảm bảo giao dịch DB từ controller chính đã commit thành công
+                Thread.sleep(1500);
+
+                PaymentVerificationCandidate candidate = RentalOrderDAO.getPaymentSubmittedCandidateForSingleOrder(rentalOrderID);
+                if (candidate == null) {
+                    System.out.println("[AI Async Verify] Order " + rentalOrderID + " not found or not in PAYMENT_SUBMITTED status.");
+                    return;
+                }
+
+                AIDecision decision = evaluateCandidate(candidate);
+                if (decision == null || decision.decision == null) {
+                    System.out.println("[AI Async Verify] Evaluation returned null for order: " + rentalOrderID);
+                    return;
+                }
+
+                if ("VERIFY".equals(decision.decision)) {
+                    if (approveOrder(candidate, decision.reason)) {
+                        System.out.println("[AI Async Verify] Automatically approved order: " + rentalOrderID);
+                    } else {
+                        System.out.println("[AI Async Verify] Approval failed for order: " + rentalOrderID);
+                    }
+                } else if ("REJECT".equals(decision.decision)) {
+                    if (rejectOrder(candidate, decision.reason)) {
+                        System.out.println("[AI Async Verify] Automatically rejected order: " + rentalOrderID + " Reason: " + decision.reason);
+                    } else {
+                        System.out.println("[AI Async Verify] Rejection failed for order: " + rentalOrderID);
+                    }
+                }
+            } catch (Exception ex) {
+                System.err.println("[AI Async Verify] Error processing order " + rentalOrderID + ": " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        });
+    }
+
     private static AIDecision evaluateCandidate(PaymentVerificationCandidate candidate) {
         String expectedTransferContent = safeText(candidate.getExpectedTransferContent());
         String providedTransferContent = safeText(candidate.getProvidedTransferContent());
@@ -264,17 +306,29 @@ public class AIPaymentVerificationService {
             return false;
         }
 
-        String digits = providedContent.replaceAll("\\D", "");
-        if (digits.isEmpty()) {
-            return false;
+        // 1. Tìm chuỗi có dạng WRC kèm theo chữ số (VD: "MB1234 WRC00001" sẽ lấy ra số 1)
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("WRC\\s*0*(\\d+)").matcher(providedContent.toUpperCase());
+        if (matcher.find()) {
+            try {
+                int providedOrderId = Integer.parseInt(matcher.group(1));
+                return providedOrderId == rentalOrderId;
+            } catch (NumberFormatException ex) {
+                // ignore and fallback
+            }
         }
 
-        try {
-            int providedOrderId = Integer.parseInt(digits);
-            return providedOrderId == rentalOrderId;
-        } catch (NumberFormatException ex) {
-            return false;
+        // 2. Dự phòng: Tìm xem trong chuỗi có cụm chữ số nào bằng đúng rentalOrderId hay không
+        java.util.regex.Matcher digitGroupMatcher = java.util.regex.Pattern.compile("\\d+").matcher(providedContent);
+        while (digitGroupMatcher.find()) {
+            try {
+                int val = Integer.parseInt(digitGroupMatcher.group());
+                if (val == rentalOrderId) {
+                    return true;
+                }
+            } catch (NumberFormatException ignored) {}
         }
+
+        return false;
     }
 
     private static boolean isAmountMatching(double expected, double observed) {

@@ -17,6 +17,12 @@ public class LegacyDatabaseCompatibilityConfig {
             bridge(environment, "wearconnect.db.server", "wearconnect.db.server");
             bridge(environment, "wearconnect.db.port", "wearconnect.db.port");
             bridge(environment, "wearconnect.db.name", "wearconnect.db.name");
+
+            // Bridge AI config from Spring Environment to System properties
+            bridge(environment, "spring.ai.google.genai.api-key", "GEMINI_API_KEY");
+            bridge(environment, "spring.ai.google.genai.chat.options.model", "AI_MODEL");
+            bridge(environment, "spring.ai.google.genai.chat.options.temperature", "AI_TEMPERATURE");
+            bridge(environment, "spring.ai.google.genai.chat.options.max-output-tokens", "AI_MAX_TOKENS");
         };
     }
 
