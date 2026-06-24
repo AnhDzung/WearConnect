@@ -6,6 +6,7 @@ import DAO.PaymentDAO;
 import DAO.RentalOrderDAO;
 import Service.NotificationService;
 import Model.RentalOrder;
+import java.util.List;
 
 /**
  * Service for handling bank transfer payments
@@ -184,6 +185,44 @@ public class BankTransferService {
                             rentalOrderID
                     );
                 }
+
+                // Xử lý xác nhận tự động các đơn hàng khác thuộc cùng lô đặt hàng (cùng user, tạo cách nhau dưới 60s)
+                try {
+                    List<RentalOrder> userOrders = RentalOrderDAO.getRentalOrdersByUser(order.getRenterUserID());
+                    if (userOrders != null) {
+                        for (RentalOrder ro : userOrders) {
+                            if (ro.getRentalOrderID() != rentalOrderID && 
+                                ("PENDING_PAYMENT".equals(ro.getStatus()) || "PAYMENT_SUBMITTED".equals(ro.getStatus()))) {
+                                
+                                long diffSeconds = java.time.Duration.between(order.getCreatedAt(), ro.getCreatedAt()).abs().getSeconds();
+                                if (diffSeconds <= 60) {
+                                    System.out.println("[Webhook] Auto-verifying batch related order ID: " + ro.getRentalOrderID());
+                                    String batchNotes = "AUTO_WEBHOOK_BATCH | parentOrder=" + rentalOrderID + " | content=" + transferContent;
+                                    if (RentalOrderDAO.updateRentalOrderStatusWithNotes(ro.getRentalOrderID(), "PAYMENT_VERIFIED", batchNotes)) {
+                                        RentalOrderDAO.markPaymentProcessed(ro.getRentalOrderID());
+                                        Payment batchPayment = PaymentDAO.getPaymentByRentalOrder(ro.getRentalOrderID());
+                                        if (batchPayment != null) {
+                                            PaymentDAO.updatePaymentStatus(batchPayment.getPaymentID(), "COMPLETED");
+                                        } else {
+                                            Payment newBatchPayment = new Payment(ro.getRentalOrderID(), ro.getTotalPrice() + ro.getAdjustedDepositAmount(), "BANK_TRANSFER");
+                                            int newPId = PaymentDAO.addPayment(newBatchPayment);
+                                            if (newPId > 0) PaymentDAO.updatePaymentStatus(newPId, "COMPLETED");
+                                        }
+                                        NotificationService.createNotification(
+                                                ro.getRenterUserID(),
+                                                "Thanh toán thành công",
+                                                "Đơn hàng #" + ro.getRentalOrderID() + " đã được xác nhận thanh toán tự động trong nhóm đơn hàng.",
+                                                ro.getRentalOrderID()
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    System.err.println("[Webhook] Lỗi xử lý xác thực nhóm đơn hàng: " + ex.getMessage());
+                }
+
                 System.out.println("[Webhook] Xác nhận thành công đơn hàng: " + rentalOrderID);
                 return true;
             }

@@ -27,6 +27,7 @@
     } catch (Exception e) {}
     List<Color> availableColors = clothingID > 0 ? ColorDAO.getColorsByClothing(clothingID) : new java.util.ArrayList<>();
 %>
+<c:set var="isAddToCart" value="${param.addToCart eq 'true'}" />
 <!DOCTYPE html>
 <html>
 <head>
@@ -526,12 +527,12 @@
         <!-- RIGHT COLUMN: Booking Form -->
         <div class="booking-form-card">
             <div class="booking-header">
-                <h1>Đặt thuê của bạn</h1>
-                <p>Cấu hình thời gian thuê và áp dụng voucher giảm giá</p>
+                <h1>${isAddToCart ? 'Thêm vào giỏ hàng' : 'Đặt thuê của bạn'}</h1>
+                <p>${isAddToCart ? 'Cấu hình thời gian thuê để lưu vào giỏ hàng' : 'Cấu hình thời gian thuê và áp dụng voucher giảm giá'}</p>
             </div>
             
-            <form method="POST" action="${pageContext.request.contextPath}/rental">
-                <input type="hidden" name="action" value="createOrder">
+            <form method="POST" action="${pageContext.request.contextPath}${isAddToCart ? '/cart' : '/rental'}">
+                <input type="hidden" name="action" value="${isAddToCart ? 'add' : 'createOrder'}">
                 <input type="hidden" name="clothingID" value="${clothingID}">
                 <input type="hidden" name="hourlyPrice" value="${hourlyPrice}">
                 <input type="hidden" name="dailyPrice" value="${dailyPrice}">
@@ -630,6 +631,7 @@
                 </div>
                 
                 <!-- Phần nhập Voucher -->
+                <c:if test="${not isAddToCart}">
                 <div class="form-group" style="margin-top: 25px; border-top: 1px dashed var(--gray-200); padding-top: 20px;">
                     <label for="voucherInput">Mã giảm giá (Voucher):</label>
                     <div class="voucher-input-wrapper">
@@ -639,19 +641,27 @@
                     <span id="voucherMessage" style="font-size: 13px; display: block; margin-top: 8px; font-weight: 600;"></span>
                     <input type="hidden" id="submittedVoucherCode" name="voucherCode" value="">
                 </div>
+                </c:if>
                 
                 <div class="price-summary">
                     <p><strong id="rentalFeeLabel">Tổng giá thuê:</strong> <span><span id="rentalFee">0</span> VNĐ</span></p>
                     <p id="discountRow" style="display: none; color: var(--secondary-color);"><strong>Giảm giá Voucher:</strong> <span>-<span id="discountAmountDisplay">0</span> VNĐ</span></p>
                     <p id="discountedRentalFeeRow" style="display: none; color: var(--primary-color);"><strong>Tiền thuê sau giảm:</strong> <span><span id="discountedRentalFeeDisplay">0</span> VNĐ</span></p>
                     <p><strong>Tiền cọc:</strong> <span><span id="depositAmount">0</span> VNĐ</span></p>
-                    <p class="payment-row"><strong>Số tiền thanh toán:</strong> <span><span id="paymentAmount">0</span> VNĐ</span></p>
+                    <p class="payment-row"><strong>${isAddToCart ? 'Ước tính thanh toán:' : 'Số tiền thanh toán:'}</strong> <span><span id="paymentAmount">0</span> VNĐ</span></p>
                     <small class="summary-disclaimer">
-                        Bạn sẽ thanh toán: <strong>Tổng tiền thuê + tiền cọc</strong> trước.<br>Tiền cọc sẽ được hoàn lại sau khi shop nhận sản phẩm không có lỗi gì.
+                        <c:choose>
+                            <c:when test="${isAddToCart}">
+                                Số tiền trên là ước tính gồm: <strong>Giá thuê + tiền cọc</strong>.<br>Bạn sẽ thực hiện thanh toán khi bấm thuê từ giỏ hàng.
+                            </c:when>
+                            <c:otherwise>
+                                Bạn sẽ thanh toán: <strong>Tổng tiền thuê + tiền cọc</strong> trước.<br>Tiền cọc sẽ được hoàn lại sau khi shop nhận sản phẩm không có lỗi gì.
+                            </c:otherwise>
+                        </c:choose>
                     </small>
                 </div>
                 
-                <button type="submit" class="btn-submit" onclick="return validateForm()">Tiến hành thanh toán</button>
+                <button type="submit" class="btn-submit" onclick="return validateForm()">${isAddToCart ? 'Thêm vào giỏ hàng 🛒' : 'Tiến hành thanh toán'}</button>
                 <button type="button" class="btn-back" onclick="history.back()">Quay lại</button>
             </form>
         </div>

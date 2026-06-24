@@ -19,6 +19,8 @@ import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,18 +55,44 @@ public class PaymentPageController {
             }
 
             String rentalOrderIDParam = request.getParameter("rentalOrderID");
-            if (rentalOrderIDParam == null || rentalOrderIDParam.isEmpty()) {
+            String rentalOrderIDsParam = request.getParameter("rentalOrderIDs");
+            String idsParam = rentalOrderIDsParam != null ? rentalOrderIDsParam : rentalOrderIDParam;
+
+            if (idsParam == null || idsParam.isEmpty()) {
                 response.sendRedirect(request.getContextPath() + "/rental");
                 return;
             }
 
-            int rentalOrderID = Integer.parseInt(rentalOrderIDParam);
-            Payment payment = PaymentController.getPaymentStatus(rentalOrderID);
-            RentalOrder rentalOrder = RentalOrderController.getRentalOrderDetails(rentalOrderID);
+            List<Integer> orderIDs = new ArrayList<>();
+            for (String part : idsParam.split(",")) {
+                if (!part.trim().isEmpty()) {
+                    orderIDs.add(Integer.parseInt(part.trim()));
+                }
+            }
 
-            if (rentalOrder == null) {
+            if (orderIDs.isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/rental");
+                return;
+            }
+
+            int firstOrderID = orderIDs.get(0);
+            Payment payment = PaymentController.getPaymentStatus(firstOrderID);
+            
+            List<RentalOrder> rentalOrders = new ArrayList<>();
+            double totalRentPrice = 0.0;
+            double totalDepositAmount = 0.0;
+            for (int id : orderIDs) {
+                RentalOrder order = RentalOrderController.getRentalOrderDetails(id);
+                if (order != null) {
+                    rentalOrders.add(order);
+                    totalRentPrice += order.getTotalPrice();
+                    totalDepositAmount += order.getAdjustedDepositAmount();
+                }
+            }
+
+            if (rentalOrders.isEmpty()) {
                 request.setAttribute("error", "Không tìm thấy đơn hàng");
-                response.sendError(404, "Rental order not found");
+                response.sendError(404, "Rental orders not found");
                 return;
             }
 
@@ -72,17 +100,21 @@ public class PaymentPageController {
             Map<String, Object> badge = RatingController.getBadgeForUser(currentUserID);
             request.setAttribute("userBadge", badge);
             request.setAttribute("payment", payment);
-            request.setAttribute("rentalOrder", rentalOrder);
-            request.setAttribute("rentalOrderID", rentalOrderID);
+            request.setAttribute("rentalOrder", rentalOrders.get(0)); // compatibility for single details
+            request.setAttribute("rentalOrders", rentalOrders);
+            request.setAttribute("totalRentPrice", totalRentPrice);
+            request.setAttribute("totalDepositAmount", totalDepositAmount);
+            request.setAttribute("rentalOrderID", firstOrderID); // compatibility for single ID logic
+            request.setAttribute("rentalOrderIDsStr", idsParam); // List of IDs as string
 
             // Tính toán số tiền cuối cùng và tạo mã QR động
-            double baseAmount = rentalOrder.getTotalPrice() + rentalOrder.getAdjustedDepositAmount();
+            double baseAmount = totalRentPrice + totalDepositAmount;
             Integer discount = null;
             try { discount = (Integer) badge.get("discount"); } catch (Exception ex) {}
             double discountPercent = discount != null ? discount.doubleValue() : 0.0;
             double finalAmount = baseAmount * (1.0 - discountPercent / 100.0);
             
-            String qrUrl = BankTransferService.generateVietQRUrl(rentalOrderID, finalAmount);
+            String qrUrl = BankTransferService.generateVietQRUrl(firstOrderID, finalAmount);
             request.setAttribute("qrUrl", qrUrl);
             
             request.getRequestDispatcher("/WEB-INF/jsp/user/payment.jsp").forward(request, response);
@@ -107,7 +139,7 @@ public class PaymentPageController {
                 response.getWriter().write(GSON.toJson(jsonResponse));
                 return;
             }
-            int rentalOrderID = Integer.parseInt(rentalOrderIDParam);
+            int rentalOrderID = Integer.parseInt(rentalOrderIDParam.split(",")[0].trim());
             Payment payment = PaymentController.getPaymentStatus(rentalOrderID);
             RentalOrder rentalOrder = RentalOrderController.getRentalOrderDetails(rentalOrderID);
             
@@ -137,11 +169,30 @@ public class PaymentPageController {
         String action = request.getParameter("action");
 
         if ("processPayment".equals(action)) {
-            int rentalOrderID = Integer.parseInt(request.getParameter("rentalOrderID"));
+            String rentalOrderIDParam = request.getParameter("rentalOrderID");
             String paymentMethod = request.getParameter("paymentMethod");
 
+            if (rentalOrderIDParam == null || rentalOrderIDParam.isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/rental");
+                return;
+            }
+
+            List<Integer> orderIDs = new ArrayList<>();
+            for (String part : rentalOrderIDParam.split(",")) {
+                if (!part.trim().isEmpty()) {
+                    orderIDs.add(Integer.parseInt(part.trim()));
+                }
+            }
+
+            if (orderIDs.isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/rental");
+                return;
+            }
+
+            int firstOrderID = orderIDs.get(0);
+
             if (!isValidPaymentMethod(paymentMethod)) {
-                response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderID + "&error=true");
+                response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderIDParam + "&error=true");
                 return;
             }
 
@@ -154,48 +205,51 @@ public class PaymentPageController {
             if ("BANK_TRANSFER".equals(paymentMethod)) {
                 Part filePart = request.getPart("paymentProof");
                 if (filePart != null && filePart.getSize() > 0) {
-                    RentalOrder ro = RentalOrderController.getRentalOrderDetails(rentalOrderID);
-                    double base = ro != null ? (ro.getTotalPrice() + ro.getAdjustedDepositAmount()) : 0.0;
-                    double amount = base * (1.0 - discountPercent / 100.0);
-                    int paymentID = PaymentController.createPaymentOnly(rentalOrderID, paymentMethod, amount);
-                    if (paymentID > 0) {
-                        String proofPath = buildPaymentProofKey(rentalOrderID, filePart);
-                        byte[] proofData = readPartBytes(filePart);
-                        if (proofPath != null && proofData != null) {
-                            PaymentController.updatePaymentProof(paymentID, proofPath, proofData);
-                            RentalOrderController.setPaymentProofPath(rentalOrderID, proofPath, proofData);
-                            RentalOrderController.updateOrderStatus(rentalOrderID, "PAYMENT_SUBMITTED");
-                             
-                            // Trigger AI verification immediately & asynchronously
-                            Service.AIPaymentVerificationService.verifyOrderAsync(rentalOrderID);
-                             
-                            response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&paymentSubmitted=true");
-                        } else {
-                            response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderID + "&error=uploadfailed");
+                    String proofPath = buildPaymentProofKey(firstOrderID, filePart);
+                    byte[] proofData = readPartBytes(filePart);
+                    if (proofPath != null && proofData != null) {
+                        for (int id : orderIDs) {
+                            RentalOrder ro = RentalOrderController.getRentalOrderDetails(id);
+                            double base = ro != null ? (ro.getTotalPrice() + ro.getAdjustedDepositAmount()) : 0.0;
+                            double amount = base * (1.0 - discountPercent / 100.0);
+                            int paymentID = PaymentController.createPaymentOnly(id, paymentMethod, amount);
+                            if (paymentID > 0) {
+                                PaymentController.updatePaymentProof(paymentID, proofPath, proofData);
+                                RentalOrderController.setPaymentProofPath(id, proofPath, proofData);
+                                RentalOrderController.updateOrderStatus(id, "PAYMENT_SUBMITTED");
+                                 
+                                // Trigger AI verification immediately & asynchronously
+                                Service.AIPaymentVerificationService.verifyOrderAsync(id);
+                            }
                         }
+                        response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + firstOrderID + "&paymentSubmitted=true");
                     } else {
-                        response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderID + "&error=true");
+                        response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderIDParam + "&error=uploadfailed");
                     }
                 } else {
-                    RentalOrder ro2 = RentalOrderController.getRentalOrderDetails(rentalOrderID);
-                    double base2 = ro2 != null ? (ro2.getTotalPrice() + ro2.getAdjustedDepositAmount()) : 0.0;
-                    double amount2 = base2 * (1.0 - discountPercent / 100.0);
-                    int paymentID = PaymentController.createPaymentOnly(rentalOrderID, paymentMethod, amount2);
-                    if (paymentID > 0) {
-                        response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&bankTransferPending=true");
-                    } else {
-                        response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderID + "&error=true");
+                    for (int id : orderIDs) {
+                        RentalOrder ro2 = RentalOrderController.getRentalOrderDetails(id);
+                        double base2 = ro2 != null ? (ro2.getTotalPrice() + ro2.getAdjustedDepositAmount()) : 0.0;
+                        double amount2 = base2 * (1.0 - discountPercent / 100.0);
+                        PaymentController.createPaymentOnly(id, paymentMethod, amount2);
                     }
+                    response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + firstOrderID + "&bankTransferPending=true");
                 }
             } else {
-                RentalOrder ro3 = RentalOrderController.getRentalOrderDetails(rentalOrderID);
-                double base3 = ro3 != null ? (ro3.getTotalPrice() + ro3.getAdjustedDepositAmount()) : 0.0;
-                double amount3 = base3 * (1.0 - discountPercent / 100.0);
-                int paymentID = PaymentController.processPayment(rentalOrderID, paymentMethod, amount3);
-                if (paymentID > 0) {
-                    response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID + "&paymentSuccess=true");
+                boolean allSuccess = true;
+                for (int id : orderIDs) {
+                    RentalOrder ro3 = RentalOrderController.getRentalOrderDetails(id);
+                    double base3 = ro3 != null ? (ro3.getTotalPrice() + ro3.getAdjustedDepositAmount()) : 0.0;
+                    double amount3 = base3 * (1.0 - discountPercent / 100.0);
+                    int paymentID = PaymentController.processPayment(id, paymentMethod, amount3);
+                    if (paymentID <= 0) {
+                        allSuccess = false;
+                    }
+                }
+                if (allSuccess) {
+                    response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + firstOrderID + "&paymentSuccess=true");
                 } else {
-                    response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderID + "&error=true");
+                    response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderIDParam + "&error=true");
                 }
             }
         }

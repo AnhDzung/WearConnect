@@ -183,8 +183,9 @@
                 <% if (!"Manager".equals(role) && !"Admin".equals(role)) { %>
                     <!-- <button class="btn btn-book" onclick="handleBooking()" type="button">Thêm vào giỏ thuê</button> -->
                     <button class="btn btn-book" onclick="handleBooking()" type="button">Thuê ngay</button>
+                    <button class="btn btn-book" onclick="handleAddToCart()" type="button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-left: 10px;">Thêm vào giỏ hàng 🛒</button>
                 <% } %>
-                <button class="btn btn-back" onclick="history.back()" type="button">Quay lại</button>
+                <button class="btn btn-back" onclick="handleBack()" type="button">Quay lại</button>
             </div>
         </div>
     </div>
@@ -363,6 +364,18 @@
 
     function handleBooking() {
         window.location.href = '${pageContext.request.contextPath}/rental?action=booking&clothingID=${clothing.clothingID}&hourlyPrice=${clothing.hourlyPrice}&dailyPrice=${clothing.dailyPrice}';
+    }
+
+    function handleAddToCart() {
+        window.location.href = '${pageContext.request.contextPath}/rental?action=booking&clothingID=${clothing.clothingID}&hourlyPrice=${clothing.hourlyPrice}&dailyPrice=${clothing.dailyPrice}&addToCart=true';
+    }
+
+    function handleBack() {
+        if (document.referrer && document.referrer.includes(window.location.host) && !document.referrer.includes('/login') && !document.referrer.includes('/register')) {
+            window.history.back();
+        } else {
+            window.location.href = '${pageContext.request.contextPath}/home';
+        }
     }
 
     const images = [

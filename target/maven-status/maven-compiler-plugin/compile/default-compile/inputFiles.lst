@@ -6,6 +6,7 @@ D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller\AIKnowledgeAdminPageController.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller\AuthPageController.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller\BankWebhookController.java
+D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller\CartPageController.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller\ChatPageController.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller\ClothingPageController.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller\CosplayPageController.java
@@ -87,6 +88,7 @@ D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\AIKnowledgeAuditLog.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\AIKnowledgeDoc.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\AIMessage.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\AIProductSuggestion.java
+D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\CartItem.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\Clothing.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\ClothingImage.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\Color.java

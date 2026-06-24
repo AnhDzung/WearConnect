@@ -578,6 +578,21 @@
                 <li><a class="header-nav-main-btn cosplay-highlight" href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes</a></li>
                 <li><a href="${pageContext.request.contextPath}/rental?action=myOrders">Đơn Thuê Của Tôi</a></li>
                 <li><a href="${pageContext.request.contextPath}/user?action=favorites">Yêu Thích</a></li>
+                <%
+                    int cartSize = 0;
+                    java.util.List<?> cartList = (java.util.List<?>) session.getAttribute("cart");
+                    if (cartList != null) {
+                        cartSize = cartList.size();
+                    }
+                %>
+                <li>
+                    <a href="${pageContext.request.contextPath}/cart" style="position:relative; display:inline-flex; align-items:center; gap:4px; font-weight:600; text-decoration:none; padding: 0 16px; font-size: 14px; color: var(--dark-gray-text);">
+                        Giỏ Hàng 🛒
+                        <% if (cartSize > 0) { %>
+                            <span style="background:#28a745; color:white; border-radius:50%; padding:1px 6px; font-size:11px; font-weight:700; display:inline-block; line-height:1.4;"><%= cartSize %></span>
+                        <% } %>
+                    </a>
+                </li>
             <% } %>
             
 
