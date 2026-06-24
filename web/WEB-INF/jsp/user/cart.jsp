@@ -362,7 +362,7 @@
                                                     </c:otherwise>
                                                 </c:choose>
                                                 <div class="item-info">
-                                                    <a href="${pageContext.request.contextPath}/clothing?action=details&clothingID=${item.clothingID}" class="item-name">${item.clothingName}</a>
+                                                    <a href="${pageContext.request.contextPath}/clothing?action=view&id=${item.clothingID}" class="item-name">${item.clothingName}</a>
                                                     <div class="item-meta">
                                                         <span>Size: ${item.selectedSize}</span>
                                                         <c:if test="${not empty item.colorName}">

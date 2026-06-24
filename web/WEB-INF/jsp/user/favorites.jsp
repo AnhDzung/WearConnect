@@ -3,169 +3,120 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <jsp:include page="/WEB-INF/jsp/components/head.jsp" />
     <title>Sản Phẩm Yêu Thích - WearConnect</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f5f5f5;
-            min-height: 100vh;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.12), transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.08), transparent 45%),
+                linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
         }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-        
-        .page-header {
-            background: linear-gradient(135deg, #cc3399 0%, #cc0099 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-        }
-        
-        .page-header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-        
+
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+            margin-bottom: 50px;
         }
-        
+
+        @media (max-width: 576px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
         .product-card {
-            background: white;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: var(--radius-lg);
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: var(--shadow-md);
+            transition: transform var(--transition-base), box-shadow var(--transition-base);
+            display: flex;
+            flex-direction: column;
         }
-        
+
         .product-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: var(--shadow-lg);
         }
-        
-        .product-image {
+
+        .product-image-wrapper {
             width: 100%;
-            height: 250px;
-            background-color: #f0f0f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
+            height: 340px;
+            position: relative;
+            overflow: hidden;
+            background-color: var(--gray-100);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
         }
-        
+
+        .product-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform var(--transition-slow);
+        }
+
+        .product-card:hover .product-image-wrapper img {
+            transform: scale(1.05);
+        }
+
         .product-info {
-            padding: 15px;
+            padding: var(--spacing-xl);
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            gap: 12px;
         }
-        
+
         .product-info h3 {
             font-size: 16px;
-            color: #333;
-            margin-bottom: 8px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin: 0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
-        .product-info p {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        
+
         .product-price {
-            color: #cc3399;
-            font-weight: 600;
-            font-size: 16px;
-            margin-bottom: 10px;
+            font-size: 14px;
+            color: var(--primary-color);
+            font-weight: 700;
+            margin: 0;
         }
-        
+
         .product-actions {
             display: flex;
-            gap: 8px;
+            gap: 10px;
+            margin-top: auto;
         }
-        
-        .btn {
-            flex: 1;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: background-color 0.3s;
-        }
-        
-        .btn-view {
-            background-color: #cc3399;
-            color: white;
-        }
-        
-        .btn-view:hover {
-            background-color: #b8278a;
-        }
-        
-        .btn-remove {
-            background-color: #ff6b9d;
-            color: white;
-        }
-        
-        .btn-remove:hover {
-            background-color: #ff5288;
-        }
-        
+
         .empty-message {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: var(--radius-lg);
+            padding: 60px var(--spacing-xl);
             text-align: center;
-            padding: 80px 20px;
-            background: white;
-            border-radius: 10px;
-            color: #999;
+            box-shadow: var(--shadow-lg);
+            margin-top: 30px;
         }
-        
-        .empty-message p {
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-        
-        .empty-message a {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 12px 30px;
-            background-color: #cc3399;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: 600;
-            transition: background-color 0.3s;
-        }
-        
-        .empty-message a:hover {
-            background-color: #b8278a;
+
+        .wc-btn-primary {
+            color: var(--white) !important;
         }
     </style>
-<head>
-    <jsp:include page="/WEB-INF/jsp/components/head.jsp" />
-    <title>Yêu thích - WearConnect</title>
-    
+</head>
+<body>
+    <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
+
     <%
         Account user = (Account) session.getAttribute("account");
         if (user == null) {
@@ -173,17 +124,18 @@
             return;
         }
     %>
-    
-    <div class="container">
-        <div class="page-header">
-            <h1>Sản Phẩm Yêu Thích</h1>
-            <p>Các bộ đồ bạn đã đánh dấu yêu thích</p>
+
+    <div class="wc-container wc-mt-4 wc-mb-4" style="max-width: 1200px; margin: 40px auto 50px; padding: 0 15px;">
+        <div style="margin-bottom: 30px;">
+            <h1 style="font-family: Poppins, sans-serif; font-weight: 800; font-size: 28px; color: var(--gray-900); margin: 0;">Sản Phẩm Yêu Thích</h1>
+            <p style="color: var(--gray-500); margin-top: 5px; font-size: 14px;">Danh sách trang phục bạn đã đánh dấu yêu thích</p>
         </div>
         
         <div class="empty-message">
-            <p>💔 Chưa có sản phẩm yêu thích</p>
-            <p style="font-size: 14px; color: #999;">Hãy nhấn vào ngôi sao trên sản phẩm để thêm vào danh sách yêu thích!</p>
-            <a href="${pageContext.request.contextPath}/home">Khám Phá Sản Phẩm</a>
+            <div style="font-size: 64px; margin-bottom: 20px;">💔</div>
+            <h3 style="font-weight: 800; color: var(--gray-700); font-size: 20px; margin-bottom: 8px;">Chưa có sản phẩm yêu thích</h3>
+            <p style="color: var(--gray-500); margin-bottom: 25px;">Hãy khám phá các trang phục lộng lẫy và nhấn vào ngôi sao trên sản phẩm để thêm vào đây nhé!</p>
+            <a href="${pageContext.request.contextPath}/home" class="wc-btn wc-btn-primary" style="width: auto; display: inline-block; padding: 12px 30px; text-decoration: none;">Khám Phá Sản Phẩm</a>
         </div>
         
         <div id="productsContainer" style="display: none;">
@@ -350,15 +302,15 @@
             productCard.className = 'product-card';
             productCard.id = 'card-' + clothingID;
             productCard.innerHTML = `
-                <div class="product-image">
-                    <img src="${pageContext.request.contextPath}/image?id=` + clothingID + `" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22cursive%22 font-size=%2214%22 fill=%22%23999%22%3E[IMG]%3C/text%3E%3C/svg%3E'">
+                <div class="product-image-wrapper">
+                    <img src="${pageContext.request.contextPath}/image?id=` + clothingID + `" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22cursive%22 font-size=%2214%22 fill=%22%23999%22%3E[IMG]%3C/text%3E%3C/svg%3E'">
                 </div>
                 <div class="product-info">
-                    <h3>` + name.substring(0, 30) + `</h3>
+                    <h3>` + name + `</h3>
                     <p class="product-price">` + price + `</p>
                     <div class="product-actions">
-                        <button class="btn btn-view" onclick="window.location.href='${pageContext.request.contextPath}/clothing?action=view&id=` + clothingID + `'">Xem Chi Tiết</button>
-                        <button class="btn btn-remove" onclick="removeFavorite(` + clothingID + `, this)">Xóa</button>
+                        <button class="wc-btn wc-btn-primary wc-btn-sm" style="flex: 1; font-weight: 700;" onclick="window.location.href='${pageContext.request.contextPath}/clothing?action=view&id=` + clothingID + `'">Xem Chi Tiết</button>
+                        <button class="wc-btn wc-btn-danger wc-btn-sm" onclick="removeFavorite(` + clothingID + `, this)">Xóa</button>
                     </div>
                 </div>
             `;

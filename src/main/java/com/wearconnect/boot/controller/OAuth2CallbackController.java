@@ -173,6 +173,16 @@ public class OAuth2CallbackController {
         }
     }
     
+    private String maskSecret(String secret) {
+        if (secret == null) {
+            return "null";
+        }
+        if (secret.length() <= 8) {
+            return "***";
+        }
+        return secret.substring(0, 4) + "..." + secret.substring(secret.length() - 4);
+    }
+
     /**
      * Exchange authorization code với access token
      */
@@ -182,6 +192,16 @@ public class OAuth2CallbackController {
             String clientId = resolveClientId();
             String clientSecret = resolveClientSecret();
             String redirectUri = resolveRedirectUri(request);
+            
+            System.out.println("[OAuth2 Diagnostics] exchangeCodeForToken details:");
+            System.out.println(" - Resolved Client ID: " + clientId);
+            System.out.println(" - Resolved Redirect URI: " + redirectUri);
+            System.out.println(" - Resolved Client Secret length: " + (clientSecret != null ? clientSecret.length() : 0));
+            System.out.println(" - Resolved Client Secret masked: " + maskSecret(clientSecret));
+            
+            if ("local-dev-client-secret".equals(clientSecret)) {
+                System.out.println("[OAuth2 Diagnostics] WARNING: Client Secret is resolved to 'local-dev-client-secret'. This is a placeholder and WILL cause 401 Unauthorized!");
+            }
             
             if (clientId == null || clientSecret == null) {
                 System.err.println("Missing Google credentials in environment");
