@@ -60,6 +60,9 @@
                 overflow-x: auto;
             }
         }
+        .back-link:hover {
+            color: var(--primary-color) !important;
+        }
     </style>
 </head>
 <body class="clothing-page">
@@ -73,12 +76,18 @@
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
 
 <div class="page-wrap">
-    <div class="breadcrumb">
-        <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
-        <span>›</span>
-        <span>${clothing.category}</span>
-        <span>›</span>
-        <span>${clothing.clothingName}</span>
+    <div class="breadcrumb" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px;">
+        <div>
+            <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
+            <span>›</span>
+            <span>${clothing.category}</span>
+            <span>›</span>
+            <span>${clothing.clothingName}</span>
+        </div>
+        <a href="javascript:void(0);" onclick="handleBack()" class="back-link" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--gray-600); font-weight: 600; font-size: 14px; transition: color var(--transition-fast);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Quay lại
+        </a>
     </div>
 
     <div class="top-card">
@@ -185,7 +194,6 @@
                     <button class="btn btn-book" onclick="handleBooking()" type="button">Thuê ngay</button>
                     <button class="btn btn-book" onclick="handleAddToCart()" type="button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-left: 10px;">Thêm vào giỏ hàng 🛒</button>
                 <% } %>
-                <button class="btn btn-back" onclick="handleBack()" type="button">Quay lại</button>
             </div>
         </div>
     </div>
@@ -362,11 +370,23 @@
             .catch(() => {});
     });
 
+    const isLoggedIn = <%= isLoggedIn %>;
+
     function handleBooking() {
+        if (!isLoggedIn) {
+            alert("Bạn vui lòng đăng nhập hoặc đăng ký hệ thống để sử dụng dịch vụ nhé!");
+            window.location.href = '${pageContext.request.contextPath}/login';
+            return;
+        }
         window.location.href = '${pageContext.request.contextPath}/rental?action=booking&clothingID=${clothing.clothingID}&hourlyPrice=${clothing.hourlyPrice}&dailyPrice=${clothing.dailyPrice}';
     }
 
     function handleAddToCart() {
+        if (!isLoggedIn) {
+            alert("Bạn vui lòng đăng nhập hoặc đăng ký hệ thống để sử dụng dịch vụ nhé!");
+            window.location.href = '${pageContext.request.contextPath}/login';
+            return;
+        }
         window.location.href = '${pageContext.request.contextPath}/rental?action=booking&clothingID=${clothing.clothingID}&hourlyPrice=${clothing.hourlyPrice}&dailyPrice=${clothing.dailyPrice}&addToCart=true';
     }
 

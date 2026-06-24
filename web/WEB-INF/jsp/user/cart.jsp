@@ -4,6 +4,7 @@
 <%@ page import="config.DepositCalculationConfig" %>
 <%@ page import="java.time.temporal.ChronoUnit" %>
 <%@ page import="DAO.RatingDAO" %>
+<%@ page import="Model.CartItem" %>
 <!DOCTYPE html>
 <html>
 <head>

@@ -507,10 +507,6 @@
                     <span class="pricing-label">Thuê theo ngày</span>
                     <span class="pricing-value"><fmt:formatNumber value="${dailyPrice}" type="number" />đ<small style="font-weight: 500; font-size: 11px; color: var(--gray-500);">/ngày</small></span>
                 </div>
-                <div class="pricing-item" style="grid-column: span 2; border-top: 1px dashed var(--gray-200); padding-top: 10px; margin-top: 5px;">
-                    <span class="pricing-label">Giá trị sản phẩm (tính tiền cọc)</span>
-                    <span class="pricing-value" style="color: var(--warning-color);"><fmt:formatNumber value="${itemValue}" type="number" />đ</span>
-                </div>
             </div>
             <% } else { %>
             <p>Không tìm thấy thông tin sản phẩm.</p>
