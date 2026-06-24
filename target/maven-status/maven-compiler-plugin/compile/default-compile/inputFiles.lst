@@ -1,4 +1,5 @@
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\config\CacheControlSpringFilter.java
+D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\config\DatabaseMigrationConfig.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\config\LegacyDatabaseCompatibilityConfig.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\config\SecurityConfig.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller\AdminPageController.java
@@ -78,6 +79,7 @@ D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\DAO\OrderIssueDAO.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\DAO\PaymentDAO.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\DAO\RatingDAO.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\DAO\RentalOrderDAO.java
+D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\DAO\VoucherDAO.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\Account.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\AIChatReply.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\AIConversation.java
@@ -97,6 +99,7 @@ D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\PaymentVerificationCandid
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\Rating.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\RentalOrder.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\UserProfile.java
+D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Model\Voucher.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Service\AIChatService.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Service\AIIntentAnalyzer.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\Service\AIKnowledgeService.java

@@ -11,8 +11,8 @@ import java.util.List;
 public class RentalOrderDAO {
     
     public static int addRentalOrder(RentalOrder rentalOrder) {
-        String sql = "INSERT INTO RentalOrder (ClothingID, RenterUserID, RentalStartDate, RentalEndDate, TotalPrice, DepositAmount, Status, SelectedSize, ColorID, UserRating, TrustBasedMultiplier, AdjustedDepositAmount) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO RentalOrder (ClothingID, RenterUserID, RentalStartDate, RentalEndDate, TotalPrice, DepositAmount, Status, SelectedSize, ColorID, UserRating, TrustBasedMultiplier, AdjustedDepositAmount, VoucherCode, DiscountAmount) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, rentalOrder.getClothingID());
@@ -33,6 +33,13 @@ public class RentalOrderDAO {
             ps.setDouble(10, rentalOrder.getUserRating());
             ps.setDouble(11, rentalOrder.getTrustBasedMultiplier());
             ps.setDouble(12, rentalOrder.getAdjustedDepositAmount());
+            
+            if (rentalOrder.getVoucherCode() != null) {
+                ps.setString(13, rentalOrder.getVoucherCode());
+            } else {
+                ps.setNull(13, Types.VARCHAR);
+            }
+            ps.setDouble(14, rentalOrder.getDiscountAmount());
             
             int row = ps.executeUpdate();
             if (row > 0) {
@@ -299,6 +306,8 @@ public class RentalOrderDAO {
         try { order.setUserRating(rs.getDouble("UserRating")); } catch (SQLException ignore) {}
         try { order.setTrustBasedMultiplier(rs.getDouble("TrustBasedMultiplier")); } catch (SQLException ignore) {}
         try { order.setAdjustedDepositAmount(rs.getDouble("AdjustedDepositAmount")); } catch (SQLException ignore) {}
+        try { order.setVoucherCode(rs.getString("VoucherCode")); } catch (SQLException ignore) {}
+        try { order.setDiscountAmount(rs.getDouble("DiscountAmount")); } catch (SQLException ignore) {}
         
         // Map return/refund fields
         try { 

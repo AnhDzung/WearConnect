@@ -26,6 +26,7 @@ import jakarta.servlet.http.Part;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +59,15 @@ public class AdminPageController {
             String action = request.getParameter("action");
             if ("confirmPayment".equals(action)) {
                 handleConfirmPayment(request, response);
+                return;
+            } else if ("addVoucher".equals(action)) {
+                handleAddVoucher(request, response);
+                return;
+            } else if ("deleteVoucher".equals(action)) {
+                handleDeleteVoucher(request, response);
+                return;
+            } else if ("toggleVoucher".equals(action)) {
+                handleToggleVoucher(request, response);
                 return;
             }
             // Fall through to GET handling for other POSTs
@@ -115,6 +125,9 @@ public class AdminPageController {
             return;
         } else if ("aiKnowledge".equals(action)) {
             showAIKnowledgePage(request, response);
+            return;
+        } else if ("vouchers".equals(action)) {
+            showVouchersPage(request, response);
             return;
         }
 
@@ -513,5 +526,87 @@ public class AdminPageController {
         int dotIndex = fileName.lastIndexOf('.');
         if (dotIndex <= 0 || dotIndex >= fileName.length() - 1) return "";
         return fileName.substring(dotIndex).toLowerCase();
+    }
+
+    private void showVouchersPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        List<Model.Voucher> vouchers = DAO.VoucherDAO.getAllVouchers();
+        request.setAttribute("vouchers", vouchers);
+        request.setAttribute("view", "vouchers");
+
+        int pendingCount = RentalOrderService.countOrdersByStatus("PENDING_PAYMENT");
+        int verifyingCount = RentalOrderService.countOrdersByStatus("PAYMENT_SUBMITTED");
+        request.setAttribute("pendingCount", pendingCount);
+        request.setAttribute("verifyingCount", verifyingCount);
+        request.setAttribute("newOrdersCount", pendingCount + verifyingCount);
+
+        request.getRequestDispatcher("/WEB-INF/jsp/admin/dashboard.jsp").forward(request, response);
+    }
+
+    private void handleAddVoucher(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String code = request.getParameter("voucherCode");
+            String discountType = request.getParameter("discountType");
+            double discountValue = Double.parseDouble(request.getParameter("discountValue"));
+            double minOrderValue = Double.parseDouble(request.getParameter("minOrderValue"));
+            String maxDiscountStr = request.getParameter("maxDiscountAmount");
+            Double maxDiscountAmount = null;
+            if (maxDiscountStr != null && !maxDiscountStr.trim().isEmpty()) {
+                maxDiscountAmount = Double.parseDouble(maxDiscountStr);
+            }
+            
+            String startDateStr = request.getParameter("startDate");
+            LocalDateTime startDate = null;
+            if (startDateStr != null && !startDateStr.trim().isEmpty()) {
+                if (startDateStr.length() == 10) {
+                    startDate = LocalDateTime.parse(startDateStr + "T00:00:00");
+                } else {
+                    startDate = LocalDateTime.parse(startDateStr);
+                }
+            }
+            
+            String endDateStr = request.getParameter("endDate");
+            LocalDateTime endDate = null;
+            if (endDateStr != null && !endDateStr.trim().isEmpty()) {
+                if (endDateStr.length() == 10) {
+                    endDate = LocalDateTime.parse(endDateStr + "T23:59:59");
+                } else {
+                    endDate = LocalDateTime.parse(endDateStr);
+                }
+            }
+            
+            Model.Voucher voucher = new Model.Voucher(code, discountType, discountValue, minOrderValue, maxDiscountAmount, startDate, endDate, true);
+            DAO.VoucherDAO.addVoucher(voucher);
+            response.sendRedirect(request.getContextPath() + "/admin?action=vouchers&success=true");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?action=vouchers&error=true");
+        }
+    }
+
+    private void handleToggleVoucher(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int voucherId = Integer.parseInt(request.getParameter("voucherID"));
+            boolean isActive = Boolean.parseBoolean(request.getParameter("isActive"));
+            DAO.VoucherDAO.toggleVoucherStatus(voucherId, isActive);
+            response.sendRedirect(request.getContextPath() + "/admin?action=vouchers&success=true");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?action=vouchers&error=true");
+        }
+    }
+
+    private void handleDeleteVoucher(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int voucherId = Integer.parseInt(request.getParameter("voucherID"));
+            DAO.VoucherDAO.deleteVoucher(voucherId);
+            response.sendRedirect(request.getContextPath() + "/admin?action=vouchers&success=true");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?action=vouchers&error=true");
+        }
     }
 }

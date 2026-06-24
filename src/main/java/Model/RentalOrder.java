@@ -25,6 +25,8 @@ public class RentalOrder {
     private LocalDateTime createdAt;
     private String selectedSize;
     private Integer colorID; // Màu sắc được chọn
+    private String voucherCode;
+    private double discountAmount;
 
     // Display helpers
     private String clothingName;
@@ -192,4 +194,10 @@ public class RentalOrder {
         if (rentalEndDate == null) return "";
         return rentalEndDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
+
+    public String getVoucherCode() { return voucherCode; }
+    public void setVoucherCode(String voucherCode) { this.voucherCode = voucherCode; }
+
+    public double getDiscountAmount() { return discountAmount; }
+    public void setDiscountAmount(double discountAmount) { this.discountAmount = discountAmount; }
 }

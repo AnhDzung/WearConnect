@@ -25,6 +25,7 @@ com\wearconnect\chatbot\security\InternalApiTokenInterceptor.class
 DAO\OrderIssueDAO.class
 Model\Color.class
 com\wearconnect\chatbot\service\DepositChatService.class
+com\wearconnect\boot\config\DatabaseMigrationConfig.class
 Controller\NotificationController.class
 DAO\ColorDAO.class
 Service\AIKnowledgeService.class
@@ -57,7 +58,9 @@ com\wearconnect\chatbot\service\OrderChatService.class
 com\wearconnect\boot\controller\UserPageController.class
 com\wearconnect\chatbot\dto\ChatRequest.class
 com\wearconnect\chatbot\service\PolicyChatService.class
+Model\Voucher.class
 DAO\RatingDAO.class
+DAO\VoucherDAO.class
 com\wearconnect\boot\config\SecurityConfig.class
 Service\AIChatService$ProductSearchContext.class
 com\wearconnect\boot\scheduler\AIPaymentVerificationScheduler.class

@@ -17,6 +17,10 @@ public class RentalOrderController {
         return RentalOrderService.createRentalOrder(clothingID, renterUserID, startDate, endDate, selectedSize, colorID);
     }
 
+    public static int createRentalOrder(int clothingID, int renterUserID, LocalDateTime startDate, LocalDateTime endDate, String selectedSize, Integer colorID, String voucherCode) {
+        return RentalOrderService.createRentalOrder(clothingID, renterUserID, startDate, endDate, selectedSize, colorID, voucherCode);
+    }
+
     public static RentalOrder getRentalOrderDetails(int rentalOrderID) {
         return RentalOrderService.getRentalOrderDetails(rentalOrderID);
     }

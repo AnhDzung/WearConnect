@@ -6,6 +6,7 @@
 <%@ page import="Model.Clothing" %>
 <%@ page import="DAO.ColorDAO" %>
 <%@ page import="DAO.ClothingDAO" %>
+<%@ page import="config.DepositCalculationConfig" %>
 <%
     int clothingID = 0;
     Clothing clothing = null;
@@ -227,12 +228,23 @@
             </div>
         </div>
         
+        <!-- Phần nhập Voucher -->
+        <div class="form-group" style="margin-top: 20px; border-top: 1px dashed #ddd; padding-top: 15px;">
+            <label for="voucherInput">Mã giảm giá (Voucher):</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="voucherInput" placeholder="Nhập mã voucher (ví dụ: WELCOME100)" style="flex: 1; text-transform: uppercase;">
+                <button type="button" id="btnApplyVoucher" onclick="applyVoucher()" style="background-color: #007bff; color: white; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: auto; margin-right: 0;">Áp dụng</button>
+            </div>
+            <span id="voucherMessage" style="font-size: 13px; display: block; margin-top: 5px; font-weight: 500;"></span>
+            <input type="hidden" id="submittedVoucherCode" name="voucherCode" value="">
+        </div>
+        
         <div class="price-summary">
             <p><strong>Tổng giá thuê:</strong> <span id="rentalFee">0</span> VNĐ</p>
+            <p id="discountRow" style="display: none; color: #28a745;"><strong>Giảm giá Voucher:</strong> -<span id="discountAmountDisplay">0</span> VNĐ</p>
             <p><strong>Tiền cọc:</strong> <span id="depositAmount">0</span> VNĐ</p>
             <p style="color: #d9534f; font-weight: bold; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;"><strong>Số tiền phải thanh toán:</strong> <span id="paymentAmount">0</span> VNĐ</p>
             <small style="color: #666; display: block; margin-top: 10px;">Bạn sẽ thanh toán tổng tiền thuê + tiền cọc. Tiền cọc sẽ được hoàn lại sau khi trả hàng và sản phẩm không có lỗi gì.</small>
-            <!-- <small style="color: #2e7d32; display: block; margin-top: 8px;"><strong>💡 Mẹo:</strong> Nếu bạn có độ tin tưởng cao (uy tín từ những lần thuê trước), tiền cọc sẽ được giảm tự động ở phần thanh toán!</small> -->
         </div>
         
         <button type="submit" onclick="return validateForm()">Tiến hành thanh toán</button>
@@ -245,19 +257,26 @@
     const DAILY_PRICE = Number('${dailyPrice}');
     const ITEM_VALUE = Number('${itemValue}');
     
-    function calculateDeposit(hours, rentalType) {
-        if (hours <= 0) return 0;
+    // Cấu hình đồng bộ từ Backend (DepositCalculationConfig)
+    const HOURLY_DEPOSIT_PERCENTAGE = <%= DepositCalculationConfig.HOURLY_DEPOSIT_PERCENTAGE %>;
+    const HOURLY_DEPOSIT_MULTIPLIER = <%= DepositCalculationConfig.HOURLY_DEPOSIT_MULTIPLIER %>;
+    const DAILY_DEPOSIT_PERCENTAGE = <%= DepositCalculationConfig.DAILY_DEPOSIT_PERCENTAGE %>;
+    const DAILY_DEPOSIT_MULTIPLIER = <%= DepositCalculationConfig.DAILY_DEPOSIT_MULTIPLIER %>;
+    
+    function calculateDeposit(duration, rentalType) {
+        if (duration <= 0) return 0;
         
         if (rentalType === 'hourly') {
-            // Hourly: MAX(40% × itemValue, 2 × hourlyPrice)
-            const percentBased = ITEM_VALUE * 0.40;
-            const priceBased = HOURLY_PRICE * 2;
+            // Công thức Thuê theo giờ: MAX(ITEM_VALUE * HOURLY_DEPOSIT_PERCENTAGE, Tổng tiền thuê * HOURLY_DEPOSIT_MULTIPLIER)
+            const rentalFee = duration * HOURLY_PRICE;
+            const percentBased = ITEM_VALUE * HOURLY_DEPOSIT_PERCENTAGE;
+            const priceBased = rentalFee * HOURLY_DEPOSIT_MULTIPLIER;
             return Math.max(percentBased, priceBased);
         } else {
-            // Daily: MAX(30% × itemValue, 0.5 × dailyPrice)
-            const days = hours; // hours is already in days for daily rental
-            const percentBased = ITEM_VALUE * 0.30 * days;
-            const priceBased = DAILY_PRICE * 0.5 * days;
+            // Công thức Thuê theo ngày: MAX(ITEM_VALUE * DAILY_DEPOSIT_PERCENTAGE, Tổng tiền thuê * DAILY_DEPOSIT_MULTIPLIER)
+            const rentalFee = duration * DAILY_PRICE; // duration ở đây là số ngày
+            const percentBased = ITEM_VALUE * DAILY_DEPOSIT_PERCENTAGE;
+            const priceBased = rentalFee * DAILY_DEPOSIT_MULTIPLIER;
             return Math.max(percentBased, priceBased);
         }
     }
@@ -338,6 +357,99 @@
         toggleRentalType();
     });
 
+    let appliedVoucherData = null;
+
+    function resetVoucher() {
+        document.getElementById('submittedVoucherCode').value = "";
+        document.getElementById('voucherInput').value = "";
+        document.getElementById('voucherMessage').textContent = "";
+        document.getElementById('discountRow').style.display = "none";
+        document.getElementById('discountAmountDisplay').textContent = "0";
+        appliedVoucherData = null;
+    }
+
+    function applyVoucher() {
+        const code = document.getElementById('voucherInput').value.trim().toUpperCase();
+        const msgSpan = document.getElementById('voucherMessage');
+        
+        if (code === '') {
+            resetVoucher();
+            return;
+        }
+
+        const rentalFeeText = document.getElementById('rentalFee').textContent.replace(/\./g, '').trim();
+        const rentalPrice = parseFloat(rentalFeeText) || 0;
+        
+        if (rentalPrice <= 0) {
+            msgSpan.style.color = 'red';
+            msgSpan.textContent = 'Vui lòng chọn thời gian thuê trước khi áp dụng voucher.';
+            return;
+        }
+
+        const ctx = '${pageContext.request.contextPath}';
+        const url = ctx + '/rental/validateVoucher?code=' + encodeURIComponent(code) + '&totalPrice=' + rentalPrice;
+        
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (data.valid) {
+                    appliedVoucherData = data;
+                    document.getElementById('submittedVoucherCode').value = data.voucherCode;
+                    msgSpan.style.color = '#28a745';
+                    msgSpan.textContent = 'Áp dụng voucher thành công!';
+                    updatePriceDisplays();
+                } else {
+                    document.getElementById('submittedVoucherCode').value = "";
+                    msgSpan.style.color = 'red';
+                    msgSpan.textContent = data.message || 'Mã giảm giá không hợp lệ.';
+                    
+                    appliedVoucherData = null;
+                    document.getElementById('discountRow').style.display = "none";
+                    document.getElementById('discountAmountDisplay').textContent = "0";
+                    updatePriceDisplays();
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                msgSpan.style.color = 'red';
+                msgSpan.textContent = 'Lỗi hệ thống khi xác thực voucher.';
+            });
+    }
+
+    function updatePriceDisplays() {
+        const rentalFeeText = document.getElementById('rentalFee').textContent.replace(/\./g, '').trim();
+        const rentalPrice = parseFloat(rentalFeeText) || 0;
+        
+        const depositText = document.getElementById('depositAmount').textContent.replace(/\./g, '').trim();
+        const depositPrice = parseFloat(depositText) || 0;
+
+        let discount = 0;
+        if (appliedVoucherData) {
+            if (appliedVoucherData.discountType === 'PERCENTAGE') {
+                discount = rentalPrice * (appliedVoucherData.discountValue / 100);
+                if (appliedVoucherData.maxDiscountAmount && discount > appliedVoucherData.maxDiscountAmount) {
+                    discount = appliedVoucherData.maxDiscountAmount;
+                }
+            } else if (appliedVoucherData.discountType === 'AMOUNT') {
+                discount = appliedVoucherData.discountValue;
+            }
+            
+            if (discount > rentalPrice) {
+                discount = rentalPrice;
+            }
+        }
+
+        if (discount > 0) {
+            document.getElementById('discountRow').style.display = 'block';
+            document.getElementById('discountAmountDisplay').textContent = Math.round(discount).toLocaleString('vi-VN');
+        } else {
+            document.getElementById('discountRow').style.display = 'none';
+        }
+
+        const totalPayment = rentalPrice - discount + depositPrice;
+        document.getElementById('paymentAmount').textContent = totalPayment > 0 ? Math.round(totalPayment).toLocaleString('vi-VN') : '0';
+    }
+
     function calculatePrice() {
         const rentalType = document.querySelector('input[name="rentalType"]:checked').value;
         let rentalPrice = 0;
@@ -368,11 +480,18 @@
             }
         }
 
-        const totalPayment = rentalPrice + depositPrice;
-
         document.getElementById('rentalFee').textContent = (isFinite(rentalPrice) && rentalPrice > 0) ? Math.round(rentalPrice).toLocaleString('vi-VN') : '0';
         document.getElementById('depositAmount').textContent = (isFinite(depositPrice) && depositPrice > 0) ? Math.round(depositPrice).toLocaleString('vi-VN') : '0';
-        document.getElementById('paymentAmount').textContent = (isFinite(totalPayment) && totalPayment > 0) ? Math.round(totalPayment).toLocaleString('vi-VN') : '0';
+
+        // Check if applied voucher is still valid with the new price
+        if (appliedVoucherData && rentalPrice < appliedVoucherData.minOrderValue) {
+            document.getElementById('submittedVoucherCode').value = "";
+            document.getElementById('voucherMessage').style.color = 'red';
+            document.getElementById('voucherMessage').textContent = 'Voucher tự động hủy do đơn hàng mới không đủ điều kiện tối thiểu.';
+            appliedVoucherData = null;
+        }
+
+        updatePriceDisplays();
     }
 </script>
 <jsp:include page="/WEB-INF/jsp/components/footer.jsp" />

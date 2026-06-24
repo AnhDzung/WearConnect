@@ -43,7 +43,8 @@ public class AIProviderConfig {
     }
 
     public static boolean isEnabled() {
-        return !getApiKey().isBlank();
+        String key = getApiKey();
+        return !key.isBlank() && !"nhap_api_key_cua_ban_vao_day".equals(key);
     }
 
     private static String getConfig(String key, String defaultValue) {

@@ -69,6 +69,10 @@
                     onclick="location.href='${pageContext.request.contextPath}/admin?action=aiKnowledge'">
                  🤖 Tri thức AI
                 </button>
+                <button type="button" class="tab-button ${view eq 'vouchers' ? 'active' : ''}"
+                    onclick="location.href='${pageContext.request.contextPath}/admin?action=vouchers'">
+                 🎟️ Quản lý Voucher
+                </button>
         </div>
 
         <c:if test="${view eq 'products'}">
@@ -409,6 +413,10 @@
                 </tbody>
             </table>
         </div>
+        </c:if>
+        
+        <c:if test="${view eq 'vouchers'}">
+            <jsp:include page="/WEB-INF/jsp/admin/vouchers.jsp" />
         </c:if>
     </div>
 

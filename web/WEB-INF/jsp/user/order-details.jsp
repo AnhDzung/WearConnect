@@ -444,9 +444,33 @@
                         <div class="info-row">
                             <strong>Ngày kết thúc:</strong> ${order.rentalEndDate}
                         </div>
-                        <div class="info-row">
-                            <strong>Tổng giá thuê:</strong> <fmt:formatNumber value="${order.totalPrice}" pattern="#,##0"/> VNĐ
-                        </div>
+                        <c:choose>
+                            <c:when test="${not empty order.voucherCode and order.discountAmount > 0}">
+                                <div class="info-row">
+                                    <strong>Giá thuê gốc:</strong> 
+                                    <span>
+                                        <fmt:formatNumber value="${order.totalPrice + order.discountAmount}" pattern="#,##0"/> VNĐ
+                                    </span>
+                                </div>
+                                <div class="info-row" style="background-color: #eafcf0; padding: 8px; border-radius: 4px; border-left: 3px solid #28a745;">
+                                    <strong style="color: #2563eb;">Voucher áp dụng:</strong>
+                                    <span style="font-weight: 700; color: #28a745;">
+                                        ${order.voucherCode} (-<fmt:formatNumber value="${order.discountAmount}" pattern="#,##0"/> VNĐ)
+                                    </span>
+                                </div>
+                                <div class="info-row">
+                                    <strong>Tổng giá thuê:</strong> 
+                                    <span style="font-weight: 700; color: #1e3a8a;">
+                                        <fmt:formatNumber value="${order.totalPrice}" pattern="#,##0"/> VNĐ
+                                    </span>
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="info-row">
+                                    <strong>Tổng giá thuê:</strong> <fmt:formatNumber value="${order.totalPrice}" pattern="#,##0"/> VNĐ
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
                         <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Admin'}">
                             <div class="info-row" style="background-color: #eef9f0; padding: 8px; border-radius: 4px; border-left: 3px solid #198754;">
                                 <strong>Thực nhận sau trừ phí (10%):</strong>

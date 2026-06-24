@@ -15,10 +15,14 @@ import java.util.ArrayList;
 public class RentalOrderService {
     
     public static int createRentalOrder(int clothingID, int renterUserID, LocalDateTime startDate, LocalDateTime endDate, String selectedSize) {
-        return createRentalOrder(clothingID, renterUserID, startDate, endDate, selectedSize, null);
+        return createRentalOrder(clothingID, renterUserID, startDate, endDate, selectedSize, null, null);
     }
 
     public static int createRentalOrder(int clothingID, int renterUserID, LocalDateTime startDate, LocalDateTime endDate, String selectedSize, Integer colorID) {
+        return createRentalOrder(clothingID, renterUserID, startDate, endDate, selectedSize, colorID, null);
+    }
+
+    public static int createRentalOrder(int clothingID, int renterUserID, LocalDateTime startDate, LocalDateTime endDate, String selectedSize, Integer colorID, String voucherCode) {
         Clothing clothing = ClothingDAO.getClothingByID(clothingID);
         if (clothing == null) return -1;
         
@@ -56,11 +60,40 @@ public class RentalOrderService {
         );
         double adjustedDepositAmount = depositAmount * trustBasedMultiplier;
         
-        RentalOrder order = new RentalOrder(clothingID, renterUserID, startDate, endDate, totalPrice, adjustedDepositAmount);
+        // Apply Voucher Discount
+        double discountAmount = 0.0;
+        String appliedVoucherCode = null;
+        if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+            Model.Voucher voucher = DAO.VoucherDAO.getVoucherByCode(voucherCode.trim());
+            if (voucher != null && voucher.isActive() && 
+                (voucher.getStartDate() == null || voucher.getStartDate().isBefore(LocalDateTime.now())) &&
+                (voucher.getEndDate() == null || voucher.getEndDate().isAfter(LocalDateTime.now())) &&
+                totalPrice >= voucher.getMinOrderValue()) {
+                
+                appliedVoucherCode = voucher.getVoucherCode();
+                if ("PERCENTAGE".equals(voucher.getDiscountType())) {
+                    discountAmount = totalPrice * (voucher.getDiscountValue() / 100.0);
+                    if (voucher.getMaxDiscountAmount() != null && discountAmount > voucher.getMaxDiscountAmount()) {
+                        discountAmount = voucher.getMaxDiscountAmount();
+                    }
+                } else if ("AMOUNT".equals(voucher.getDiscountType())) {
+                    discountAmount = voucher.getDiscountValue();
+                }
+                
+                if (discountAmount > totalPrice) {
+                    discountAmount = totalPrice;
+                }
+            }
+        }
+        double finalTotalPrice = totalPrice - discountAmount;
+        
+        RentalOrder order = new RentalOrder(clothingID, renterUserID, startDate, endDate, finalTotalPrice, adjustedDepositAmount);
         order.setSelectedSize(selectedSize);
         order.setUserRating(userRating);
         order.setTrustBasedMultiplier(trustBasedMultiplier);
         order.setAdjustedDepositAmount(adjustedDepositAmount);
+        order.setVoucherCode(appliedVoucherCode);
+        order.setDiscountAmount(discountAmount);
         if (colorID != null) {
             order.setColorID(colorID);
         }

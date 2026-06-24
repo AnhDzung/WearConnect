@@ -23,6 +23,11 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,6 +36,59 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequestMapping("/rental")
 public class RentalPageController {
+
+    @GetMapping(value = "/validateVoucher", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> validateVoucher(@RequestParam("code") String code, @RequestParam("totalPrice") double totalPrice) {
+        Map<String, Object> result = new HashMap<>();
+        if (code == null || code.trim().isEmpty()) {
+            result.put("valid", false);
+            result.put("message", "Mã voucher không hợp lệ.");
+            return result;
+        }
+
+        Model.Voucher voucher = DAO.VoucherDAO.getVoucherByCode(code.trim());
+        if (voucher == null) {
+            result.put("valid", false);
+            result.put("message", "Voucher không tồn tại.");
+            return result;
+        }
+
+        if (!voucher.isActive()) {
+            result.put("valid", false);
+            result.put("message", "Voucher đã bị khóa hoặc hết hiệu lực.");
+            return result;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (voucher.getStartDate() != null && voucher.getStartDate().isAfter(now)) {
+            result.put("valid", false);
+            result.put("message", "Voucher chưa đến thời gian áp dụng.");
+            return result;
+        }
+
+        if (voucher.getEndDate() != null && voucher.getEndDate().isBefore(now)) {
+            result.put("valid", false);
+            result.put("message", "Voucher đã hết hạn.");
+            return result;
+        }
+
+        if (totalPrice < voucher.getMinOrderValue()) {
+            result.put("valid", false);
+            java.text.DecimalFormat df = new java.text.DecimalFormat("#,###");
+            result.put("message", "Đơn hàng tối thiểu " + df.format(voucher.getMinOrderValue()) + " đ để áp dụng voucher này.");
+            return result;
+        }
+
+        result.put("valid", true);
+        result.put("voucherCode", voucher.getVoucherCode());
+        result.put("discountType", voucher.getDiscountType());
+        result.put("discountValue", voucher.getDiscountValue());
+        if (voucher.getMaxDiscountAmount() != null) {
+            result.put("maxDiscountAmount", voucher.getMaxDiscountAmount());
+        }
+        return result;
+    }
 
     @GetMapping
     public void handleGet(HttpServletRequest request, HttpServletResponse response)
@@ -163,7 +221,8 @@ public class RentalPageController {
                     try { colorID = Integer.parseInt(selectedColorStr); } catch (NumberFormatException e) { colorID = null; }
                 }
 
-                int rentalOrderID = RentalOrderController.createRentalOrder(clothingID, userID, startDate, endDate, selectedSize, colorID);
+                String voucherCode = request.getParameter("voucherCode");
+                int rentalOrderID = RentalOrderController.createRentalOrder(clothingID, userID, startDate, endDate, selectedSize, colorID, voucherCode);
                 if (rentalOrderID > 0) {
                     response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderID);
                 } else {

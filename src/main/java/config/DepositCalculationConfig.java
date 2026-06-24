@@ -7,15 +7,15 @@ package config;
 public class DepositCalculationConfig {
     
     // ==================== HOURLY RENTAL (Thuê theo giờ) ====================
-    /** Deposit percentage for hourly rental: 40% of item value */
-    public static final double HOURLY_DEPOSIT_PERCENTAGE = 0.40;
+    /** Deposit percentage for hourly rental: 70% of item value */
+    public static final double HOURLY_DEPOSIT_PERCENTAGE = 0.70;
     
     /** Deposit multiplier for hourly rental: 2x rental fee */
     public static final double HOURLY_DEPOSIT_MULTIPLIER = 2.0;
     
     // ==================== DAILY RENTAL (Thuê theo ngày) ====================
     /** Deposit percentage for daily rental: 30% of item value */
-    public static final double DAILY_DEPOSIT_PERCENTAGE = 0.30;
+    public static final double DAILY_DEPOSIT_PERCENTAGE = 0.50;
     
     /** Deposit multiplier for daily rental: 0.5x rental fee */
     public static final double DAILY_DEPOSIT_MULTIPLIER = 0.5;
@@ -107,21 +107,8 @@ public class DepositCalculationConfig {
      * @return Multiplier to apply to calculated deposit
      */
     public static double getTrustBasedMultiplier(Double userRating) {
-        if (userRating == null || userRating <= 0) {
-            // No rating = new user = surcharge
-            return NEW_USER_MULTIPLIER;
-        }
-        
-        if (userRating >= HIGH_RATING_THRESHOLD) {
-            // High rating = discount
-            return HIGH_RATING_MULTIPLIER;
-        } else if (userRating < LOW_RATING_THRESHOLD) {
-            // Low rating = surcharge
-            return NEW_USER_MULTIPLIER;
-        } else {
-            // Normal rating = no adjustment
-            return NORMAL_USER_MULTIPLIER;
-        }
+        // Tạm thời bỏ hệ số uy tín, tất cả người dùng đều dùng hệ số 1.0
+        return NORMAL_USER_MULTIPLIER;
     }
     
     /**
@@ -131,16 +118,6 @@ public class DepositCalculationConfig {
      * @return Description string
      */
     public static String getTrustRatingDescription(Double userRating) {
-        if (userRating == null || userRating <= 0) {
-            return "Người dùng mới (cọc +20%)";
-        }
-        
-        if (userRating >= HIGH_RATING_THRESHOLD) {
-            return "Uy tín cao (cọc -20%)";
-        } else if (userRating < LOW_RATING_THRESHOLD) {
-            return "Uy tín thấp (cọc +20%)";
-        } else {
-            return "Uy tín bình thường (cọc 100%)";
-        }
+        return "Không áp dụng hệ số uy tín (cọc 100%)";
     }
 }
