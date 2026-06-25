@@ -43,22 +43,33 @@ public class OAuth2CallbackController {
 
     private static final String GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 
+    private String cleanValue(String val) {
+        if (val == null) {
+            return null;
+        }
+        val = val.trim();
+        if (val.startsWith("[") && val.endsWith("]")) {
+            val = val.substring(1, val.length() - 1).trim();
+        }
+        return val;
+    }
+
     private String resolveClientId() {
         if (configuredClientId != null && !configuredClientId.isBlank()
                 && !"local-dev-client-id".equals(configuredClientId)) {
-            return configuredClientId;
+            return cleanValue(configuredClientId);
         }
         String envValue = System.getenv("GOOGLE_CLIENT_ID");
-        return (envValue == null || envValue.isBlank()) ? null : envValue;
+        return (envValue == null || envValue.isBlank()) ? null : cleanValue(envValue);
     }
 
     private String resolveClientSecret() {
         if (configuredClientSecret != null && !configuredClientSecret.isBlank()
                 && !"local-dev-client-secret".equals(configuredClientSecret)) {
-            return configuredClientSecret;
+            return cleanValue(configuredClientSecret);
         }
         String envValue = System.getenv("GOOGLE_CLIENT_SECRET");
-        return (envValue == null || envValue.isBlank()) ? null : envValue;
+        return (envValue == null || envValue.isBlank()) ? null : cleanValue(envValue);
     }
 
     private String resolveRedirectUri(HttpServletRequest request) {
@@ -238,6 +249,9 @@ public class OAuth2CallbackController {
                     System.err.println("Google token error: " + error + " - " + desc);
                 }
             }
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            System.err.println("HTTP Error exchanging code for token: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            e.printStackTrace();
         } catch (Exception e) {
             System.err.println("Error exchanging code for token: " + e.getMessage());
             e.printStackTrace();

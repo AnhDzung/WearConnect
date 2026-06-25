@@ -90,9 +90,23 @@ public class ImagePageController {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            System.out.println("Image retrieval error: " + e.getMessage());
-            e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            String msg = e.getMessage();
+            boolean isAbort = e instanceof java.io.IOException || 
+                             (msg != null && (msg.toLowerCase().contains("abort") || msg.toLowerCase().contains("broken pipe") || msg.toLowerCase().contains("connection reset")));
+            
+            if (isAbort) {
+                System.out.println("[ImageController] Image retrieval interrupted: Client disconnected / aborted connection.");
+            } else {
+                System.err.println("[ImageController] Image retrieval error: " + e.getMessage());
+                e.printStackTrace();
+            }
+            
+            if (!response.isCommitted()) {
+                try {
+                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                } catch (Exception ignored) {
+                }
+            }
         }
     }
 
