@@ -1,6 +1,8 @@
 package com.wearconnect.boot.controller;
 
 import Model.Account;
+import Model.CartItem;
+import DAO.CartDAO;
 import Service.GoogleOAuth2Service;
 import Service.GoogleOAuth2Service.GoogleUserInfo;
 import Service.NotificationService;
@@ -22,6 +24,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Controller xử lý OAuth2 callback từ Google
@@ -154,6 +157,10 @@ public class OAuth2CallbackController {
             session.setAttribute("accountID", account.getAccountID());
             session.setAttribute("userRole", account.getUserRole());
             session.setMaxInactiveInterval(30 * 60);
+
+            // Load cart from database
+            List<CartItem> cart = CartDAO.getCartByAccountID(account.getAccountID());
+            session.setAttribute("cart", cart);
             
             // Redirect dựa trên role
             String role = account.getUserRole();

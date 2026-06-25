@@ -6,6 +6,8 @@ import Controller.RatingController;
 import Model.Payment;
 import Model.RentalOrder;
 import Model.Account;
+import Model.CartItem;
+import DAO.CartDAO;
 import Service.BankTransferService;
 import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
@@ -220,8 +222,18 @@ public class PaymentPageController {
                                  
                                 // Trigger AI verification immediately & asynchronously
                                 Service.AIPaymentVerificationService.verifyOrderAsync(id);
+
+                                // Remove matching item from database cart
+                                if (ro != null) {
+                                    CartDAO.removeCartItemByProduct(currentUserID, ro.getClothingID(), ro.getSelectedSize(), ro.getColorID());
+                                }
                             }
                         }
+                        
+                        // Update session cart
+                        List<CartItem> cart = CartDAO.getCartByAccountID(currentUserID);
+                        session.setAttribute("cart", cart);
+
                         response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + firstOrderID + "&paymentSubmitted=true");
                     } else {
                         response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderIDParam + "&error=uploadfailed");
@@ -244,9 +256,18 @@ public class PaymentPageController {
                     int paymentID = PaymentController.processPayment(id, paymentMethod, amount3);
                     if (paymentID <= 0) {
                         allSuccess = false;
+                    } else {
+                        // Remove matching item from database cart
+                        if (ro3 != null) {
+                            CartDAO.removeCartItemByProduct(currentUserID, ro3.getClothingID(), ro3.getSelectedSize(), ro3.getColorID());
+                        }
                     }
                 }
                 if (allSuccess) {
+                    // Update session cart
+                    List<CartItem> cart = CartDAO.getCartByAccountID(currentUserID);
+                    session.setAttribute("cart", cart);
+
                     response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + firstOrderID + "&paymentSuccess=true");
                 } else {
                     response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderIDParam + "&error=true");

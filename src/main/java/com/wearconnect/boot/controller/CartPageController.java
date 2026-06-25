@@ -3,6 +3,7 @@ package com.wearconnect.boot.controller;
 import DAO.ClothingDAO;
 import DAO.ClothingImageDAO;
 import DAO.ColorDAO;
+import DAO.CartDAO;
 import Model.CartItem;
 import Model.Clothing;
 import Model.ClothingImage;
@@ -53,11 +54,9 @@ public class CartPageController {
         }
 
         if ("view".equals(action)) {
-            List<CartItem> cart = (List<CartItem>) session.getAttribute("cart");
-            if (cart == null) {
-                cart = new ArrayList<>();
-                session.setAttribute("cart", cart);
-            }
+            int userID = (int) session.getAttribute("accountID");
+            List<CartItem> cart = CartDAO.getCartByAccountID(userID);
+            session.setAttribute("cart", cart);
             request.setAttribute("cart", cart);
             request.getRequestDispatcher("/WEB-INF/jsp/user/cart.jsp").forward(request, response);
             return;
@@ -106,7 +105,6 @@ public class CartPageController {
                 }
 
                 CartItem item = new CartItem();
-                item.setCartItemId((int) (System.currentTimeMillis() % 1000000) + (int)(Math.random() * 1000));
                 item.setClothingID(clothingID);
                 item.setClothingName(clothing.getClothingName());
                 item.setCategory(clothing.getCategory());
@@ -125,6 +123,9 @@ public class CartPageController {
                     item.setImageID(imgs.get(0).getImageID());
                 }
 
+                int userID = (int) session.getAttribute("accountID");
+                CartDAO.addCartItem(userID, item);
+
                 cart.add(item);
                 session.setAttribute("cart", cart);
                 response.sendRedirect(request.getContextPath() + "/cart?added=true");
@@ -138,6 +139,9 @@ public class CartPageController {
         if ("remove".equals(action)) {
             try {
                 int cartItemId = Integer.parseInt(request.getParameter("cartItemId"));
+                int userID = (int) session.getAttribute("accountID");
+                CartDAO.removeCartItem(userID, cartItemId);
+
                 List<CartItem> cart = (List<CartItem>) session.getAttribute("cart");
                 if (cart != null) {
                     Iterator<CartItem> it = cart.iterator();
@@ -210,11 +214,8 @@ public class CartPageController {
                     }
                 }
                 
-                // Remove checked out items from cart
-                for (CartItem item : itemsToCheckout) {
-                    cart.remove(item);
-                }
-                session.setAttribute("cart", cart);
+                // Keep items in the cart until the payment is processed successfully.
+                // They will be removed in PaymentPageController.java upon payment submission/success.
 
                 // Build comma-separated order IDs
                 StringBuilder sb = new StringBuilder();

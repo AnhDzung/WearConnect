@@ -2,12 +2,15 @@ package com.wearconnect.boot.controller;
 
 import Controller.AuthController;
 import Model.Account;
+import Model.CartItem;
+import DAO.CartDAO;
 import Service.NotificationService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +37,10 @@ public class AuthPageController {
             session.setAttribute("accountID", account.getAccountID());
             session.setAttribute("userRole", account.getUserRole());
             session.setMaxInactiveInterval(30 * 60);
+
+            // Load cart from database
+            List<CartItem> cart = CartDAO.getCartByAccountID(account.getAccountID());
+            session.setAttribute("cart", cart);
 
             String role = account.getUserRole();
             if ("User".equals(role) || "Manager".equals(role)) {

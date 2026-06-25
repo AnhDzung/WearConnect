@@ -1,3 +1,4 @@
+DAO\CartDAO.class
 com\wearconnect\chatbot\exception\GlobalExceptionHandler.class
 Model\AIConversation.class
 Service\DashboardService.class

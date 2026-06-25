@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 public class DatabaseConnection {
@@ -92,10 +93,39 @@ public class DatabaseConnection {
 
                     dataSource = new HikariDataSource(config);
                     System.out.println("Khởi tạo SQL Server connection pool thành công!");
+                    initializeDatabaseSchema();
                 }
             }
         }
         return dataSource;
+    }
+
+    private static void initializeDatabaseSchema() {
+        String sql = "IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='CartItems' AND xtype='U')\n" +
+                     "BEGIN\n" +
+                     "    CREATE TABLE CartItems (\n" +
+                     "        CartItemID INT IDENTITY(1,1) PRIMARY KEY,\n" +
+                     "        AccountID INT NOT NULL,\n" +
+                     "        ClothingID INT NOT NULL,\n" +
+                     "        RentalType NVARCHAR(50) NOT NULL,\n" +
+                     "        StartDate DATETIME NOT NULL,\n" +
+                     "        EndDate DATETIME NOT NULL,\n" +
+                     "        SelectedSize NVARCHAR(50) NULL,\n" +
+                     "        ColorID INT NULL,\n" +
+                     "        FOREIGN KEY (AccountID) REFERENCES Accounts(AccountID) ON DELETE CASCADE,\n" +
+                     "        FOREIGN KEY (ClothingID) REFERENCES Clothing(ClothingID) ON DELETE CASCADE\n" +
+                     "    )\n" +
+                     "END";
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            if (conn != null) {
+                stmt.execute(sql);
+                System.out.println("[DatabaseConnection] Bảng CartItems đã được kiểm tra/khởi tạo thành công!");
+            }
+        } catch (SQLException e) {
+            System.err.println("[DatabaseConnection] Lỗi khi tạo bảng CartItems: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private static String getSetting(String systemPropertyKey, String envKey, String defaultValue) {
