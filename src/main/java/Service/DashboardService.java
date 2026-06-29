@@ -11,7 +11,7 @@ import java.sql.*;
 import java.util.*;
 
 public class DashboardService {
-    private static final double SYSTEM_FEE_RATE = 0.10;
+    private static final double SYSTEM_FEE_RATE = 0.25;
     
     // Lấy doanh thu thực nhận của manager (toàn thời gian, sau khi trừ 10% phí hệ thống)
     public static double getTotalRevenue(int renterID) {

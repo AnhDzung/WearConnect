@@ -5,7 +5,7 @@
 
     function openPaymentModal(orderID, depositAmount, totalAmount) {
         const rentalAmount = parseFloat(totalAmount) || 0;
-        const systemFee = rentalAmount * 0.10;
+        const systemFee = rentalAmount * 0.25;
         const managerReceive = rentalAmount - systemFee;
 
         document.getElementById('paymentOrderID').value = orderID;

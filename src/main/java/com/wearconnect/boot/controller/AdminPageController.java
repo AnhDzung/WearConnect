@@ -35,7 +35,7 @@ import java.util.Map;
 @RequestMapping("/admin")
 public class AdminPageController {
 
-    private static final double SYSTEM_FEE_RATE = 0.10;
+    private static final double SYSTEM_FEE_RATE = 0.25;
 
     @RequestMapping
     public void handleRequest(HttpServletRequest request, HttpServletResponse response)
@@ -482,7 +482,7 @@ public class AdminPageController {
                                 "Thanh toán tiền thuê đã hoàn tất",
                                 "Đơn hàng #" + orderID + " đã được admin xác thực và thanh toán thành công.\n"
                                         + "Số tiền thuê: " + String.format("%,.0f", rentalAmount) + " VND\n"
-                                        + "Phí hệ thống: 10%\n"
+                                        + "Phí hệ thống: " + String.format("%.0f", SYSTEM_FEE_RATE * 100) + "%\n"
                                         + "Số tiền bạn sẽ nhận được: " + String.format("%,.0f", managerReceiveAmount) + " VND\n"
                                         + "Cảm ơn bạn đã tin tưởng và sử dụng hệ thống. Khoản thanh toán đã được thực hiện."
                         );

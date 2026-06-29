@@ -434,7 +434,7 @@
                     <div>
                         <strong>Tiền thuê trả cho Manager:</strong> <span id="rentalDisplay"></span> VND
                         <div style="margin-top: 6px; color: #555;">
-                            <div>Phí hệ thống (10%): <strong><span id="systemFeeDisplay">0</span> VND</strong></div>
+                            <div>Phí hệ thống (25%): <strong><span id="systemFeeDisplay">0</span> VND</strong></div>
                             <div>Số tiền Manager nhận: <strong><span id="managerReceiveDisplay">0</span> VND</strong></div>
                         </div>
                         <div style="margin-top: 8px;">
