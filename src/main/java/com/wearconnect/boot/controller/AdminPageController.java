@@ -247,6 +247,15 @@ public class AdminPageController {
             RentalOrderService.updateOrderStatus(orderID, "PAYMENT_VERIFIED");
 
             try {
+                Payment payment = PaymentController.getPaymentStatus(orderID);
+                if (payment != null) {
+                    PaymentController.completePayment(payment.getPaymentID());
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+            try {
                 RentalOrder ro = RentalOrderController.getRentalOrderByID(orderID);
                 if (ro != null) {
                     int managerUserID = ro.getManagerID();
