@@ -11,9 +11,9 @@ import java.sql.*;
 import java.util.*;
 
 public class DashboardService {
-    private static final double SYSTEM_FEE_RATE = 0.25;
+    private static final double SYSTEM_FEE_RATE = 0.20;
     
-    // Lấy doanh thu thực nhận của manager (toàn thời gian, sau khi trừ 10% phí hệ thống)
+    // Lấy doanh thu thực nhận của manager (toàn thời gian, sau khi trừ 20% phí hệ thống)
     public static double getTotalRevenue(int renterID) {
         String sql = "SELECT SUM(ro.TotalPrice * ?) as TotalRevenue FROM RentalOrder ro " +
                      "JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
@@ -140,7 +140,7 @@ public class DashboardService {
         return result;
     }
     
-    // Lấy top 3 sản phẩm có doanh thu thực nhận cao nhất (chỉ đơn COMPLETED, đã trừ 10% phí)
+    // Lấy top 3 sản phẩm có doanh thu thực nhận cao nhất (chỉ đơn COMPLETED, đã trừ 20% phí)
     public static List<Map<String, Object>> getTopRevenueProducts(int renterID, int limit) {
         List<Map<String, Object>> result = new ArrayList<>();
         String sql = "SELECT TOP " + limit + " c.ClothingID, c.ClothingName, c.HourlyPrice, " +

@@ -473,9 +473,9 @@
                         </c:choose>
                         <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Admin'}">
                             <div class="info-row" style="background-color: #eef9f0; padding: 8px; border-radius: 4px; border-left: 3px solid #198754;">
-                                <strong>Thực nhận sau trừ phí (25%):</strong>
+                                <strong>Thực nhận sau trừ phí (20%):</strong>
                                 <span style="font-weight: 700; color: #198754;">
-                                    <fmt:formatNumber value="${order.totalPrice * 0.75}" pattern="#,##0"/> VNĐ
+                                    <fmt:formatNumber value="${order.totalPrice * 0.80}" pattern="#,##0"/> VNĐ
                                 </span>
                             </div>
                         </c:if>

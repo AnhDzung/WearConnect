@@ -136,6 +136,10 @@ public class RentalOrderService {
         return RentalOrderDAO.getRentalOrdersByStatus(status);
     }
 
+    public static List<RentalOrder> getOrdersForPaymentProcessing() {
+        return RentalOrderDAO.getOrdersForPaymentProcessing();
+    }
+
     public static int countOrdersByStatus(String status) {
         return RentalOrderDAO.countRentalOrdersByStatus(status);
     }

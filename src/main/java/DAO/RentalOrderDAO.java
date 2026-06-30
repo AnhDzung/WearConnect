@@ -216,6 +216,29 @@ public class RentalOrderDAO {
         return list;
     }
 
+    public static List<RentalOrder> getOrdersForPaymentProcessing() {
+        List<RentalOrder> list = new ArrayList<>();
+        String sql = "SELECT ro.*, c.ClothingName, " +
+                     "a.Username AS RenterUsername, a.FullName AS RenterFullName, " +
+                     "a.Email AS RenterEmail, a.PhoneNumber AS RenterPhone, a.Address AS RenterAddress " +
+                     "FROM RentalOrder ro " +
+                     "LEFT JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
+                     "LEFT JOIN Accounts a ON ro.RenterUserID = a.AccountID " +
+                     "WHERE ro.Status = 'RETURNED' OR (ro.Status = 'COMPLETED' AND ro.PaymentProcessedDate IS NULL) " +
+                     "ORDER BY ro.CreatedAt DESC";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRowToRentalOrder(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public static int countRentalOrdersByStatus(String status) {
         // Normalize status for comparison
         String normalizedStatus = (status != null) ? status.trim().toUpperCase() : "";
@@ -336,6 +359,12 @@ public class RentalOrderDAO {
         try { order.setLateFees(rs.getDouble("LateFees")); } catch (SQLException ignore) {}
         try { order.setCompensationAmount(rs.getDouble("CompensationAmount")); } catch (SQLException ignore) {}
         try { order.setRefundAmount(rs.getDouble("RefundAmount")); } catch (SQLException ignore) {}
+        try {
+            Timestamp paymentProcessedTs = rs.getTimestamp("PaymentProcessedDate");
+            if (paymentProcessedTs != null) {
+                order.setPaymentProcessedDate(paymentProcessedTs.toLocalDateTime());
+            }
+        } catch (SQLException ignore) {}
         
         return order;
     }

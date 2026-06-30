@@ -35,7 +35,7 @@ import java.util.Map;
 @RequestMapping("/admin")
 public class AdminPageController {
 
-    private static final double SYSTEM_FEE_RATE = 0.25;
+    private static final double SYSTEM_FEE_RATE = 0.20;
 
     @RequestMapping
     public void handleRequest(HttpServletRequest request, HttpServletResponse response)
@@ -392,7 +392,7 @@ public class AdminPageController {
     private void showPaymentsPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            List<Model.RentalOrder> returnedOrders = RentalOrderService.getOrdersByStatus("RETURNED");
+            List<Model.RentalOrder> returnedOrders = RentalOrderService.getOrdersForPaymentProcessing();
             Map<Integer, Account> accountMap = new HashMap<>();
             Map<Integer, Clothing> clothingMap = new HashMap<>();
 

@@ -58,6 +58,13 @@ public class ManagerPageController {
                     ? (Integer) accountIDObj
                     : Integer.parseInt(accountIDObj.toString());
 
+            // Notify manager about system fee update to 20%
+            NotificationService.createNotificationOnceByTitle(
+                    managerId,
+                    "Cập nhật phí hệ thống mới (20%)",
+                    "Chào Manager, phí hệ thống của WearConnect đã được điều chỉnh giảm xuống còn 20% (trước đây là 25%). Mức phí này sẽ được áp dụng cho tất cả các giao dịch mới."
+            );
+
             Account manager = (Account) session.getAttribute("account");
             String action = request.getParameter("action");
 

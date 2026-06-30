@@ -409,7 +409,7 @@
                     </td>
                     <td data-label="Ngày bắt đầu">${order.formattedStartDate}</td>
                     <td data-label="Ngày kết thúc">${order.formattedEndDate}</td>
-                    <td data-label="Tổng giá (thực nhận)"><fmt:formatNumber value="${order.totalPrice * 0.75}" pattern="#,##0"/> VNĐ</td>
+                    <td data-label="Tổng giá (thực nhận)"><fmt:formatNumber value="${order.totalPrice * 0.80}" pattern="#,##0"/> VNĐ</td>
                     <td data-label="Trạng thái">
                         <span class="status ${order.status.toLowerCase()}">
                             <c:choose>

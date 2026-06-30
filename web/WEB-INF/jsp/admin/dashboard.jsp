@@ -241,6 +241,7 @@
                         <tr>
                             <th>Order ID</th>
                             <th>Sản phẩm</th>
+                            <th>Trạng thái</th>
                             <th>Người thuê (User)</th>
                             <th>Số TK User</th>
                             <th>Chủ sản phẩm (Manager)</th>
@@ -270,6 +271,13 @@
                             <tr>
                                 <td>#<%= order.getRentalOrderID() %></td>
                                 <td><%= clothing != null ? clothing.getClothingName() : "N/A" %></td>
+                                <td>
+                                    <% if ("COMPLETED".equals(order.getStatus())) { %>
+                                        <span class="status-active" style="background: #eef9f0; color: #198754; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 12px; display: inline-block;">Hoàn thành</span>
+                                    <% } else { %>
+                                        <span class="status-pending" style="background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 12px; display: inline-block;">Đã trả hàng</span>
+                                    <% } %>
+                                </td>
                                 <td><%= renter != null ? renter.getFullName() : "N/A" %></td>
                                 <td style="font-size: 12px;"><%= renterBankInfo %></td>
                                 <td><%= manager != null ? manager.getFullName() : "N/A" %></td>
@@ -434,7 +442,7 @@
                     <div>
                         <strong>Tiền thuê trả cho Manager:</strong> <span id="rentalDisplay"></span> VND
                         <div style="margin-top: 6px; color: #555;">
-                            <div>Phí hệ thống (25%): <strong><span id="systemFeeDisplay">0</span> VND</strong></div>
+                            <div>Phí hệ thống (20%): <strong><span id="systemFeeDisplay">0</span> VND</strong></div>
                             <div>Số tiền Manager nhận: <strong><span id="managerReceiveDisplay">0</span> VND</strong></div>
                         </div>
                         <div style="margin-top: 8px;">
