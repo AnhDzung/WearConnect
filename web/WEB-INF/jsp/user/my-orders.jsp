@@ -74,6 +74,37 @@
         }
         .btn:hover { opacity: 0.9; }
         .btn-info { background-color: #0dcaf0; }
+
+        /* Tab layout styles */
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0 25px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 12px;
+        }
+        .tab-link {
+            padding: 8px 18px;
+            text-decoration: none;
+            color: #495057;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .tab-link:hover {
+            background-color: #f8f9fa;
+            color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .tab-link.active {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.15);
+        }
     </style>
 <body>
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
@@ -81,6 +112,12 @@
 <div class="container">
     <h1>Các đơn thuê của tôi</h1>
     <button onclick="history.back()" style="padding: 10px 20px; background-color: #6c757d; color: white; border: none; cursor: pointer; margin-bottom: 20px;">Quay lại</button>
+    
+    <!-- Tab navigation -->
+    <div class="tab-container">
+        <a href="${pageContext.request.contextPath}/rental?action=myOrders&filter=confirmed" class="tab-link ${activeFilter == 'confirmed' ? 'active' : ''}">Đơn được xác nhận</a>
+        <a href="${pageContext.request.contextPath}/rental?action=myOrders&filter=cancelled" class="tab-link ${activeFilter == 'cancelled' ? 'active' : ''}">Đơn bị hủy</a>
+    </div>
     
     <c:if test="${param.success}">
         <div style="color: green; padding: 10px; background-color: #d4edda; margin-bottom: 20px;">
@@ -96,7 +133,10 @@
     
     <c:if test="${empty myOrders}">
         <div style="background: white; padding: 40px; text-align: center; color: #666; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            Bạn chưa có đơn thuê nào.
+            <c:choose>
+                <c:when test="${activeFilter == 'cancelled'}">Bạn không có đơn thuê bị hủy nào.</c:when>
+                <c:otherwise>Bạn chưa có đơn thuê nào.</c:otherwise>
+            </c:choose>
         </div>
     </c:if>
     

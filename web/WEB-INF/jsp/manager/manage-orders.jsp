@@ -116,6 +116,37 @@
         .btn-info { background-color: #0dcaf0; }
         .btn-success { background-color: #198754; }
         .btn-secondary { background-color: #6c757d; }
+
+        /* Tab layout styles */
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0 25px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 12px;
+        }
+        .tab-link {
+            padding: 8px 18px;
+            text-decoration: none;
+            color: #495057;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .tab-link:hover {
+            background-color: #f8f9fa;
+            color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .tab-link.active {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.15);
+        }
         /* Rating widget styles (match user-side `order-details.jsp`) */
         .star-rating { display: inline-flex; gap: 6px; font-size: 26px; cursor: pointer; }
         .star-rating input { display: none; }
@@ -295,6 +326,12 @@
 <div class="container">
     <h1>Quản lý đơn thuê</h1>
     <button onclick="history.back()" style="padding: 10px 20px; background-color: #6c757d; color: white; border: none; cursor: pointer; margin-bottom: 20px;">Quay lại</button>
+    
+    <!-- Tab navigation -->
+    <div class="tab-container">
+        <a href="${pageContext.request.contextPath}/manager?action=orders&filter=active" class="tab-link ${activeFilter == 'active' ? 'active' : ''}">Đơn hoạt động / Hoàn thành</a>
+        <a href="${pageContext.request.contextPath}/manager?action=orders&filter=cancelled_issue" class="tab-link ${activeFilter == 'cancelled_issue' ? 'active' : ''}">Đơn bị huỷ do có lỗi</a>
+    </div>
     <c:if test="${newConfirmedCount > 0}">
         <div style="background:#cff4fc; border:1px solid #b6effb; color:#055160; padding:12px 14px; border-radius:8px; margin-bottom:16px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
             🔔 Có ${newConfirmedCount} đơn hàng mới được admin xác thực. Vui lòng kiểm tra và bàn giao.
@@ -309,7 +346,10 @@
     
     <c:if test="${empty rentalOrders}">
         <div style="background: white; padding: 40px; text-align: center; color: #666; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            Không có đơn đặt thuê nào
+            <c:choose>
+                <c:when test="${activeFilter == 'cancelled_issue'}">Không có đơn thuê nào bị hủy do có lỗi.</c:when>
+                <c:otherwise>Không có đơn đặt thuê nào.</c:otherwise>
+            </c:choose>
         </div>
     </c:if>
     
@@ -333,9 +373,26 @@
                     <td data-label="Mã đơn hàng">${order.orderCode}</td>
                     <td data-label="Quần áo">
                         <c:choose>
-                            <c:when test="${not empty order.clothingName}">${order.clothingName}</c:when>
-                            <c:otherwise>${order.clothingID}</c:otherwise>
+                            <c:when test="${not empty order.clothingName}"><strong>${order.clothingName}</strong></c:when>
+                            <c:otherwise>ID: ${order.clothingID}</c:otherwise>
                         </c:choose>
+                        <c:if test="${activeFilter == 'cancelled_issue'}">
+                            <c:set var="issue" value="${orderIssuesMap[order.rentalOrderID]}" />
+                            <c:if test="${not empty issue}">
+                                <div style="margin-top: 8px; padding: 10px; background-color: #fff5f5; border-left: 4px solid #f87171; border-radius: 6px; font-size: 13px; color: #9b1c1c; text-align: left; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                                    <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                        Lý do lỗi [${issue.issueType}]:
+                                    </div>
+                                    <div style="line-height: 1.4; color: #7f1d1d;">${issue.description}</div>
+                                    <c:if test="${not empty issue.notes}">
+                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(248, 113, 113, 0.3); font-size: 12px; color: #4b5563;">
+                                            <strong>Cách xử lý:</strong> ${issue.notes}
+                                        </div>
+                                    </c:if>
+                                </div>
+                            </c:if>
+                        </c:if>
                     </td>
                     <td data-label="Người thuê">
                         <c:choose>

@@ -282,7 +282,7 @@ public class AdminPageController {
             String reason = request.getParameter("reason");
             if (reason == null) reason = "Lý do không được cung cấp";
             RentalOrderController.setPaymentProofPath(orderID, null);
-            RentalOrderController.updateOrderStatusWithNotes(orderID, "PENDING_PAYMENT", reason);
+            RentalOrderController.updateOrderStatusWithNotes(orderID, "CANCELLED", reason);
             Payment payment = PaymentController.getPaymentStatus(orderID);
             if (payment != null) {
                 PaymentController.failPayment(payment.getPaymentID());

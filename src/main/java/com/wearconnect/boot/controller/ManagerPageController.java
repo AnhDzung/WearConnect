@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -354,25 +355,57 @@ public class ManagerPageController {
             } else if ("changePassword".equals(action)) {
                 handleChangePassword(request, response, manager, managerId);
             } else if ("orders".equals(action)) {
-                List<RentalOrder> rentalOrders = RentalOrderController.getRentalOrdersByManager(managerId);
+                List<RentalOrder> allRentalOrders = RentalOrderController.getRentalOrdersByManager(managerId);
+                List<RentalOrder> activeOrders = new ArrayList<>();
+                List<RentalOrder> cancelledIssueOrders = new ArrayList<>();
+                Map<Integer, OrderIssue> orderIssuesMap = new HashMap<>();
+
+                if (allRentalOrders != null) {
+                    for (RentalOrder ro : allRentalOrders) {
+                        if ("CANCELLED".equalsIgnoreCase(ro.getStatus())) {
+                            OrderIssue issue = OrderIssueDAO.getIssueByRentalOrder(ro.getRentalOrderID());
+                            if (issue != null) {
+                                cancelledIssueOrders.add(ro);
+                                orderIssuesMap.put(ro.getRentalOrderID(), issue);
+                            }
+                        } else {
+                            activeOrders.add(ro);
+                        }
+                    }
+                }
+
+                String filter = request.getParameter("filter");
+                if (filter == null || filter.trim().isEmpty()) {
+                    filter = "active";
+                } else {
+                    filter = filter.trim().toLowerCase();
+                }
+
+                List<RentalOrder> rentalOrdersToDisplay;
+                if ("cancelled_issue".equals(filter)) {
+                    rentalOrdersToDisplay = cancelledIssueOrders;
+                } else {
+                    rentalOrdersToDisplay = activeOrders;
+                }
+
                 int newConfirmedCount = 0;
-                if (rentalOrders != null) {
-                    for (RentalOrder ro : rentalOrders) {
-                        if ("PAYMENT_VERIFIED".equals(ro.getStatus())) newConfirmedCount++;
-                    }
+                for (RentalOrder ro : activeOrders) {
+                    if ("PAYMENT_VERIFIED".equals(ro.getStatus())) newConfirmedCount++;
                 }
+
                 Map<Integer, Boolean> ratedMap = new HashMap<>();
-                if (rentalOrders != null) {
-                    for (RentalOrder ro : rentalOrders) {
-                        try {
-                            Rating existing = RatingController.getRatingByOrder(ro.getRentalOrderID());
-                            if (existing != null) ratedMap.put(ro.getRentalOrderID(), true);
-                        } catch (Exception e) { /* ignore */ }
-                    }
+                for (RentalOrder ro : rentalOrdersToDisplay) {
+                    try {
+                        Rating existing = RatingController.getRatingByOrder(ro.getRentalOrderID());
+                        if (existing != null) ratedMap.put(ro.getRentalOrderID(), true);
+                    } catch (Exception e) { /* ignore */ }
                 }
+
                 request.setAttribute("newConfirmedCount", newConfirmedCount);
-                request.setAttribute("rentalOrders", rentalOrders);
+                request.setAttribute("rentalOrders", rentalOrdersToDisplay);
                 request.setAttribute("ratedMap", ratedMap);
+                request.setAttribute("orderIssuesMap", orderIssuesMap);
+                request.setAttribute("activeFilter", filter);
                 request.getRequestDispatcher("/WEB-INF/jsp/manager/manage-orders.jsp").forward(request, response);
             } else {
                 // Default dashboard

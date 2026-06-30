@@ -157,8 +157,23 @@ public class RentalPageController {
         int userID = (int) session.getAttribute("accountID");
 
         if ("myOrders".equals(action)) {
+            String filter = request.getParameter("filter");
+            if (filter == null || filter.trim().isEmpty()) {
+                filter = "confirmed";
+            } else {
+                filter = filter.trim().toLowerCase();
+            }
+
             List<RentalOrder> myOrders = RentalOrderController.getMyRentalOrders(userID);
+            if (myOrders != null) {
+                if ("cancelled".equals(filter)) {
+                    myOrders.removeIf(ro -> !"CANCELLED".equalsIgnoreCase(ro.getStatus()));
+                } else {
+                    myOrders.removeIf(ro -> "CANCELLED".equalsIgnoreCase(ro.getStatus()));
+                }
+            }
             request.setAttribute("myOrders", myOrders);
+            request.setAttribute("activeFilter", filter);
             request.getRequestDispatcher("/WEB-INF/jsp/user/my-orders.jsp").forward(request, response);
         } else if ("viewOrder".equals(action)) {
             int rentalOrderID = Integer.parseInt(request.getParameter("id"));
