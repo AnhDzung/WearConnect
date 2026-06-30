@@ -1,6 +1,7 @@
 package Service;
 
 import java.util.Properties;
+
 import jakarta.mail.Authenticator;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
@@ -26,17 +27,25 @@ public class EmailService {
             if (input != null) {
                 Properties prop = new Properties();
                 prop.load(input);
-                String value = prop.getProperty(key);
-                if (value != null && !value.isBlank()) {
-                    if (value.contains("${")) {
-                        int colonIndex = value.indexOf(":");
-                        if (colonIndex > 0) {
-                            String resolvedEnvKey = value.substring(value.indexOf("${") + 2, colonIndex).trim();
-                            String resolvedDefault = value.substring(colonIndex + 1, value.indexOf("}")).trim();
-                            return getConfig(key, resolvedEnvKey, resolvedDefault);
+                String rawValue = prop.getProperty(key);
+                if (rawValue != null && !rawValue.isBlank()) {
+                    rawValue = rawValue.trim();
+                    if (rawValue.startsWith("${") && rawValue.endsWith("}")) {
+                        String content = rawValue.substring(2, rawValue.length() - 1);
+                        int colonIndex = content.indexOf(":");
+                        String innerEnvKey = (colonIndex >= 0) ? content.substring(0, colonIndex).trim() : content.trim();
+                        String innerDefault = (colonIndex >= 0) ? content.substring(colonIndex + 1).trim() : "";
+                        
+                        String resolved = System.getProperty(innerEnvKey);
+                        if (resolved == null || resolved.isBlank()) {
+                            resolved = System.getenv(innerEnvKey);
                         }
+                        if (resolved != null && !resolved.isBlank()) {
+                            return resolved.trim();
+                        }
+                        return innerDefault;
                     }
-                    return value.trim();
+                    return rawValue;
                 }
             }
         } catch (Exception e) {
@@ -72,11 +81,17 @@ public class EmailService {
         });
 
         try {
-            Message message = new MimeMessage(session);
+            MimeMessage message = new MimeMessage(session);
             message.setFrom(new InternetAddress(authEmail));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail));
-            message.setSubject("Mã OTP Khôi Phục Mật Khẩu - WearConnect");
-            message.setText("Chào bạn,\n\nMã OTP để khôi phục mật khẩu của bạn là: " + otp + "\nMã có hiệu lực trong 5 phút.\n\nVui lòng không chia sẻ mã này cho bất kỳ ai.\n\nTrân trọng,\nĐội ngũ WearConnect");
+            message.setSubject("Mã OTP Khôi Phục Mật Khẩu - WearConnect", "UTF-8");
+            String emailContent = "Chào bạn,\n\n"
+                    + "Mã OTP để khôi phục mật khẩu của bạn là: " + otp + "\n"
+                    + "Mã có hiệu lực trong 5 phút.\n\n"
+                    + "Vui lòng không chia sẻ mã này cho bất kỳ ai.\n\n"
+                    + "Trân trọng,\n"
+                    + "Đội ngũ WearConnect";
+            message.setContent(emailContent, "text/plain; charset=UTF-8");
             Transport.send(message);
             System.out.println("[EmailService] Gửi email thành công tới: " + recipientEmail);
             return true;
