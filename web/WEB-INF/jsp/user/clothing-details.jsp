@@ -237,8 +237,69 @@
                 <div class="kv-label">Giá ngày</div>
                 <div><fmt:formatNumber value="${clothing.dailyPrice}" pattern="#,##0"/> đ</div>
             </div>
+            <div class="kv">
+                <div class="kv-label">Cửa hàng</div>
+                <div>
+                    <c:choose>
+                        <c:when test="${not empty shop}">
+                            <a href="${pageContext.request.contextPath}/shop?id=${shop.accountID}" style="color: var(--accent); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                ${shop.fullName}
+                            </a>
+                        </c:when>
+                        <c:otherwise>Không rõ</c:otherwise>
+                    </c:choose>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Cửa hàng bán sản phẩm -->
+    <c:if test="${not empty shop}">
+        <div class="panel" style="margin-top: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; border-radius: var(--radius-lg); background: var(--surface); padding: 24px; box-shadow: var(--shadow-md);">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="width: 60px; height: 60px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 22px; color: var(--accent); border: 2px solid var(--line); overflow: hidden; flex-shrink: 0;">
+                    <c:choose>
+                        <c:when test="${not empty shop.avatar}">
+                            <img src="${pageContext.request.contextPath}/${shop.avatar}" alt="${shop.fullName}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentNode.innerHTML='${fn:substring(shop.fullName, 0, 1)}';">
+                        </c:when>
+                        <c:otherwise>
+                            ${fn:substring(shop.fullName, 0, 1)}
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+                <div>
+                    <h4 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 800; color: var(--gray-900);">
+                        <a href="${pageContext.request.contextPath}/shop?id=${shop.accountID}" style="text-decoration: none; color: inherit; transition: color 0.2s;">
+                            ${shop.fullName}
+                        </a>
+                    </h4>
+                    <div style="display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); flex-wrap: wrap;">
+                        <span style="display: inline-flex; align-items: center; gap: 4px; font-weight: 600;">
+                            <span style="color: #f5a623; font-size: 15px;">★</span>
+                            <c:choose>
+                                <c:when test="${shopRating > 0}">
+                                    <fmt:formatNumber value="${shopRating}" type="number" maxFractionDigits="1" minFractionDigits="1"/>/5
+                                </c:when>
+                                <c:otherwise>Chưa có đánh giá</c:otherwise>
+                            </c:choose>
+                        </span>
+                        <span style="color: var(--line);">|</span>
+                        <span style="display: inline-flex; align-items: center; gap: 4px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            ${shop.address}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <a href="${pageContext.request.contextPath}/shop?id=${shop.accountID}" class="btn" style="background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%); color: white; text-decoration: none; border-radius: var(--radius-full); padding: 10px 20px; font-weight: 700; transition: all 0.2s; box-shadow: var(--shadow-sm); display: inline-flex; align-items: center; gap: 6px; font-size: 13px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    Xem Cửa Hàng
+                </a>
+            </div>
+        </div>
+    </c:if>
 
     <div class="ratings-block">
         <h3>Đánh giá sản phẩm</h3>

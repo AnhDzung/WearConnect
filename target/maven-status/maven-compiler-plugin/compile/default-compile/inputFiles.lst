@@ -22,6 +22,7 @@ D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller\ReturnPageController.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller\RootRedirectController.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller\SearchPageController.java
+D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller\ShopPageController.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller\UserPageController.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\controller\WebhookPageController.java
 D:\Fpt\sm7\WearConnect\WearConnect\src\main\java\com\wearconnect\boot\scheduler\AIPaymentVerificationScheduler.java

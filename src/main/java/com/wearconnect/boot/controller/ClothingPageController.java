@@ -4,7 +4,9 @@ import Controller.ClothingController;
 import DAO.ClothingImageDAO;
 import DAO.ColorDAO;
 import DAO.CosplayDetailDAO;
+import DAO.AccountDAO;
 import DAO.RatingDAO;
+import Model.Account;
 import Model.Clothing;
 import Model.ClothingImage;
 import Model.CosplayDetail;
@@ -75,6 +77,13 @@ public class ClothingPageController {
         model.addAttribute("images", ClothingController.getClothingImages(clothingId));
         model.addAttribute("avgRating", RatingDAO.getAverageRatingForClothing(clothingId));
         model.addAttribute("ratings", RatingDAO.getRatingsByClothing(clothingId));
+        
+        // Fetch shop/renter details and rating
+        Account shop = AccountDAO.findById(clothing.getRenterID());
+        double shopRating = RatingDAO.getAverageRatingForRenter(clothing.getRenterID());
+        model.addAttribute("shop", shop);
+        model.addAttribute("shopRating", shopRating);
+
         if ("Cosplay".equals(clothing.getCategory())) {
             model.addAttribute("cosplayDetail", CosplayDetailDAO.getCosplayDetailByClothingID(clothingId));
         }

@@ -141,3 +141,4 @@ com\wearconnect\boot\controller\WebhookPageController.class
 com\wearconnect\chatbot\config\WebMvcConfig.class
 Model\AIKnowledgeAuditLog.class
 Model\PaymentVerificationCandidate.class
+com\wearconnect\boot\controller\ShopPageController.class
