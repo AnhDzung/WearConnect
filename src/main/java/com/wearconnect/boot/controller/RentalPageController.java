@@ -148,8 +148,8 @@ public class RentalPageController {
         }
 
         try {
-            int removed = Service.RentalOrderService.expirePendingPayments(24);
-            if (removed > 0) System.out.println("[RentalPageController] Expired PENDING_PAYMENT orders: " + removed);
+            int removed = Service.RentalOrderService.expirePendingPaymentsInMinutes(30);
+            if (removed > 0) System.out.println("[RentalPageController] Expired PENDING_PAYMENT orders (30 mins): " + removed);
         } catch (Exception e) {
             System.out.println("[RentalPageController] Error expiring pending payments: " + e.getMessage());
         }

@@ -589,6 +589,12 @@
                 </div>
             </div>
             
+            <c:if test="${param.error == 'cancelled'}">
+                <div class="alert alert-danger" style="margin-top:12px; background-color:#f8d7da; color:#721c24; border:1px solid #f5c6cb; padding:12px; border-radius:4px; margin-bottom:12px;">
+                    ⚠️ Đơn hàng này đã bị hủy hoặc đã quá thời hạn thanh toán (24 giờ). Vui lòng tạo đơn hàng mới.
+                </div>
+            </c:if>
+
             <c:if test="${order.status == 'PENDING_PAYMENT' && sessionScope.userRole == 'User'}">
                 <a href="${pageContext.request.contextPath}/payment?rentalOrderID=${order.rentalOrderID}" class="btn">Thanh toán</a>
                 <form method="POST" action="${pageContext.request.contextPath}/rental">

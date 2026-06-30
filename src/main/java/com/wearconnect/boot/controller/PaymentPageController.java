@@ -86,6 +86,17 @@ public class PaymentPageController {
             for (int id : orderIDs) {
                 RentalOrder order = RentalOrderController.getRentalOrderDetails(id);
                 if (order != null) {
+                    if ("CANCELLED".equalsIgnoreCase(order.getStatus())) {
+                        response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + id + "&error=cancelled");
+                        return;
+                    }
+                    if ("PAYMENT_VERIFIED".equalsIgnoreCase(order.getStatus()) || 
+                        "DELIVERED_PENDING_CONFIRMATION".equalsIgnoreCase(order.getStatus()) || 
+                        "RENTED".equalsIgnoreCase(order.getStatus()) || 
+                        "COMPLETED".equalsIgnoreCase(order.getStatus())) {
+                        response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + id + "&paymentSuccess=true");
+                        return;
+                    }
                     rentalOrders.add(order);
                     totalRentPrice += order.getTotalPrice();
                     totalDepositAmount += order.getAdjustedDepositAmount();
@@ -102,6 +113,8 @@ public class PaymentPageController {
             Map<String, Object> badge = RatingController.getBadgeForUser(currentUserID);
             request.setAttribute("userBadge", badge);
             request.setAttribute("payment", payment);
+            long createdAtMillis = java.sql.Timestamp.valueOf(rentalOrders.get(0).getCreatedAt()).getTime();
+            request.setAttribute("createdAtMillis", createdAtMillis);
             request.setAttribute("rentalOrder", rentalOrders.get(0)); // compatibility for single details
             request.setAttribute("rentalOrders", rentalOrders);
             request.setAttribute("totalRentPrice", totalRentPrice);

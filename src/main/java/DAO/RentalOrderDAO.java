@@ -178,6 +178,21 @@ public class RentalOrderDAO {
         return 0;
     }
 
+    public static int cancelExpiredPendingPaymentsInMinutes(int minutes) {
+        String sql = "UPDATE RentalOrder SET Status = 'CANCELLED' " +
+                     "WHERE Status = 'PENDING_PAYMENT' AND CreatedAt < ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            long cutoffMillis = System.currentTimeMillis() - minutes * 60L * 1000L;
+            ps.setTimestamp(1, new Timestamp(cutoffMillis));
+            int updated = ps.executeUpdate();
+            return updated;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     public static List<RentalOrder> getRentalOrdersByStatus(String status) {
         List<RentalOrder> list = new ArrayList<>();
         String sql = "SELECT ro.*, c.ClothingName, " +

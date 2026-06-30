@@ -203,6 +203,10 @@ public class RentalOrderService {
         return RentalOrderDAO.cancelExpiredPendingPayments(hours);
     }
 
+    public static int expirePendingPaymentsInMinutes(int minutes) {
+        return RentalOrderDAO.cancelExpiredPendingPaymentsInMinutes(minutes);
+    }
+
     public static double calculateTotalPrice(int clothingID, LocalDateTime startDate, LocalDateTime endDate) {
         Clothing clothing = ClothingDAO.getClothingByID(clothingID);
         if (clothing == null) return 0;

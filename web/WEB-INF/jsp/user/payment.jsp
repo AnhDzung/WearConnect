@@ -257,6 +257,12 @@
                 <div id="bankTransferDetails" class="payment-details">
                     <h3>🏦 Thông tin chuyển khoản </h3>
                     
+                    <div id="countdownContainer" style="background: #fff0f0; border: 1px solid #ffcccc; border-radius: 8px; padding: 15px; margin: 15px 0; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+                        <span style="font-size: 15px; font-weight: bold; color: #dc3545;">⏱️ Thời gian thanh toán còn lại:</span>
+                        <span id="countdownTimer" style="font-size: 24px; font-weight: 800; color: #dc3545; font-family: monospace; letter-spacing: 1px;">30:00</span>
+                        <p style="margin: 0; font-size: 12px; color: #666;">Đơn hàng sẽ tự động hủy sau khi hết thời gian đếm ngược.</p>
+                    </div>
+                    
                     <div id="qrCodeContainer">
                         <p>📱 Mã QR thanh toán:</p>
                         <c:choose>
@@ -538,12 +544,46 @@
                     .then(data => {
                         const isSuccess = data.paymentStatus === 'COMPLETED' || 
                                           ['PAYMENT_VERIFIED', 'DELIVERED_PENDING_CONFIRMATION', 'RENTED', 'COMPLETED'].includes(data.orderStatus);
-                        if (data.success && isSuccess) {
-                            window.location.href = '${pageContext.request.contextPath}/rental?action=viewOrder&id=' + currentRentalOrderID + '&paymentSuccess=true';
+                        if (data.success) {
+                            if (isSuccess) {
+                                window.location.href = '${pageContext.request.contextPath}/rental?action=viewOrder&id=' + currentRentalOrderID + '&paymentSuccess=true';
+                            } else if (data.orderStatus === 'CANCELLED') {
+                                window.location.href = '${pageContext.request.contextPath}/rental?action=viewOrder&id=' + currentRentalOrderID + '&error=cancelled';
+                            }
                         }
                     })
                     .catch(error => console.error('Error polling payment status:', error));
             }, 3000);
+
+            // Đếm ngược 30 phút từ lúc tạo đơn
+            const createdAtMillis = parseInt('${createdAtMillis}');
+            if (createdAtMillis) {
+                const expireTime = createdAtMillis + (30 * 60 * 1000); // 30 phút
+                
+                function updateCountdown() {
+                    const now = Date.now();
+                    const diff = expireTime - now;
+                    
+                    if (diff <= 0) {
+                        document.getElementById('countdownTimer').innerText = "00:00";
+                        clearInterval(countdownInterval);
+                        alert("Thời gian thanh toán của đơn hàng đã hết hạn.");
+                        window.location.href = '${pageContext.request.contextPath}/rental?action=viewOrder&id=' + currentRentalOrderID + '&error=cancelled';
+                        return;
+                    }
+                    
+                    const minutes = Math.floor(diff / 60000);
+                    const seconds = Math.floor((diff % 60000) / 1000);
+                    
+                    const minStr = String(minutes).padStart(2, '0');
+                    const secStr = String(seconds).padStart(2, '0');
+                    
+                    document.getElementById('countdownTimer').innerText = minStr + ":" + secStr;
+                }
+                
+                updateCountdown();
+                const countdownInterval = setInterval(updateCountdown, 1000);
+            }
         }
     });
 </script>

@@ -12,10 +12,47 @@ import jakarta.mail.internet.MimeMessage;
 
 public class EmailService {
 
+    private static String getConfig(String key, String envKey, String defaultValue) {
+        String sysProp = System.getProperty(key);
+        if (sysProp != null && !sysProp.isBlank()) return sysProp.trim();
+
+        String sysPropEnv = System.getProperty(envKey);
+        if (sysPropEnv != null && !sysPropEnv.isBlank()) return sysPropEnv.trim();
+
+        String envValue = System.getenv(envKey);
+        if (envValue != null && !envValue.isBlank()) return envValue.trim();
+
+        try (java.io.InputStream input = EmailService.class.getClassLoader().getResourceAsStream("application.properties")) {
+            if (input != null) {
+                Properties prop = new Properties();
+                prop.load(input);
+                String value = prop.getProperty(key);
+                if (value != null && !value.isBlank()) {
+                    if (value.contains("${")) {
+                        int colonIndex = value.indexOf(":");
+                        if (colonIndex > 0) {
+                            String resolvedEnvKey = value.substring(value.indexOf("${") + 2, colonIndex).trim();
+                            String resolvedDefault = value.substring(colonIndex + 1, value.indexOf("}")).trim();
+                            return getConfig(key, resolvedEnvKey, resolvedDefault);
+                        }
+                    }
+                    return value.trim();
+                }
+            }
+        } catch (Exception e) {
+            // Ignore properties load error
+        }
+
+        return defaultValue;
+    }
+
     public static boolean sendOTP(String recipientEmail, String otp) {
-        // TẠM THỜI GÁN CỨNG ĐỂ TEST (Nhớ sửa lại thành email và app password thật của bạn nhé)
-        String senderEmail = "wearconnect.hotro@gmail.com"; 
-        String senderPassword = "AnhDung_14062003"; // 16 ký tự viết liền, KHÔNG dấu cách
+        String senderEmail = getConfig("mail.sender.email", "EMAIL_SENDER", "wearconnect.hotro@gmail.com"); 
+        String senderPassword = getConfig("mail.sender.app-password", "EMAIL_APP_PASSWORD", "AnhDung_14062003"); 
+
+        if (senderPassword != null) {
+            senderPassword = senderPassword.replaceAll("\\s+", ""); // Loại bỏ khoảng trắng nếu dán nhầm App Password có dấu cách
+        }
 
         System.out.println("[EmailService] Đang đăng nhập Gmail bằng tài khoản: " + senderEmail);
 
