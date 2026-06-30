@@ -8,21 +8,21 @@ public class AuthController {
     /**
      * Xử lý đăng nhập
      */
-    public static Account handleLogin(String username, String password) {
+    public static Account handleLogin(String usernameOrEmail, String password) {
         // Kiểm tra input
-        if (username == null || username.trim().isEmpty() || 
+        if (usernameOrEmail == null || usernameOrEmail.trim().isEmpty() || 
             password == null || password.trim().isEmpty()) {
-            System.err.println("Tên đăng nhập và mật khẩu không được để trống!");
+            System.err.println("Tên đăng nhập/Email và mật khẩu không được để trống!");
             return null;
         }
         
         // Gọi service đăng nhập
-        Account account = AuthService.login(username, password);
+        Account account = AuthService.login(usernameOrEmail, password);
         
         if (account != null) {
             System.out.println("Đăng nhập thành công! Role: " + account.getUserRole());
         } else {
-            System.err.println("Tên đăng nhập hoặc mật khẩu không chính xác!");
+            System.err.println("Tên đăng nhập/Email hoặc mật khẩu không chính xác!");
         }
         
         return account;

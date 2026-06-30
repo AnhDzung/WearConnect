@@ -32,8 +32,8 @@
 
                         <form method="POST" action="<%= request.getContextPath() %>/login">
                             <div class="wc-form-group">
-                                <label for="username" class="wc-form-label">Tên đăng nhập:</label>
-                                <input type="text" id="username" name="username" class="wc-form-input" required>
+                                <label for="username" class="wc-form-label">Tên đăng nhập hoặc Email:</label>
+                                <input type="text" id="username" name="username" class="wc-form-input" placeholder="Nhập tên đăng nhập hoặc email..." required>
                             </div>
 
                             <div class="wc-form-group">

@@ -8,12 +8,12 @@ public class AuthService {
     
     /**
      * Đăng nhập người dùng
-     * @param username Tên đăng nhập
+     * @param usernameOrEmail Tên đăng nhập hoặc Email
      * @param password Mật khẩu
      * @return Account nếu đăng nhập thành công, null nếu thất bại
      */
-    public static Account login(String username, String password) {
-        Account account = AccountDAO.login(username, password);
+    public static Account login(String usernameOrEmail, String password) {
+        Account account = AccountDAO.login(usernameOrEmail, password);
         
         if (account != null) {
             // Ghi lại lịch sử đăng nhập

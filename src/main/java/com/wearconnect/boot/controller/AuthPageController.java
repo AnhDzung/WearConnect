@@ -60,7 +60,7 @@ public class AuthPageController {
                 response.sendRedirect(request.getContextPath() + "/login");
             }
         } else {
-            request.setAttribute("error", "Tên đăng nhập hoặc mật khẩu không chính xác!");
+            request.setAttribute("error", "Tên đăng nhập/Email hoặc mật khẩu không chính xác!");
             request.getRequestDispatcher("/WEB-INF/jsp/login.jsp").forward(request, response);
         }
     }

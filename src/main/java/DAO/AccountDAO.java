@@ -10,15 +10,16 @@ import java.util.List;
 public class AccountDAO {
     
     /**
-     * Lấy tài khoản theo tên đăng nhập và mật khẩu
+     * Lấy tài khoản theo tên đăng nhập/Email và mật khẩu
      */
-    public static Account login(String username, String password) {
-        String query = "SELECT * FROM Accounts WHERE Username = ? AND Status = 1";
+    public static Account login(String usernameOrEmail, String password) {
+        String query = "SELECT * FROM Accounts WHERE (Username = ? OR Email = ?) AND Status = 1";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
 
-            ps.setString(1, username);
+            ps.setString(1, usernameOrEmail);
+            ps.setString(2, usernameOrEmail);
 
             ResultSet rs = ps.executeQuery();
 
