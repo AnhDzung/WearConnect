@@ -57,11 +57,10 @@ public class EmailService {
 
     public static boolean sendOTP(String recipientEmail, String otp) {
         String senderEmail = getConfig("mail.sender.email", "EMAIL_SENDER", "wearconnect.hotro@gmail.com"); 
-        String senderPassword = getConfig("mail.sender.app-password", "EMAIL_APP_PASSWORD", "AnhDung_14062003"); 
+        String senderPassword = getConfig("mail.sender.app-password", "EMAIL_APP_PASSWORD", "ihoy nptq emrb exvj"); 
 
         if (senderPassword != null) {
-            senderPassword = senderPassword.replaceAll("\\s+", ""); // Loại bỏ khoảng trắng nếu dán nhầm App Password có dấu cách
-        }
+            senderPassword = senderPassword.replaceAll("\\s+", ""); 
 
         System.out.println("[EmailService] Đang đăng nhập Gmail bằng tài khoản: " + senderEmail);
 
