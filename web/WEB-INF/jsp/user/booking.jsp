@@ -26,6 +26,13 @@
         }
     } catch (Exception e) {}
     List<Color> availableColors = clothingID > 0 ? ColorDAO.getColorsByClothing(clothingID) : new java.util.ArrayList<>();
+    boolean isForSale = false;
+    if (clothing != null) {
+        Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
+        if (owner != null && "Renter".equals(owner.getUserRole())) {
+            isForSale = true;
+        }
+    }
 %>
 <c:set var="isAddToCart" value="${param.addToCart eq 'true'}" />
 <!DOCTYPE html>
@@ -523,8 +530,8 @@
         <!-- RIGHT COLUMN: Booking Form -->
         <div class="booking-form-card">
             <div class="booking-header">
-                <h1>${isAddToCart ? 'Thêm vào giỏ hàng' : 'Đặt thuê của bạn'}</h1>
-                <p>${isAddToCart ? 'Cấu hình thời gian thuê để lưu vào giỏ hàng' : 'Cấu hình thời gian thuê và áp dụng voucher giảm giá'}</p>
+                <h1><%= isForSale ? (isAddToCart ? "Thêm vào giỏ mua" : "Đặt mua sản phẩm") : (isAddToCart ? "Thêm vào giỏ hàng" : "Đặt thuê của bạn") %></h1>
+                <p><%= isForSale ? "Cấu hình phân loại sản phẩm để mua hàng" : (isAddToCart ? "Cấu hình thời gian thuê để lưu vào giỏ hàng" : "Cấu hình thời gian thuê và áp dụng voucher giảm giá") %></p>
             </div>
             
             <form method="POST" action="${pageContext.request.contextPath}${isAddToCart ? '/cart' : '/rental'}">
@@ -585,6 +592,9 @@
                 </div>
                 <% } // End if (!isCosplay) %>
                 
+                <% if (isForSale) { %>
+                    <input type="hidden" name="rentalType" value="buy">
+                <% } else { %>
                 <!-- Lựa chọn loại thuê -->
                 <div class="form-group">
                     <label>Chọn hình thức thuê:</label>
@@ -625,6 +635,7 @@
                         <input type="date" id="dailyEndDate" name="dailyEndDate" class="form-control" onchange="calculatePrice()">
                     </div>
                 </div>
+                <% } %>
                 
                 <!-- Phần nhập Voucher -->
                 <c:if test="${not isAddToCart}">
@@ -640,11 +651,11 @@
                 </c:if>
                 
                 <div class="price-summary">
-                    <p><strong id="rentalFeeLabel">Tổng giá thuê:</strong> <span><span id="rentalFee">0</span> VNĐ</span></p>
+                    <p><strong id="rentalFeeLabel"><%= isForSale ? "Giá bán sản phẩm:" : "Tổng giá thuê:" %></strong> <span><span id="rentalFee">0</span> VNĐ</span></p>
                     <p id="discountRow" style="display: none; color: var(--secondary-color);"><strong>Giảm giá Voucher:</strong> <span>-<span id="discountAmountDisplay">0</span> VNĐ</span></p>
-                    <p id="discountedRentalFeeRow" style="display: none; color: var(--primary-color);"><strong>Tiền thuê sau giảm:</strong> <span><span id="discountedRentalFeeDisplay">0</span> VNĐ</span></p>
-                    <p><strong>Tiền cọc:</strong> <span><span id="depositAmount">0</span> VNĐ</span></p>
-                    <p class="payment-row"><strong>${isAddToCart ? 'Ước tính thanh toán:' : 'Số tiền thanh toán:'}</strong> <span><span id="paymentAmount">0</span> VNĐ</span></p>
+                    <p id="discountedRentalFeeRow" style="display: none; color: var(--primary-color);"><strong><%= isForSale ? "Giá sau giảm:" : "Tiền thuê sau giảm:" %></strong> <span><span id="discountedRentalFeeDisplay">0</span> VNĐ</span></p>
+                    <p style="<%= isForSale ? "display:none;" : "" %>"><strong>Tiền cọc:</strong> <span><span id="depositAmount">0</span> VNĐ</span></p>
+                    <p class="payment-row"><strong><%= isForSale ? (isAddToCart ? "Giá bán tạm tính:" : "Số tiền thanh toán:") : (isAddToCart ? "Ước tính thanh toán:" : "Số tiền thanh toán:") %></strong> <span><span id="paymentAmount">0</span> VNĐ</span></p>
                     <small class="summary-disclaimer">
                         <c:choose>
                             <c:when test="${isAddToCart}">
@@ -876,32 +887,40 @@
     }
 
     function calculatePrice() {
-        const rentalType = document.querySelector('input[name="rentalType"]:checked').value;
+        const isForSale = <%= isForSale %>;
         let rentalPrice = 0;
         let depositPrice = 0;
 
-        if (rentalType === 'hourly') {
-            const rawStart = document.getElementById('hourlyStartDate').value;
-            const rawEnd = document.getElementById('hourlyEndDate').value;
-            
-            if (rawStart && rawEnd && rawStart < rawEnd) {
-                const start = new Date(rawStart);
-                const end = new Date(rawEnd);
-                const hours = (end - start) / (1000 * 60 * 60);
-                rentalPrice = hours * HOURLY_PRICE;
-                depositPrice = calculateDeposit(hours, 'hourly');
-            }
+        if (isForSale) {
+            rentalPrice = DAILY_PRICE;
+            depositPrice = 0;
         } else {
-            const rawStart = document.getElementById('dailyStartDate').value;
-            const rawEnd = document.getElementById('dailyEndDate').value;
-            
-            if (rawStart && rawEnd && rawStart < rawEnd) {
-                const start = new Date(rawStart);
-                const end = new Date(rawEnd);
-                const timeDiff = end - start;
-                const days = timeDiff / (1000 * 60 * 60 * 24);
-                rentalPrice = days * DAILY_PRICE;
-                depositPrice = calculateDeposit(days, 'daily');
+            const rentalTypeEl = document.querySelector('input[name="rentalType"]:checked');
+            const rentalType = rentalTypeEl ? rentalTypeEl.value : 'hourly';
+
+            if (rentalType === 'hourly') {
+                const rawStart = document.getElementById('hourlyStartDate').value;
+                const rawEnd = document.getElementById('hourlyEndDate').value;
+                
+                if (rawStart && rawEnd && rawStart < rawEnd) {
+                    const start = new Date(rawStart);
+                    const end = new Date(rawEnd);
+                    const hours = (end - start) / (1000 * 60 * 60);
+                    rentalPrice = hours * HOURLY_PRICE;
+                    depositPrice = calculateDeposit(hours, 'hourly');
+                }
+            } else {
+                const rawStart = document.getElementById('dailyStartDate').value;
+                const rawEnd = document.getElementById('dailyEndDate').value;
+                
+                if (rawStart && rawEnd && rawStart < rawEnd) {
+                    const start = new Date(rawStart);
+                    const end = new Date(rawEnd);
+                    const timeDiff = end - start;
+                    const days = timeDiff / (1000 * 60 * 60 * 24);
+                    rentalPrice = days * DAILY_PRICE;
+                    depositPrice = calculateDeposit(days, 'daily');
+                }
             }
         }
 

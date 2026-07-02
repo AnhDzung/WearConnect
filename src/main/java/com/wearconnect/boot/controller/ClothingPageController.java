@@ -235,7 +235,8 @@ public class ClothingPageController {
     private boolean isManager(HttpSession session) {
         if (session == null || session.getAttribute("account") == null) return false;
         String role = (String) session.getAttribute("userRole");
-        return "Manager".equals(role != null ? role.trim() : "");
+        String trimmedRole = role != null ? role.trim() : "";
+        return "Manager".equals(trimmedRole) || "Renter".equals(trimmedRole);
     }
 
     private int getManagerId(HttpSession session) {

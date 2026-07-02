@@ -74,6 +74,16 @@
 %>
 
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
+<%
+    boolean isForSale = false;
+    Model.Clothing clothing = (Model.Clothing) request.getAttribute("clothing");
+    if (clothing != null) {
+        Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
+        if (owner != null && "Renter".equals(owner.getUserRole())) {
+            isForSale = true;
+        }
+    }
+%>
 
 <div class="page-wrap">
     <div class="breadcrumb" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px;">
@@ -143,14 +153,21 @@
             </div>
 
             <div class="price-block">
-                <div class="price-row">
-                    <span class="price-label">Thuê ngày:</span>
-                    <span class="price-value"><fmt:formatNumber value="${clothing.dailyPrice}" pattern="#,##0"/> đ</span>
-                </div>
-                <div class="price-row">
-                    <span class="price-label">Thuê giờ:</span>
-                    <span class="price-value"><fmt:formatNumber value="${clothing.hourlyPrice}" pattern="#,##0"/> đ</span>
-                </div>
+                <% if (isForSale) { %>
+                    <div class="price-row">
+                        <span class="price-label">Giá bán:</span>
+                        <span class="price-value" style="color: #d97706; font-size: 24px; font-weight: 800;"><fmt:formatNumber value="${clothing.dailyPrice}" pattern="#,##0"/> đ</span>
+                    </div>
+                <% } else { %>
+                    <div class="price-row">
+                        <span class="price-label">Thuê ngày:</span>
+                        <span class="price-value"><fmt:formatNumber value="${clothing.dailyPrice}" pattern="#,##0"/> đ</span>
+                    </div>
+                    <div class="price-row">
+                        <span class="price-label">Thuê giờ:</span>
+                        <span class="price-value"><fmt:formatNumber value="${clothing.hourlyPrice}" pattern="#,##0"/> đ</span>
+                    </div>
+                <% } %>
             </div>
 
             <div class="size-wrap">
@@ -169,9 +186,11 @@
                 </div>
             </div>
 
+            <% if (!isForSale) { %>
             <div class="stock-line">
                 Có sẵn: ${clothing.availableFrom} → ${clothing.availableTo}
             </div>
+            <% } %>
 
             <c:if test="${not empty cosplayDetail and clothing.category eq 'Cosplay'}">
                 <div class="summary-line">
@@ -189,10 +208,14 @@
             </c:choose>
 
             <div class="action-row">
-                <% if (!"Manager".equals(role) && !"Admin".equals(role)) { %>
-                    <!-- <button class="btn btn-book" onclick="handleBooking()" type="button">Thêm vào giỏ thuê</button> -->
-                    <button class="btn btn-book" onclick="handleBooking()" type="button">Thuê ngay</button>
-                    <button class="btn btn-book" onclick="handleAddToCart()" type="button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-left: 10px;">Thêm vào giỏ hàng 🛒</button>
+                <% if (!"Manager".equals(role) && !"Admin".equals(role) && !"Renter".equals(role)) { %>
+                    <% if (isForSale) { %>
+                        <button class="btn btn-book" onclick="handleBooking()" type="button">Mua ngay</button>
+                        <button class="btn btn-book" onclick="handleAddToCart()" type="button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-left: 10px;">Thêm vào giỏ hàng 🛒</button>
+                    <% } else { %>
+                        <button class="btn btn-book" onclick="handleBooking()" type="button">Thuê ngay</button>
+                        <button class="btn btn-book" onclick="handleAddToCart()" type="button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-left: 10px;">Thêm vào giỏ hàng 🛒</button>
+                    <% } %>
                 <% } %>
             </div>
         </div>

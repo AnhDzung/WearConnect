@@ -46,7 +46,7 @@ public class UserPageController {
             }
             String userRole = (String) session.getAttribute("userRole");
             if (userRole != null) userRole = userRole.trim();
-            if (!("User".equals(userRole) || "Manager".equals(userRole) || "Admin".equals(userRole))) {
+            if (!("User".equals(userRole) || "Manager".equals(userRole) || "Admin".equals(userRole) || "Renter".equals(userRole))) {
                 response.sendRedirect(request.getContextPath() + "/login");
                 return;
             }

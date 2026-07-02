@@ -39,6 +39,10 @@
                     onclick="location.href='${pageContext.request.contextPath}/admin?action=users'">
                  Quản lý người dùng
             </button>
+            <button type="button" class="tab-button ${view eq 'renters' ? 'active' : ''}" 
+                    onclick="location.href='${pageContext.request.contextPath}/admin?action=renters'">
+                 Quản lý Renter
+            </button>
             <button type="button" class="tab-button"
                     onclick="location.href='${pageContext.request.contextPath}/admin?action=ratings'">
                  Đánh giá
@@ -209,7 +213,139 @@
             %>
         </div>
         </c:if>
-        
+
+        <c:if test="${view eq 'renters'}">
+        <c:if test="${param.success == 'added'}">
+            <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;">
+                ✓ Thêm tài khoản Renter thành công!
+            </div>
+        </c:if>
+        <c:if test="${param.error == 'missingFields'}">
+            <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;">
+                ✗ Vui lòng điền đầy đủ các thông tin bắt buộc.
+            </div>
+        </c:if>
+        <c:if test="${param.error == 'usernameExists'}">
+            <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;">
+                ✗ Tên tài khoản đã tồn tại.
+            </div>
+        </c:if>
+        <c:if test="${param.error == 'emailExists'}">
+            <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;">
+                ✗ Địa chỉ email đã được sử dụng.
+            </div>
+        </c:if>
+        <c:if test="${param.error == 'createFailed'}">
+            <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;">
+                ✗ Tạo tài khoản Renter thất bại. Vui lòng kiểm tra lại.
+            </div>
+        </c:if>
+
+        <div style="display: flex; gap: 24px; margin-bottom: 30px;">
+            <!-- Form thêm Renter -->
+            <div style="flex: 1; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; height: fit-content;">
+                <h3 style="margin-top: 0; margin-bottom: 20px; font-weight: 600; color: #2d3748;">Thêm tài khoản Renter mới</h3>
+                <form action="${pageContext.request.contextPath}/admin" method="POST">
+                    <input type="hidden" name="action" value="addRenter">
+                    
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; color: #4a5568;">Tên đăng nhập *</label>
+                        <input type="text" name="username" required style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box;" placeholder="Nhập tên đăng nhập...">
+                    </div>
+                    
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; color: #4a5568;">Mật khẩu *</label>
+                        <input type="password" name="password" required style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box;" placeholder="Nhập mật khẩu...">
+                    </div>
+                    
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; color: #4a5568;">Họ và tên *</label>
+                        <input type="text" name="fullName" required style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box;" placeholder="Nhập họ và tên...">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; color: #4a5568;">Email *</label>
+                        <input type="email" name="email" required style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box;" placeholder="example@domain.com">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-add" style="width: 100%; padding: 10px; font-weight: 600;">Tạo tài khoản Renter</button>
+                </form>
+            </div>
+            
+            <!-- Danh sách Renter -->
+            <div style="flex: 2;">
+                <div class="control-panel" style="margin-top: 0;">
+                    <div><strong>Danh sách tài khoản Renter</strong></div>
+                </div>
+                
+                <div class="table-container">
+                    <%
+                        @SuppressWarnings("unchecked")
+                        List<Model.Account> renters = (List<Model.Account>) request.getAttribute("renters");
+                        if (renters != null && !renters.isEmpty()) {
+                    %>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên đăng nhập</th>
+                                    <th>Họ và tên</th>
+                                    <th>Email</th>
+                                    <th>Trạng thái</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <%
+                                    for (Model.Account renter : renters) {
+                                %>
+                                    <tr>
+                                        <td><%= renter.getAccountID() %></td>
+                                        <td><%= renter.getUsername() %></td>
+                                        <td><%= renter.getFullName() %></td>
+                                        <td><%= renter.getEmail() %></td>
+                                        <td>
+                                            <% if (renter.isStatus()) { %>
+                                                <span class="status-active">Hoạt động</span>
+                                            <% } else { %>
+                                                <span class="status-inactive">Không hoạt động</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <form method="GET" action="<%= request.getContextPath() %>/admin" style="display: inline;">
+                                                    <input type="hidden" name="action" value="toggleStatus">
+                                                    <input type="hidden" name="id" value="<%= renter.getAccountID() %>">
+                                                    <input type="hidden" name="status" value="<%= renter.isStatus() ? "active" : "inactive" %>">
+                                                    <input type="hidden" name="redirect" value="/admin?action=renters">
+                                                    <button type="submit" class="btn btn-toggle"><%= renter.isStatus() ? "Vô hiệu hóa" : "Kích hoạt" %></button>
+                                                </form>
+                                                <form method="GET" action="<%= request.getContextPath() %>/admin" style="display: inline;">
+                                                    <input type="hidden" name="action" value="delete">
+                                                    <input type="hidden" name="id" value="<%= renter.getAccountID() %>">
+                                                    <input type="hidden" name="redirect" value="/admin?action=renters">
+                                                    <button type="submit" class="btn btn-delete" onclick="return confirm('Bạn có chắc chắn muốn xóa renter này?')">Xóa</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <%
+                                    }
+                                %>
+                            </tbody>
+                        </table>
+                    <%
+                        } else {
+                    %>
+                        <div class="empty-message">Chưa có tài khoản Renter nào.</div>
+                    <%
+                        }
+                    %>
+                </div>
+            </div>
+        </div>
+        </c:if>
+
         <c:if test="${view eq 'payments'}">
         <c:if test="${param.success == 'true'}">
             <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;">

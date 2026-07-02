@@ -69,6 +69,9 @@ public class AdminPageController {
             } else if ("toggleVoucher".equals(action)) {
                 handleToggleVoucher(request, response);
                 return;
+            } else if ("addRenter".equals(action)) {
+                handleAddRenter(request, response);
+                return;
             }
             // Fall through to GET handling for other POSTs
         }
@@ -78,14 +81,24 @@ public class AdminPageController {
         if ("delete".equals(action)) {
             int accountID = Integer.parseInt(request.getParameter("id"));
             UserController.deleteUser(accountID);
-            response.sendRedirect(request.getContextPath() + "/admin");
+            String redirectUrl = request.getParameter("redirect");
+            if (redirectUrl != null && !redirectUrl.isEmpty()) {
+                response.sendRedirect(request.getContextPath() + redirectUrl);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin");
+            }
             return;
         } else if ("toggleStatus".equals(action)) {
             int accountID = Integer.parseInt(request.getParameter("id"));
             String status = request.getParameter("status");
             boolean newStatus = !"active".equals(status);
             UserController.toggleUserStatus(accountID, newStatus);
-            response.sendRedirect(request.getContextPath() + "/admin");
+            String redirectUrl = request.getParameter("redirect");
+            if (redirectUrl != null && !redirectUrl.isEmpty()) {
+                response.sendRedirect(request.getContextPath() + redirectUrl);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin");
+            }
             return;
         } else if ("orders".equals(action)) {
             showOrdersPage(request, response);
@@ -116,6 +129,9 @@ public class AdminPageController {
             return;
         } else if ("users".equals(action)) {
             showUsersPage(request, response);
+            return;
+        } else if ("renters".equals(action)) {
+            showRentersPage(request, response);
             return;
         } else if ("ratings".equals(action)) {
             showRatingsPage(request, response);
@@ -616,6 +632,67 @@ public class AdminPageController {
         } catch (Exception e) {
             e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/admin?action=vouchers&error=true");
+        }
+    }
+
+    private void showRentersPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            List<Account> renters = AccountDAO.findByRole("Renter");
+            request.setAttribute("renters", renters);
+            request.setAttribute("view", "renters");
+
+            int pendingCount = RentalOrderService.countOrdersByStatus("PENDING_PAYMENT");
+            int verifyingCount = RentalOrderService.countOrdersByStatus("PAYMENT_SUBMITTED");
+            request.setAttribute("pendingCount", pendingCount);
+            request.setAttribute("verifyingCount", verifyingCount);
+            request.setAttribute("newOrdersCount", pendingCount + verifyingCount);
+
+            request.getRequestDispatcher("/WEB-INF/jsp/admin/dashboard.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?error=true");
+        }
+    }
+
+    private void handleAddRenter(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String username = request.getParameter("username");
+            String email = request.getParameter("email");
+            String fullName = request.getParameter("fullName");
+            String password = request.getParameter("password");
+            
+            if (username == null || username.trim().isEmpty() ||
+                email == null || email.trim().isEmpty() ||
+                fullName == null || fullName.trim().isEmpty() ||
+                password == null || password.trim().isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/admin?action=renters&error=missingFields");
+                return;
+            }
+            
+            if (AccountDAO.existsByUsername(username)) {
+                response.sendRedirect(request.getContextPath() + "/admin?action=renters&error=usernameExists");
+                return;
+            }
+            
+            if (AccountDAO.existsByEmail(email)) {
+                response.sendRedirect(request.getContextPath() + "/admin?action=renters&error=emailExists");
+                return;
+            }
+            
+            String hashedPassword = util.PasswordUtil.hashPassword(password);
+            Account account = new Account(username, hashedPassword, email, "Renter", fullName);
+            
+            boolean created = AccountDAO.create(account);
+            if (created) {
+                response.sendRedirect(request.getContextPath() + "/admin?action=renters&success=added");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin?action=renters&error=createFailed");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin?action=renters&error=true");
         }
     }
 }

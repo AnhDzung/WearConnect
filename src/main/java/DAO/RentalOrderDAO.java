@@ -17,8 +17,16 @@ public class RentalOrderDAO {
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, rentalOrder.getClothingID());
             ps.setInt(2, rentalOrder.getRenterUserID());
-            ps.setTimestamp(3, Timestamp.valueOf(rentalOrder.getRentalStartDate()));
-            ps.setTimestamp(4, Timestamp.valueOf(rentalOrder.getRentalEndDate()));
+            if (rentalOrder.getRentalStartDate() != null) {
+                ps.setTimestamp(3, Timestamp.valueOf(rentalOrder.getRentalStartDate()));
+            } else {
+                ps.setNull(3, Types.TIMESTAMP);
+            }
+            if (rentalOrder.getRentalEndDate() != null) {
+                ps.setTimestamp(4, Timestamp.valueOf(rentalOrder.getRentalEndDate()));
+            } else {
+                ps.setNull(4, Types.TIMESTAMP);
+            }
             ps.setDouble(5, rentalOrder.getTotalPrice());
             ps.setDouble(6, rentalOrder.getDepositAmount());
             ps.setString(7, rentalOrder.getStatus());

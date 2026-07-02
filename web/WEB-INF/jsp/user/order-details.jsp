@@ -438,16 +438,20 @@
                             </div>
                         </c:if>
                         
-                        <div class="info-row">
-                            <strong>Ngày bắt đầu:</strong> ${order.rentalStartDate}
-                        </div>
-                        <div class="info-row">
-                            <strong>Ngày kết thúc:</strong> ${order.rentalEndDate}
-                        </div>
+                        <c:set var="isPurchase" value="${empty order.rentalStartDate}" />
+                        
+                        <c:if test="${not isPurchase}">
+                            <div class="info-row">
+                                <strong>Ngày bắt đầu:</strong> ${order.rentalStartDate}
+                            </div>
+                            <div class="info-row">
+                                <strong>Ngày kết thúc:</strong> ${order.rentalEndDate}
+                            </div>
+                        </c:if>
                         <c:choose>
                             <c:when test="${not empty order.voucherCode and order.discountAmount > 0}">
                                 <div class="info-row">
-                                    <strong>Giá thuê gốc:</strong> 
+                                    <strong>${isPurchase ? 'Giá gốc sản phẩm:' : 'Giá thuê gốc:'}</strong> 
                                     <span>
                                         <fmt:formatNumber value="${order.totalPrice + order.discountAmount}" pattern="#,##0"/> VNĐ
                                     </span>
@@ -459,7 +463,7 @@
                                     </span>
                                 </div>
                                 <div class="info-row">
-                                    <strong>Tiền thuê sau giảm:</strong> 
+                                    <strong>${isPurchase ? 'Giá sau giảm:' : 'Tiền thuê sau giảm:'}</strong> 
                                     <span style="font-weight: 700; color: #1e3a8a;">
                                         <fmt:formatNumber value="${order.totalPrice}" pattern="#,##0"/> VNĐ
                                     </span>
@@ -467,7 +471,7 @@
                             </c:when>
                             <c:otherwise>
                                 <div class="info-row">
-                                    <strong>Tổng giá thuê:</strong> <fmt:formatNumber value="${order.totalPrice}" pattern="#,##0"/> VNĐ
+                                    <strong>${isPurchase ? 'Tổng giá bán:' : 'Tổng giá thuê:'}</strong> <fmt:formatNumber value="${order.totalPrice}" pattern="#,##0"/> VNĐ
                                 </div>
                             </c:otherwise>
                         </c:choose>
@@ -483,6 +487,9 @@
                         <c:if test="${sessionScope.userRole != 'Manager'}">
                             <!-- Tiền cọc chi tiết -->
                             <c:choose>
+                                <c:when test="${isPurchase}">
+                                    <!-- No deposit for purchase -->
+                                </c:when>
                                 <c:when test="${not empty order.trustBasedMultiplier and order.trustBasedMultiplier > 0 and order.trustBasedMultiplier < 1.0}">
                                     <c:set var="baseDeposit" value="${order.adjustedDepositAmount / order.trustBasedMultiplier}" />
                                     <div class="info-row">

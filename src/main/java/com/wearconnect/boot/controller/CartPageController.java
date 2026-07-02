@@ -69,11 +69,12 @@ public class CartPageController {
                 String selectedSize = request.getParameter("selectedSize");
                 String selectedColorStr = request.getParameter("selectedColor");
                 
-                LocalDateTime startDate, endDate;
+                LocalDateTime startDate = null;
+                LocalDateTime endDate = null;
                 if ("hourly".equals(rentalType)) {
                     startDate = LocalDateTime.parse(request.getParameter("startDate"), DateTimeFormatter.ISO_DATE_TIME);
                     endDate = LocalDateTime.parse(request.getParameter("endDate"), DateTimeFormatter.ISO_DATE_TIME);
-                } else {
+                } else if ("daily".equals(rentalType)) {
                     startDate = LocalDateTime.parse(request.getParameter("dailyStartDate") + "T00:00:00");
                     endDate = LocalDateTime.parse(request.getParameter("dailyEndDate") + "T23:59:59");
                 }

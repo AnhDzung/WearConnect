@@ -26,39 +26,49 @@ public class RentalOrderService {
         Clothing clothing = ClothingDAO.getClothingByID(clothingID);
         if (clothing == null) return -1;
         
-        // Calculate rental duration in hours
-        long durationHours = ChronoUnit.HOURS.between(startDate, endDate);
-        if (durationHours <= 0) return -1;
+        Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
+        boolean isForSale = owner != null && "Renter".equals(owner.getUserRole());
         
-        // Get item value (product value set by manager)
-        double itemValue = clothing.getItemValue();
-        if (itemValue <= 0) {
-            // Fallback to 20% of daily price if not set
-            itemValue = clothing.getDailyPrice() * 0.2;
-        }
+        double totalPrice = 0.0;
+        double depositAmount = 0.0;
+        double userRating = 5.0;
+        double trustBasedMultiplier = 1.0;
+        double adjustedDepositAmount = 0.0;
         
-        // Calculate rental fee based on duration
-        double totalPrice;
-        double depositAmount;
-        
-        // Determine if using daily or hourly pricing
-        if (DepositCalculationConfig.shouldUseDailyPricing(durationHours)) {
-            // Use daily pricing for rentals >= 24 hours
-            long durationDays = durationHours / 24;
-            totalPrice = durationDays * clothing.getDailyPrice();
-            depositAmount = DepositCalculationConfig.calculateDailyDeposit(itemValue, totalPrice);
+        if (isForSale) {
+            // For sale products: price is clothing.getDailyPrice(), deposit is 0
+            totalPrice = clothing.getDailyPrice();
         } else {
-            // Use hourly pricing for rentals < 24 hours
-            totalPrice = durationHours * clothing.getHourlyPrice();
-            depositAmount = DepositCalculationConfig.calculateHourlyDeposit(itemValue, totalPrice);
+            // Calculate rental duration in hours
+            long durationHours = ChronoUnit.HOURS.between(startDate, endDate);
+            if (durationHours <= 0) return -1;
+            
+            // Get item value (product value set by manager)
+            double itemValue = clothing.getItemValue();
+            if (itemValue <= 0) {
+                // Fallback to 20% of daily price if not set
+                itemValue = clothing.getDailyPrice() * 0.2;
+            }
+            
+            // Determine if using daily or hourly pricing
+            if (DepositCalculationConfig.shouldUseDailyPricing(durationHours)) {
+                // Use daily pricing for rentals >= 24 hours
+                long durationDays = durationHours / 24;
+                totalPrice = durationDays * clothing.getDailyPrice();
+                depositAmount = DepositCalculationConfig.calculateDailyDeposit(itemValue, totalPrice);
+            } else {
+                // Use hourly pricing for rentals < 24 hours
+                totalPrice = durationHours * clothing.getHourlyPrice();
+                depositAmount = DepositCalculationConfig.calculateHourlyDeposit(itemValue, totalPrice);
+            }
+            
+            // Get user's average rating for trust-based deposit adjustment
+            userRating = RatingDAO.getAverageRatingForUser(renterUserID);
+            trustBasedMultiplier = DepositCalculationConfig.getTrustBasedMultiplier(
+                userRating > 0 ? userRating : null
+            );
+            adjustedDepositAmount = depositAmount * trustBasedMultiplier;
         }
-        
-        // Get user's average rating for trust-based deposit adjustment
-        double userRating = RatingDAO.getAverageRatingForUser(renterUserID);
-        double trustBasedMultiplier = DepositCalculationConfig.getTrustBasedMultiplier(
-            userRating > 0 ? userRating : null
-        );
-        double adjustedDepositAmount = depositAmount * trustBasedMultiplier;
         
         // Apply Voucher Discount
         double discountAmount = 0.0;
@@ -87,7 +97,7 @@ public class RentalOrderService {
         }
         double finalTotalPrice = totalPrice - discountAmount;
         
-        RentalOrder order = new RentalOrder(clothingID, renterUserID, startDate, endDate, finalTotalPrice, adjustedDepositAmount);
+        RentalOrder order = new RentalOrder(clothingID, renterUserID, isForSale ? null : startDate, isForSale ? null : endDate, finalTotalPrice, adjustedDepositAmount);
         order.setSelectedSize(selectedSize);
         order.setUserRating(userRating);
         order.setTrustBasedMultiplier(trustBasedMultiplier);
@@ -153,9 +163,12 @@ public class RentalOrderService {
         Clothing clothing = ClothingDAO.getClothingByID(clothingID);
         if (clothing == null) return false;
         
+        Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
+        boolean isForSale = owner != null && "Renter".equals(owner.getUserRole());
+        
         int totalQuantity = clothing.getQuantity();
         
-        // Count how many items are already rented during the requested time period
+        // Count how many items are already ordered/rented during the requested time period or total active orders for sales
         List<RentalOrder> orders = RentalOrderDAO.getRentalOrdersByClothing(clothingID);
         int rentedCount = 0;
         
@@ -165,9 +178,13 @@ public class RentalOrderService {
                 continue;
             }
             
-            // Check for time overlap
-            if (startDate.isBefore(order.getRentalEndDate()) && endDate.isAfter(order.getRentalStartDate())) {
+            if (isForSale) {
                 rentedCount++;
+            } else {
+                // Check for time overlap
+                if (startDate.isBefore(order.getRentalEndDate()) && endDate.isAfter(order.getRentalStartDate())) {
+                    rentedCount++;
+                }
             }
         }
         
@@ -177,8 +194,17 @@ public class RentalOrderService {
 
     public static List<RentalOrder> getConflictingOrders(int clothingID, LocalDateTime startDate, LocalDateTime endDate) {
         List<RentalOrder> conflictingOrders = new ArrayList<>();
-        List<RentalOrder> orders = RentalOrderDAO.getRentalOrdersByClothing(clothingID);
+        Clothing clothing = ClothingDAO.getClothingByID(clothingID);
+        if (clothing == null) return conflictingOrders;
         
+        Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
+        boolean isForSale = owner != null && "Renter".equals(owner.getUserRole());
+        if (isForSale) {
+            // For sale items, we don't have overlapping date conflicts. They only conflict if out of stock.
+            return conflictingOrders;
+        }
+
+        List<RentalOrder> orders = RentalOrderDAO.getRentalOrdersByClothing(clothingID);
         for (RentalOrder order : orders) {
             // Skip cancelled orders only. PENDING_PAYMENT and PAYMENT_SUBMITTED still conflict.
             if (order.getStatus().equals("CANCELLED")) {
@@ -197,10 +223,27 @@ public class RentalOrderService {
         Clothing clothing = ClothingDAO.getClothingByID(clothingID);
         if (clothing == null) return 0;
         
-        int totalQuantity = clothing.getQuantity();
-        List<RentalOrder> conflictingOrders = getConflictingOrders(clothingID, startDate, endDate);
+        Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
+        boolean isForSale = owner != null && "Renter".equals(owner.getUserRole());
         
-        return totalQuantity - conflictingOrders.size();
+        int totalQuantity = clothing.getQuantity();
+        
+        List<RentalOrder> orders = RentalOrderDAO.getRentalOrdersByClothing(clothingID);
+        int activeCount = 0;
+        for (RentalOrder order : orders) {
+            if (order.getStatus().equals("CANCELLED")) {
+                continue;
+            }
+            if (isForSale) {
+                activeCount++;
+            } else {
+                if (startDate.isBefore(order.getRentalEndDate()) && endDate.isAfter(order.getRentalStartDate())) {
+                    activeCount++;
+                }
+            }
+        }
+        
+        return Math.max(0, totalQuantity - activeCount);
     }
 
     public static int expirePendingPayments(int hours) {

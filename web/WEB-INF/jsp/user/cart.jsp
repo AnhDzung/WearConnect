@@ -297,20 +297,15 @@
         </c:when>
         <c:otherwise>
             <form action="${pageContext.request.contextPath}/cart" method="POST" id="cartForm">
-                <input type="hidden" name="action" value="checkout">
-                
-                <div class="cart-layout">
-                    <!-- Left: Items list -->
-                    <div class="cart-table-wrapper">
-                        <table class="cart-table">
+                <input type="hidden" name="action" value="checkout">                        <table class="cart-table">
                             <thead>
                                 <tr>
                                     <th style="width: 40px; text-align: center;">
                                         <input type="checkbox" id="selectAll" class="checkbox-custom" checked onclick="toggleSelectAll(this)">
                                     </th>
                                     <th>Sản Phẩm</th>
-                                    <th style="width: 140px;">Thời Gian Thuê</th>
-                                    <th style="width: 120px; text-align: right;">Giá Thuê</th>
+                                    <th style="width: 140px;">Thời Gian / Loại</th>
+                                    <th style="width: 120px; text-align: right;">Giá Tiền</th>
                                     <th style="width: 120px; text-align: right;">Tiền Cọc</th>
                                     <th style="width: 60px; text-align: center;"></th>
                                 </tr>
@@ -319,24 +314,35 @@
                                 <c:forEach items="${cart}" var="item">
                                     <%
                                         CartItem cartItem = (CartItem) pageContext.getAttribute("item");
-                                        long durationHours = ChronoUnit.HOURS.between(cartItem.getStartDate(), cartItem.getEndDate());
+                                        long durationHours = 0;
                                         double rentFee = 0.0;
                                         double deposit = 0.0;
                                         
-                                        if ("daily".equals(cartItem.getRentalType())) {
-                                            long durationDays = durationHours / 24;
-                                            if (durationDays <= 0) durationDays = 1;
-                                            rentFee = durationDays * cartItem.getDailyPrice();
-                                            deposit = Math.max(cartItem.getItemValue() * DepositCalculationConfig.DAILY_DEPOSIT_PERCENTAGE, rentFee * DepositCalculationConfig.DAILY_DEPOSIT_MULTIPLIER);
+                                        if ("buy".equals(cartItem.getRentalType())) {
+                                            rentFee = cartItem.getDailyPrice();
+                                            deposit = 0.0;
                                         } else {
-                                            rentFee = durationHours * cartItem.getHourlyPrice();
-                                            deposit = Math.max(cartItem.getItemValue() * DepositCalculationConfig.HOURLY_DEPOSIT_PERCENTAGE, rentFee * DepositCalculationConfig.HOURLY_DEPOSIT_MULTIPLIER);
+                                            if (cartItem.getStartDate() != null && cartItem.getEndDate() != null) {
+                                                durationHours = ChronoUnit.HOURS.between(cartItem.getStartDate(), cartItem.getEndDate());
+                                            }
+                                            if ("daily".equals(cartItem.getRentalType())) {
+                                                long durationDays = durationHours / 24;
+                                                if (durationDays <= 0) durationDays = 1;
+                                                rentFee = durationDays * cartItem.getDailyPrice();
+                                                deposit = Math.max(cartItem.getItemValue() * DepositCalculationConfig.DAILY_DEPOSIT_PERCENTAGE, rentFee * DepositCalculationConfig.DAILY_DEPOSIT_MULTIPLIER);
+                                            } else {
+                                                rentFee = durationHours * cartItem.getHourlyPrice();
+                                                deposit = Math.max(cartItem.getItemValue() * DepositCalculationConfig.HOURLY_DEPOSIT_PERCENTAGE, rentFee * DepositCalculationConfig.HOURLY_DEPOSIT_MULTIPLIER);
+                                            }
                                         }
-
-                                        // Apply trust multiplier for user
-                                        double userRating = RatingDAO.getAverageRatingForUser((int)session.getAttribute("accountID"));
-                                        double trustBasedMultiplier = DepositCalculationConfig.getTrustBasedMultiplier(userRating > 0 ? userRating : null);
-                                        double adjustedDeposit = deposit * trustBasedMultiplier;
+                                        
+                                        // Apply trust multiplier for user if not a purchase
+                                        double adjustedDeposit = 0.0;
+                                        if (!"buy".equals(cartItem.getRentalType())) {
+                                            double userRating = RatingDAO.getAverageRatingForUser((int)session.getAttribute("accountID"));
+                                            double trustBasedMultiplier = DepositCalculationConfig.getTrustBasedMultiplier(userRating > 0 ? userRating : null);
+                                            adjustedDeposit = deposit * trustBasedMultiplier;
+                                        }
 
                                         pageContext.setAttribute("durationHours", durationHours);
                                         pageContext.setAttribute("durationDays", durationHours / 24);
@@ -368,28 +374,48 @@
                                                         <c:if test="${not empty item.colorName}">
                                                             <span>Màu: ${item.colorName}</span>
                                                         </c:if>
-                                                        <span style="background-color: #f1f5f9; color: #475569; font-weight: bold;">
-                                                            ${item.rentalType eq 'daily' ? 'Theo ngày' : 'Theo giờ'}
-                                                        </span>
+                                                         <span style="background-color: #f1f5f9; color: #475569; font-weight: bold;">
+                                                             <c:choose>
+                                                                 <c:when test="${item.rentalType eq 'buy'}">Mua đứt</c:when>
+                                                                 <c:when test="${item.rentalType eq 'daily'}">Theo ngày</c:when>
+                                                                 <c:otherwise>Theo giờ</c:otherwise>
+                                                             </c:choose>
+                                                         </span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
-                                            <div style="font-size: 13px; font-weight: 600; color: var(--gray-700); line-height: 1.4;">
-                                                Từ: ${item.formattedStartDate}<br>
-                                                Đến: ${item.formattedEndDate}
-                                            </div>
-                                            <small style="color: var(--gray-400); font-size: 11px;">
-                                                (${item.rentalType eq 'daily' ? durationDays : durationHours} ${item.rentalType eq 'daily' ? 'ngày' : 'giờ'})
-                                            </small>
-                                        </td>
+                                         <td>
+                                             <c:choose>
+                                                 <c:when test="${item.rentalType eq 'buy'}">
+                                                     <div style="font-size: 13px; font-weight: 600; color: var(--gray-500);">
+                                                         Mua đứt sản phẩm
+                                                     </div>
+                                                 </c:when>
+                                                 <c:otherwise>
+                                                     <div style="font-size: 13px; font-weight: 600; color: var(--gray-700); line-height: 1.4;">
+                                                         Từ: ${item.formattedStartDate}<br>
+                                                         Đến: ${item.formattedEndDate}
+                                                     </div>
+                                                     <small style="color: var(--gray-400); font-size: 11px;">
+                                                         (${item.rentalType eq 'daily' ? durationDays : durationHours} ${item.rentalType eq 'daily' ? 'ngày' : 'giờ'})
+                                                     </small>
+                                                 </c:otherwise>
+                                             </c:choose>
+                                         </td>
                                         <td style="text-align: right;">
                                             <span class="price-text"><fmt:formatNumber value="${rentFee}" pattern="#,##0"/>đ</span>
                                         </td>
-                                        <td style="text-align: right;">
-                                            <span class="deposit-text"><fmt:formatNumber value="${adjustedDeposit}" pattern="#,##0"/>đ</span>
-                                        </td>
+                                         <td style="text-align: right;">
+                                             <c:choose>
+                                                 <c:when test="${item.rentalType eq 'buy'}">
+                                                     <span style="color: var(--gray-400);">0đ</span>
+                                                 </c:when>
+                                                 <c:otherwise>
+                                                     <span class="deposit-text"><fmt:formatNumber value="${adjustedDeposit}" pattern="#,##0"/>đ</span>
+                                                 </c:otherwise>
+                                             </c:choose>
+                                         </td>
                                         <td style="text-align: center;">
                                             <button type="button" class="btn-remove" onclick="removeItem(${item.cartItemId})">Xóa</button>
                                         </td>
@@ -424,11 +450,11 @@
                         </div>
                         
                         <small style="display: block; font-size: 11px; color: var(--gray-500); line-height: 1.5; margin-top: 15px;">
-                            * Tổng thanh toán = Tổng tiền thuê + Tổng tiền cọc.<br>
-                            * Tiền cọc sẽ được hoàn lại 100% sau khi trả đồ và không bị hư hỏng gì.
+                            * Tổng thanh toán = Tổng giá trị sản phẩm + Tổng tiền cọc (nếu có thuê đồ).<br>
+                            * Tiền cọc chỉ áp dụng cho sản phẩm thuê và sẽ được hoàn lại 100% sau khi trả đồ.
                         </small>
                         
-                        <button type="submit" class="btn-checkout" id="btnCheckout">Đặt Thuê Ngay</button>
+                        <button type="submit" class="btn-checkout" id="btnCheckout">Tiến Hành Thanh Toán</button>
                         <a href="${pageContext.request.contextPath}/home" class="btn-checkout" style="background: white; border: 1.5px solid var(--gray-300); color: var(--gray-700); box-shadow: none; margin-top: 10px;">Thêm Đồ Khác</a>
                     </div>
                 </div>

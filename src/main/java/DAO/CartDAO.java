@@ -78,8 +78,16 @@ public class CartDAO {
             ps.setInt(1, accountID);
             ps.setInt(2, item.getClothingID());
             ps.setString(3, item.getRentalType());
-            ps.setTimestamp(4, Timestamp.valueOf(item.getStartDate()));
-            ps.setTimestamp(5, Timestamp.valueOf(item.getEndDate()));
+            if (item.getStartDate() != null) {
+                ps.setTimestamp(4, Timestamp.valueOf(item.getStartDate()));
+            } else {
+                ps.setNull(4, Types.TIMESTAMP);
+            }
+            if (item.getEndDate() != null) {
+                ps.setTimestamp(5, Timestamp.valueOf(item.getEndDate()));
+            } else {
+                ps.setNull(5, Types.TIMESTAMP);
+            }
             ps.setString(6, item.getSelectedSize());
             if (item.getColorID() != null) {
                 ps.setInt(7, item.getColorID());

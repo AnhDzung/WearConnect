@@ -17,6 +17,18 @@ public class ClothingDAO {
                                                  String sort,
                                                  int page,
                                                  int pageSize) {
+        return getHomeProducts("Manager", type, query, categories, dateFrom, dateTo, sort, page, pageSize);
+    }
+
+    public static List<Clothing> getHomeProducts(String ownerRole,
+                                                 String type,
+                                                 String query,
+                                                 List<String> categories,
+                                                 String dateFrom,
+                                                 String dateTo,
+                                                 String sort,
+                                                 int page,
+                                                 int pageSize) {
         List<Clothing> list = new ArrayList<>();
         String safeSort = sort != null ? sort : "newest";
         int safePage = Math.max(page, 1);
@@ -34,7 +46,7 @@ public class ClothingDAO {
            .append(") r ON r.ClothingID = c.ClothingID ")
            .append("WHERE 1=1 ");
 
-        appendHomeFilters(sql, type, query, categories, dateFrom, dateTo);
+        appendHomeFilters(sql, ownerRole, type, query, categories, dateFrom, dateTo);
 
         if ("popular".equals(safeSort)) {
             sql.append(" ORDER BY COALESCE(r.AvgRating, 0) DESC, c.ClothingID DESC ");
@@ -49,7 +61,7 @@ public class ClothingDAO {
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            int paramIndex = bindHomeFilters(ps, 1, type, query, categories, dateFrom, dateTo);
+            int paramIndex = bindHomeFilters(ps, 1, ownerRole, type, query, categories, dateFrom, dateTo);
             ps.setInt(paramIndex++, offset);
             ps.setInt(paramIndex, safePageSize);
 
@@ -70,13 +82,22 @@ public class ClothingDAO {
                                         List<String> categories,
                                         String dateFrom,
                                         String dateTo) {
+        return countHomeProducts("Manager", type, query, categories, dateFrom, dateTo);
+    }
+
+    public static int countHomeProducts(String ownerRole,
+                                        String type,
+                                        String query,
+                                        List<String> categories,
+                                        String dateFrom,
+                                        String dateTo) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT COUNT(*) AS TotalItems FROM Clothing c WHERE 1=1 ");
-        appendHomeFilters(sql, type, query, categories, dateFrom, dateTo);
+        appendHomeFilters(sql, ownerRole, type, query, categories, dateFrom, dateTo);
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            bindHomeFilters(ps, 1, type, query, categories, dateFrom, dateTo);
+            bindHomeFilters(ps, 1, ownerRole, type, query, categories, dateFrom, dateTo);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt("TotalItems");
@@ -460,6 +481,7 @@ public class ClothingDAO {
     }
 
     private static void appendHomeFilters(StringBuilder sql,
+                                          String ownerRole,
                                           String type,
                                           String query,
                                           List<String> categories,
@@ -468,6 +490,10 @@ public class ClothingDAO {
         sql.append(" AND c.IsActive = 1 ")
            .append(" AND (c.Category IS NULL OR LTRIM(RTRIM(c.Category)) <> 'Cosplay') ")
            .append(" AND (c.ClothingStatus IS NULL OR UPPER(LTRIM(RTRIM(c.ClothingStatus))) = 'ACTIVE') ");
+
+        if (ownerRole != null && !ownerRole.isBlank()) {
+            sql.append(" AND c.RenterID IN (SELECT AccountID FROM Accounts WHERE UserRole = ?) ");
+        }
 
         if (query != null && !query.isBlank()) {
             if ("category".equals(type)) {
@@ -500,12 +526,17 @@ public class ClothingDAO {
 
     private static int bindHomeFilters(PreparedStatement ps,
                                        int startIndex,
+                                       String ownerRole,
                                        String type,
                                        String query,
                                        List<String> categories,
                                        String dateFrom,
                                        String dateTo) throws SQLException {
         int paramIndex = startIndex;
+
+        if (ownerRole != null && !ownerRole.isBlank()) {
+            ps.setString(paramIndex++, ownerRole);
+        }
 
         if (query != null && !query.isBlank()) {
             if ("category".equals(type)) {
@@ -530,7 +561,6 @@ public class ClothingDAO {
 
         return paramIndex;
     }
-    
     /**
      * Get all cosplay products by status
      */

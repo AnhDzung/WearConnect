@@ -114,6 +114,7 @@ Controller\RentalOrderController.class
 Model\CosplayDetail.class
 com\wearconnect\boot\controller\OAuth2CallbackController.class
 config\DepositCalculationConfig.class
+com\wearconnect\boot\controller\BuyPageController.class
 Model\Rating.class
 Service\UserService.class
 Controller\AIChatController.class

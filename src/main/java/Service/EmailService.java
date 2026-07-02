@@ -61,6 +61,7 @@ public class EmailService {
 
         if (senderPassword != null) {
             senderPassword = senderPassword.replaceAll("\\s+", ""); 
+        }
 
         System.out.println("[EmailService] Đang đăng nhập Gmail bằng tài khoản: " + senderEmail);
 

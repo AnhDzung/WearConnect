@@ -568,13 +568,15 @@
             
             <!-- Menu cho Guest (Chưa đăng nhập) -->
             <% if (userRole == null || userRole.isEmpty()) { %>
-                <li><a class="header-nav-main-btn" href="${pageContext.request.contextPath}/home">Cửa Hàng</a></li>
+                <li><a class="header-nav-main-btn" href="${pageContext.request.contextPath}/home">Thuê Đồ</a></li>
+                <li><a class="header-nav-main-btn" href="${pageContext.request.contextPath}/buy">Mua Sản Phẩm</a></li>
                 <li><a class="header-nav-main-btn cosplay-highlight" href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes</a></li>
             <% } %>
             
             <!-- Menu cho User -->
             <% if ("User".equals(userRole)) { %>
-                <li><a class="header-nav-main-btn" href="${pageContext.request.contextPath}/home">Cửa Hàng</a></li>
+                <li><a class="header-nav-main-btn" href="${pageContext.request.contextPath}/home">Thuê Đồ</a></li>
+                <li><a class="header-nav-main-btn" href="${pageContext.request.contextPath}/buy">Mua Sản Phẩm</a></li>
                 <li><a class="header-nav-main-btn cosplay-highlight" href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes</a></li>
                 <li><a href="${pageContext.request.contextPath}/rental?action=myOrders">Đơn Thuê Của Tôi</a></li>
                 <li><a href="${pageContext.request.contextPath}/user?action=favorites">Yêu Thích</a></li>
@@ -596,12 +598,11 @@
             <% } %>
             
 
-            <!-- Menu cho Manager (Người Cho Thuê Quần Áo) -->
-            <% if ("Manager".equals(userRole)) { %>
+            <!-- Menu cho Manager hoặc Renter -->
+            <% if ("Manager".equals(userRole) || "Renter".equals(userRole)) { %>
                 <li><a href="${pageContext.request.contextPath}/manager">Dashboard</a></li>
                 <li><a href="${pageContext.request.contextPath}/clothing?action=myClothing">Quản Lý Sản Phẩm</a></li>
-                <!--<li><a href="${pageContext.request.contextPath}/clothing?action=upload">Đăng Tải Mới</a></li>-->
-                <li><a href="${pageContext.request.contextPath}/manager?action=orders">Đơn Đặt Thuê</a></li>
+                <li><a href="${pageContext.request.contextPath}/manager?action=orders"><%= "Renter".equals(userRole) ? "Đơn Hàng Bán" : "Đơn Đặt Thuê" %></a></li>
                 <li><a href="${pageContext.request.contextPath}/manager?action=ratings">Đánh Giá</a></li>
             <% } %>
             
@@ -1016,11 +1017,12 @@
             <button id="wcMobileClose" style="background:none;border:none;font-size:28px;cursor:pointer;">×</button>
         </div>
         <nav style="display:flex; flex-direction:column; gap:10px;">
-            <a href="${pageContext.request.contextPath}/home" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Cửa Hàng</a>
+            <a href="${pageContext.request.contextPath}/home" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Thuê Đồ</a>
+            <a href="${pageContext.request.contextPath}/buy" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Mua Sản Phẩm</a>
             <a href="${pageContext.request.contextPath}/cosplay" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Cosplay & Fes</a>
             <a href="${pageContext.request.contextPath}/rental?action=myOrders" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Đơn Thuê Của Tôi</a>
             <a href="${pageContext.request.contextPath}/user?action=favorites" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Yêu Thích</a>
-            <c:if test="${sessionScope.userRole == 'Manager'}">
+            <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Renter'}">
                 <a href="${pageContext.request.contextPath}/manager" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Dashboard</a>
             </c:if>
             <hr style="border:none; height:1px; background:#eee; margin:12px 0;">
