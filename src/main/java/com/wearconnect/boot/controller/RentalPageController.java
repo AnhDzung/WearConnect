@@ -103,8 +103,10 @@ public class RentalPageController {
             }
             try {
                 int clothingID = Integer.parseInt(request.getParameter("clothingID"));
-                double hourlyPrice = Double.parseDouble(request.getParameter("hourlyPrice"));
-                double dailyPrice = Double.parseDouble(request.getParameter("dailyPrice"));
+                String hourlyPriceStr = request.getParameter("hourlyPrice");
+                double hourlyPrice = (hourlyPriceStr == null || hourlyPriceStr.trim().isEmpty()) ? 0 : Double.parseDouble(hourlyPriceStr);
+                String dailyPriceStr = request.getParameter("dailyPrice");
+                double dailyPrice = (dailyPriceStr == null || dailyPriceStr.trim().isEmpty()) ? 0 : Double.parseDouble(dailyPriceStr);
                 request.setAttribute("clothingID", clothingID);
                 request.setAttribute("hourlyPrice", hourlyPrice);
                 request.setAttribute("dailyPrice", dailyPrice);
@@ -182,8 +184,18 @@ public class RentalPageController {
             request.setAttribute("order", order);
             request.setAttribute("payment", payment);
             if (order != null) {
-                request.setAttribute("clothing", ClothingDAO.getClothingByID(order.getClothingID()));
+                Model.Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
+                request.setAttribute("clothing", clothing);
                 request.setAttribute("clothingImages", ClothingImageDAO.getImagesByClothing(order.getClothingID()));
+                
+                boolean isForSale = false;
+                if (clothing != null) {
+                    Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
+                    if (owner != null && "Renter".equals(owner.getUserRole())) {
+                        isForSale = true;
+                    }
+                }
+                request.setAttribute("isForSale", isForSale);
             }
             request.getRequestDispatcher("/WEB-INF/jsp/user/order-details.jsp").forward(request, response);
         }
@@ -211,9 +223,13 @@ public class RentalPageController {
                 if ("hourly".equals(rentalType)) {
                     startDate = LocalDateTime.parse(request.getParameter("startDate"), DateTimeFormatter.ISO_DATE_TIME);
                     endDate = LocalDateTime.parse(request.getParameter("endDate"), DateTimeFormatter.ISO_DATE_TIME);
-                } else {
+                } else if ("daily".equals(rentalType)) {
                     startDate = LocalDateTime.parse(request.getParameter("dailyStartDate") + "T00:00:00");
                     endDate = LocalDateTime.parse(request.getParameter("dailyEndDate") + "T23:59:59");
+                } else {
+                    // For purchase (rentalType == "buy")
+                    startDate = LocalDateTime.now();
+                    endDate = LocalDateTime.now();
                 }
 
                 if (!RentalOrderController.isAvailable(clothingID, startDate, endDate)) {

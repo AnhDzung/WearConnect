@@ -97,7 +97,9 @@ public class RentalOrderService {
         }
         double finalTotalPrice = totalPrice - discountAmount;
         
-        RentalOrder order = new RentalOrder(clothingID, renterUserID, isForSale ? null : startDate, isForSale ? null : endDate, finalTotalPrice, adjustedDepositAmount);
+        LocalDateTime actualStartDate = isForSale ? LocalDateTime.now() : startDate;
+        LocalDateTime actualEndDate = isForSale ? LocalDateTime.now() : endDate;
+        RentalOrder order = new RentalOrder(clothingID, renterUserID, actualStartDate, actualEndDate, finalTotalPrice, adjustedDepositAmount);
         order.setSelectedSize(selectedSize);
         order.setUserRating(userRating);
         order.setTrustBasedMultiplier(trustBasedMultiplier);
@@ -166,6 +168,10 @@ public class RentalOrderService {
         Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
         boolean isForSale = owner != null && "Renter".equals(owner.getUserRole());
         
+        if (!isForSale && (startDate == null || endDate == null)) {
+            return false;
+        }
+        
         int totalQuantity = clothing.getQuantity();
         
         // Count how many items are already ordered/rented during the requested time period or total active orders for sales
@@ -225,6 +231,10 @@ public class RentalOrderService {
         
         Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
         boolean isForSale = owner != null && "Renter".equals(owner.getUserRole());
+        
+        if (!isForSale && (startDate == null || endDate == null)) {
+            return 0;
+        }
         
         int totalQuantity = clothing.getQuantity();
         

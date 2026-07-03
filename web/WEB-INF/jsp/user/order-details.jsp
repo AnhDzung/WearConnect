@@ -366,8 +366,9 @@
 <body>
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
 
+<c:set var="isPurchase" value="${isForSale}" />
 <div class="container">
-    <h1>Chi tiết đơn thuê</h1>
+    <h1>${isPurchase ? "Chi tiết đơn mua" : "Chi tiết đơn thuê"}</h1>
     
     <!-- Success message for automatic payment verification -->
     <c:if test="${param.paymentSuccess == 'true'}">
@@ -437,8 +438,6 @@
                                 </div>
                             </div>
                         </c:if>
-                        
-                        <c:set var="isPurchase" value="${empty order.rentalStartDate}" />
                         
                         <c:if test="${not isPurchase}">
                             <div class="info-row">

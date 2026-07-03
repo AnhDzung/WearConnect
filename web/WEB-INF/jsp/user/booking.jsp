@@ -33,8 +33,9 @@
             isForSale = true;
         }
     }
+    boolean isAddToCart = "true".equals(request.getParameter("addToCart"));
 %>
-<c:set var="isAddToCart" value="${param.addToCart eq 'true'}" />
+<c:set var="isAddToCart" value="<%= isAddToCart %>" />
 <!DOCTYPE html>
 <html>
 <head>
@@ -658,11 +659,25 @@
                     <p class="payment-row"><strong><%= isForSale ? (isAddToCart ? "Giá bán tạm tính:" : "Số tiền thanh toán:") : (isAddToCart ? "Ước tính thanh toán:" : "Số tiền thanh toán:") %></strong> <span><span id="paymentAmount">0</span> VNĐ</span></p>
                     <small class="summary-disclaimer">
                         <c:choose>
-                            <c:when test="${isAddToCart}">
-                                Số tiền trên là ước tính gồm: <strong>Giá thuê + tiền cọc</strong>.<br>Bạn sẽ thực hiện thanh toán khi bấm thuê từ giỏ hàng.
+                            <c:when test="<%= isForSale %>">
+                                <c:choose>
+                                    <c:when test="${isAddToCart}">
+                                        Sản phẩm mua đứt không có tiền đặt cọc.<br>Bạn sẽ thực hiện thanh toán khi bấm mua từ giỏ hàng.
+                                    </c:when>
+                                    <c:otherwise>
+                                        Bạn sẽ thanh toán 100% tiền mua sản phẩm.<br>Sản phẩm mua đứt không đi kèm tiền cọc và không phải hoàn trả.
+                                    </c:otherwise>
+                                </c:choose>
                             </c:when>
                             <c:otherwise>
-                                Bạn sẽ thanh toán: <strong>Tổng tiền thuê + tiền cọc</strong> trước.<br>Tiền cọc sẽ được hoàn lại sau khi shop nhận sản phẩm không có lỗi gì.
+                                <c:choose>
+                                    <c:when test="${isAddToCart}">
+                                        Số tiền trên là ước tính gồm: <strong>Giá thuê + tiền cọc</strong>.<br>Bạn sẽ thực hiện thanh toán khi bấm thuê từ giỏ hàng.
+                                    </c:when>
+                                    <c:otherwise>
+                                        Bạn sẽ thanh toán: <strong>Tổng tiền thuê + tiền cọc</strong> trước.<br>Tiền cọc sẽ được hoàn lại sau khi shop nhận sản phẩm không có lỗi gì.
+                                    </c:otherwise>
+                                </c:choose>
                             </c:otherwise>
                         </c:choose>
                     </small>
@@ -680,6 +695,7 @@
     const HOURLY_PRICE = Number('${hourlyPrice}');
     const DAILY_PRICE = Number('${dailyPrice}');
     const ITEM_VALUE = Number('${itemValue}');
+    const isForSale = <%= isForSale %>;
     
     // Cấu hình đồng bộ từ Backend (DepositCalculationConfig)
     const HOURLY_DEPOSIT_PERCENTAGE = <%= DepositCalculationConfig.HOURLY_DEPOSIT_PERCENTAGE %>;
@@ -706,11 +722,17 @@
     }
     
     function validateForm() {
-        const rentalType = document.querySelector('input[name="rentalType"]:checked').value;
+        const rentalTypeEl = document.querySelector('input[name="rentalType"]:checked');
+        const rentalType = rentalTypeEl ? rentalTypeEl.value : 'buy';
+        
         const selectedSize = document.getElementById('selectedSize').value;
         if (!selectedSize || selectedSize.trim() === '') {
             alert('Vui lòng chọn size');
             return false;
+        }
+        
+        if (rentalType === 'buy') {
+            return true;
         }
         
         // Validate datetime inputs
@@ -750,7 +772,12 @@
     }
     
     function toggleRentalType() {
-        const rentalType = document.querySelector('input[name="rentalType"]:checked').value;
+        const rentalTypeEl = document.querySelector('input[name="rentalType"]:checked');
+        if (!rentalTypeEl) {
+            calculatePrice();
+            return;
+        }
+        const rentalType = rentalTypeEl.value;
         const hourlySection = document.getElementById('hourlySection');
         const dailySection = document.getElementById('dailySection');
         
@@ -871,13 +898,13 @@
         }
 
         if (discount > 0) {
-            document.getElementById('rentalFeeLabel').textContent = 'Giá thuê gốc:';
+            document.getElementById('rentalFeeLabel').textContent = isForSale ? 'Giá bán gốc:' : 'Giá thuê gốc:';
             document.getElementById('discountRow').style.display = 'block';
             document.getElementById('discountAmountDisplay').textContent = Math.round(discount).toLocaleString('vi-VN');
             document.getElementById('discountedRentalFeeRow').style.display = 'block';
             document.getElementById('discountedRentalFeeDisplay').textContent = Math.round(rentalPrice - discount).toLocaleString('vi-VN');
         } else {
-            document.getElementById('rentalFeeLabel').textContent = 'Tổng giá thuê:';
+            document.getElementById('rentalFeeLabel').textContent = isForSale ? 'Giá bán sản phẩm:' : 'Tổng giá thuê:';
             document.getElementById('discountRow').style.display = 'none';
             document.getElementById('discountedRentalFeeRow').style.display = 'none';
         }
@@ -887,7 +914,6 @@
     }
 
     function calculatePrice() {
-        const isForSale = <%= isForSale %>;
         let rentalPrice = 0;
         let depositPrice = 0;
 

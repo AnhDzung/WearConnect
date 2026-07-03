@@ -40,12 +40,14 @@
     
     List<Color> availableColors = ColorDAO.getColorsByManager(managerID);
     List<Color> clothingColors = clothingID > 0 ? ColorDAO.getColorsByClothing(clothingID) : new java.util.ArrayList<>();
+    String userRole = (session != null && session.getAttribute("userRole") != null) ? ((String) session.getAttribute("userRole")).trim() : "";
+    boolean isRenter = "Renter".equals(userRole);
 %>
 <!DOCTYPE html>
 <html>
 <head>
     <jsp:include page="/WEB-INF/jsp/components/head.jsp" />
-    <title>Chỉnh sửa quần áo - WearConnect</title>
+    <title><%= isRenter ? "Chỉnh sửa thông tin bán" : "Chỉnh sửa quần áo" %> - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap');
@@ -396,8 +398,8 @@
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
 
 <div class="form-container">
-    <h1>Chỉnh Sửa Quần Áo</h1>
-    <p class="upload-subtitle">Cập nhật thông tin sản phẩm để tăng khả năng được thuê và hiển thị chuyên nghiệp hơn.</p>
+    <h1><%= isRenter ? "Chỉnh sửa quần áo bán" : "Chỉnh Sửa Quần Áo" %></h1>
+    <p class="upload-subtitle"><%= isRenter ? "Cập nhật thông tin sản phẩm bán để khách hàng dễ mua sắm hơn." : "Cập nhật thông tin sản phẩm để tăng khả năng được thuê và hiển thị chuyên nghiệp hơn." %></p>
     
     <form method="POST" action="${pageContext.request.contextPath}/clothing" enctype="multipart/form-data" onsubmit="return validateForm()">
         <input type="hidden" name="action" value="update">
@@ -423,39 +425,51 @@
             </select>
         </div>
         
-        <div class="form-group" id="styleSection">
-            <label for="style">Phong cách:</label>
-            <select id="style" name="style" required>
-                <option value="">-- Chọn phong cách --</option>
-                <option value="Thường ngày" <c:if test="${clothing.style == 'Thường ngày'}">selected</c:if>>Thường ngày</option>
-                <option value="Trang trọng" <c:if test="${clothing.style == 'Trang trọng'}">selected</c:if>>Trang trọng</option>
-                <option value="Dự tiệc" <c:if test="${clothing.style == 'Dự tiệc'}">selected</c:if>>Dự tiệc</option>
-                <option value="Thể thao" <c:if test="${clothing.style == 'Thể thao'}">selected</c:if>>Thể thao</option>
-                <option value="Cổ điển" <c:if test="${clothing.style == 'Cổ điển'}">selected</c:if>>Cổ điển</option>
-                <option value="Vintage" <c:if test="${clothing.style == 'Vintage'}">selected</c:if>>Vintage</option>
-                <option value="Streetwear" <c:if test="${clothing.style == 'Streetwear'}">selected</c:if>>Streetwear</option>
-                <option value="Sexy" <c:if test="${clothing.style == 'Sexy'}">selected</c:if>>Sexy</option>
-                <option value="Minimalist" <c:if test="${clothing.style == 'Minimalist'}">selected</c:if>>Minimalist</option>
-            </select>
-        </div>
+        <% if (isRenter) { %>
+            <div class="form-group" id="styleSection">
+                <label for="style">Chất liệu sản phẩm:</label>
+                <input type="text" id="style" name="style" value="${clothing.style}" placeholder="Nhập chất liệu (ví dụ: Cotton, Silk, Polyester...)" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="occasion">Xuất xứ:</label>
+                <input type="text" id="occasion" name="occasion" value="${clothing.occasion}" placeholder="Nhập xuất xứ (ví dụ: Việt Nam, Quảng Châu, Hàn Quốc...)" required>
+            </div>
+        <% } else { %>
+            <div class="form-group" id="styleSection">
+                <label for="style">Phong cách:</label>
+                <select id="style" name="style" required>
+                    <option value="">-- Chọn phong cách --</option>
+                    <option value="Thường ngày" <c:if test="${clothing.style == 'Thường ngày'}">selected</c:if>>Thường ngày</option>
+                    <option value="Trang trọng" <c:if test="${clothing.style == 'Trang trọng'}">selected</c:if>>Trang trọng</option>
+                    <option value="Dự tiệc" <c:if test="${clothing.style == 'Dự tiệc'}">selected</c:if>>Dự tiệc</option>
+                    <option value="Thể thao" <c:if test="${clothing.style == 'Thể thao'}">selected</c:if>>Thể thao</option>
+                    <option value="Cổ điển" <c:if test="${clothing.style == 'Cổ điển'}">selected</c:if>>Cổ điển</option>
+                    <option value="Vintage" <c:if test="${clothing.style == 'Vintage'}">selected</c:if>>Vintage</option>
+                    <option value="Streetwear" <c:if test="${clothing.style == 'Streetwear'}">selected</c:if>>Streetwear</option>
+                    <option value="Sexy" <c:if test="${clothing.style == 'Sexy'}">selected</c:if>>Sexy</option>
+                    <option value="Minimalist" <c:if test="${clothing.style == 'Minimalist'}">selected</c:if>>Minimalist</option>
+                </select>
+            </div>
 
-        <div class="form-group">
-            <label for="occasion">Mục đích sử dụng:</label>
-            <select id="occasion" name="occasion" required>
-                <option value="">-- Chọn mục đích --</option>
-                <option value="Dự tiệc" <c:if test="${clothing.occasion == 'Dự tiệc'}">selected</c:if>>Dự tiệc</option>
-                <option value="Tốt nghiệp" <c:if test="${clothing.occasion == 'Tốt nghiệp'}">selected</c:if>>Tốt nghiệp</option>
-                <option value="Đám cưới" <c:if test="${clothing.occasion == 'Đám cưới' || clothing.occasion == 'Tiệc cưới'}">selected</c:if>>Đám cưới</option>
-                <option value="Gala / Sự kiện công ty" <c:if test="${clothing.occasion == 'Gala / Sự kiện công ty'}">selected</c:if>>Gala / Sự kiện công ty</option>
-                <option value="Biểu diễn" <c:if test="${clothing.occasion == 'Biểu diễn'}">selected</c:if>>Biểu diễn</option>
-                <option value="Chụp ảnh" <c:if test="${clothing.occasion == 'Chụp ảnh'}">selected</c:if>>Chụp ảnh</option>
-                <option value="Quay video / Content" <c:if test="${clothing.occasion == 'Quay video / Content'}">selected</c:if>>Quay video / Content</option>
-                <option value="Du lịch" <c:if test="${clothing.occasion == 'Du lịch'}">selected</c:if>>Du lịch</option>
-                <option value="Hẹn hò" <c:if test="${clothing.occasion == 'Hẹn hò'}">selected</c:if>>Hẹn hò</option>
-                <option value="Đi biển" <c:if test="${clothing.occasion == 'Đi biển'}">selected</c:if>>Đi biển</option>
-                <option value="Street style / Đi chơi concept" <c:if test="${clothing.occasion == 'Street style / Đi chơi concept'}">selected</c:if>>Street style / Đi chơi concept</option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label for="occasion">Mục đích sử dụng:</label>
+                <select id="occasion" name="occasion" required>
+                    <option value="">-- Chọn mục đích --</option>
+                    <option value="Dự tiệc" <c:if test="${clothing.occasion == 'Dự tiệc'}">selected</c:if>>Dự tiệc</option>
+                    <option value="Tốt nghiệp" <c:if test="${clothing.occasion == 'Tốt nghiệp'}">selected</c:if>>Tốt nghiệp</option>
+                    <option value="Đám cưới" <c:if test="${clothing.occasion == 'Đám cưới' || clothing.occasion == 'Tiệc cưới'}">selected</c:if>>Đám cưới</option>
+                    <option value="Gala / Sự kiện công ty" <c:if test="${clothing.occasion == 'Gala / Sự kiện công ty'}">selected</c:if>>Gala / Sự kiện công ty</option>
+                    <option value="Biểu diễn" <c:if test="${clothing.occasion == 'Biểu diễn'}">selected</c:if>>Biểu diễn</option>
+                    <option value="Chụp ảnh" <c:if test="${clothing.occasion == 'Chụp ảnh'}">selected</c:if>>Chụp ảnh</option>
+                    <option value="Quay video / Content" <c:if test="${clothing.occasion == 'Quay video / Content'}">selected</c:if>>Quay video / Content</option>
+                    <option value="Du lịch" <c:if test="${clothing.occasion == 'Du lịch'}">selected</c:if>>Du lịch</option>
+                    <option value="Hẹn hò" <c:if test="${clothing.occasion == 'Hẹn hò'}">selected</c:if>>Hẹn hò</option>
+                    <option value="Đi biển" <c:if test="${clothing.occasion == 'Đi biển'}">selected</c:if>>Đi biển</option>
+                    <option value="Street style / Đi chơi concept" <c:if test="${clothing.occasion == 'Street style / Đi chơi concept'}">selected</c:if>>Street style / Đi chơi concept</option>
+                </select>
+            </div>
+        <% } %>
         
         <!-- Cosplay-specific fields (hidden by default) -->
         <div id="cosplayFields" style="display: none;">
@@ -526,7 +540,7 @@
         <div class="form-group">
             <label for="quantity">Số lượng:</label>
             <input type="number" id="quantity" name="quantity" min="1" max="1000" value="${clothing.quantity > 0 ? clothing.quantity : 1}" required>
-            <small style="color: #666; display: block; margin-top: 5px;">Số lượng sản phẩm cùng loại có sẵn để cho thuê</small>
+            <small style="color: #666; display: block; margin-top: 5px;"><%= isRenter ? "Số lượng sản phẩm cùng loại có sẵn để bán" : "Số lượng sản phẩm cùng loại có sẵn để cho thuê" %></small>
         </div>
         
         <div class="form-group">
@@ -534,14 +548,19 @@
             <textarea id="description" name="description" rows="4" required>${clothing.description}</textarea>
         </div>
         
-        <div class="form-group">
-            <label for="hourlyPrice">Giá thuê/giờ (VNĐ):</label>
-            <input type="number" id="hourlyPrice" name="hourlyPrice" step="0.01" min="10000" max="99999999.99" value="${clothing.hourlyPrice}" required>
-            <small style="color: #666; display: block; margin-top: 5px;">Giá tối thiểu: 10.000 VNĐ</small>
-        </div>
+        <% if (isRenter) { %>
+            <input type="hidden" id="hourlyPrice" name="hourlyPrice" value="0">
+            <input type="hidden" id="itemValue" name="itemValue" value="0">
+        <% } else { %>
+            <div class="form-group">
+                <label for="hourlyPrice">Giá thuê/giờ (VNĐ):</label>
+                <input type="number" id="hourlyPrice" name="hourlyPrice" step="0.01" min="10000" max="99999999.99" value="${clothing.hourlyPrice}" required>
+                <small style="color: #666; display: block; margin-top: 5px;">Giá tối thiểu: 10.000 VNĐ</small>
+            </div>
+        <% } %>
         
         <div class="form-group">
-            <label for="dailyPrice">Giá thuê/ngày (VNĐ):</label>
+            <label for="dailyPrice"><%= isRenter ? "Giá bán (VNĐ):" : "Giá thuê/ngày (VNĐ):" %></label>
             <c:set var="dailyPriceValue">
                 <c:choose>
                     <c:when test="${clothing.dailyPrice > 0}">${clothing.dailyPrice}</c:when>
@@ -549,15 +568,17 @@
                 </c:choose>
             </c:set>
             <input type="number" id="dailyPrice" name="dailyPrice" step="0.01" min="10000" max="99999999.99" value="${dailyPriceValue}" required>
-            <small style="color: #666; display: block; margin-top: 5px;">Giá tối thiểu: 10.000 VNĐ</small>
+            <small style="color: #666; display: block; margin-top: 5px;"><%= isRenter ? "Nhập giá bán cho sản phẩm" : "Giá tối thiểu: 10.000 VNĐ" %></small>
         </div>
         
-        <div class="form-group">
-            <label for="itemValue">Item value (VNĐ):</label>
-                 <input type="number" id="itemValue" name="itemValue" step="0.01" min="0" max="99999999.99" 
-                     value="${clothing.itemValue > 0 ? clothing.itemValue : clothing.hourlyPrice * 24 * 0.2}" required>
-            <small style="color: #666; display: block; margin-top: 5px;">Giá trị sản phẩm - người dùng phải trả khi đặt thuê. Người dùng sẽ thanh toán 100% tổng tiền.</small>
-        </div>
+        <% if (!isRenter) { %>
+            <div class="form-group">
+                <label for="itemValue">Item value (VNĐ):</label>
+                <input type="number" id="itemValue" name="itemValue" step="0.01" min="0" max="99999999.99" 
+                    value="${clothing.itemValue > 0 ? clothing.itemValue : clothing.hourlyPrice * 24 * 0.2}" required>
+                <small style="color: #666; display: block; margin-top: 5px;">Giá trị sản phẩm - người dùng phải trả khi đặt thuê. Người dùng sẽ thanh toán 100% tổng tiền.</small>
+            </div>
+        <% } %>
 
         <!-- Chỉnh sửa màu sắc -->
         <div class="form-group">

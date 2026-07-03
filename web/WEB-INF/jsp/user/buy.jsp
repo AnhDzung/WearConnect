@@ -142,8 +142,8 @@
             <select name="type">
                 <option value="">Tìm theo tên</option>
                 <option value="category" ${param.type == 'category' ? 'selected' : ''}>Danh mục</option>
-                <option value="style"    ${param.type == 'style'    ? 'selected' : ''}>Phong cách</option>
-                <option value="occasion" ${param.type == 'occasion' ? 'selected' : ''}>Mục đích</option>
+                <option value="style"    ${param.type == 'style'    ? 'selected' : ''}>Chất liệu</option>
+                <option value="occasion" ${param.type == 'occasion' ? 'selected' : ''}>Xuất xứ</option>
             </select>
             <input type="text" name="query" placeholder="Tìm kiếm sản phẩm..." value="${param.query}">
             <button type="submit">Tìm Kiếm</button>

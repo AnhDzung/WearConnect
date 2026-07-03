@@ -100,15 +100,17 @@
         <div class="payment-info">
             <c:choose>
                 <c:when test="${not empty rentalOrders && rentalOrders.size() > 1}">
-                    <h3 style="margin-top:0; margin-bottom: 15px; color: #cc3399;">📦 Danh sách đồ thuê (${rentalOrders.size()} món)</h3>
+                    <h3 style="margin-top:0; margin-bottom: 15px; color: #cc3399;">📦 ${isForSale ? "Danh sách sản phẩm mua" : "Danh sách đồ thuê"} (${rentalOrders.size()} món)</h3>
                     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                         <thead>
                             <tr style="background: rgba(204, 51, 153, 0.05); border-bottom: 2px solid rgba(204, 51, 153, 0.15);">
                                 <th style="padding: 10px; text-align: left; font-size: 13px;">Mã đơn</th>
                                 <th style="padding: 10px; text-align: left; font-size: 13px;">Sản phẩm</th>
                                 <th style="padding: 10px; text-align: left; font-size: 13px;">Size/Màu</th>
-                                <th style="padding: 10px; text-align: right; font-size: 13px;">Giá thuê</th>
-                                <th style="padding: 10px; text-align: right; font-size: 13px;">Tiền cọc</th>
+                                <th style="padding: 10px; text-align: right; font-size: 13px;">${isForSale ? "Giá bán" : "Giá thuê"}</th>
+                                <c:if test="${not isForSale}">
+                                    <th style="padding: 10px; text-align: right; font-size: 13px;">Tiền cọc</th>
+                                </c:if>
                             </tr>
                         </thead>
                         <tbody>
@@ -118,20 +120,24 @@
                                     <td style="padding: 10px; font-size: 13px;">${o.clothingName}</td>
                                     <td style="padding: 10px; font-size: 13px;">Size: ${o.selectedSize}<c:if test="${not empty o.selectedColorName}"> / Màu: ${o.selectedColorName}</c:if></td>
                                     <td style="padding: 10px; text-align: right; font-weight: 600; font-size: 13px;"><fmt:formatNumber value="${o.totalPrice}" pattern="#,##0"/>đ</td>
-                                    <td style="padding: 10px; text-align: right; font-weight: 600; font-size: 13px; color: #ff9800;"><fmt:formatNumber value="${o.adjustedDepositAmount}" pattern="#,##0"/>đ</td>
+                                    <c:if test="${not isForSale}">
+                                        <td style="padding: 10px; text-align: right; font-weight: 600; font-size: 13px; color: #ff9800;"><fmt:formatNumber value="${o.adjustedDepositAmount}" pattern="#,##0"/>đ</td>
+                                    </c:if>
                                 </tr>
                             </c:forEach>
                         </tbody>
                     </table>
                     
                     <div class="payment-info-row">
-                        <strong>Tổng tiền thuê:</strong>
+                        <strong>${isForSale ? "Tổng tiền mua:" : "Tổng tiền thuê:"}</strong>
                         <span><fmt:formatNumber value="${totalRentPrice}" pattern="#,##0"/> VNĐ</span>
                     </div>
-                    <div class="payment-info-row">
-                        <strong>Tổng tiền cọc:</strong>
-                        <span><fmt:formatNumber value="${totalDepositAmount}" pattern="#,##0"/> VNĐ</span>
-                    </div>
+                    <c:if test="${not isForSale}">
+                        <div class="payment-info-row">
+                            <strong>Tổng tiền cọc:</strong>
+                            <span><fmt:formatNumber value="${totalDepositAmount}" pattern="#,##0"/> VNĐ</span>
+                        </div>
+                    </c:if>
                 </c:when>
                 <c:otherwise>
                     <div class="payment-info-row">
@@ -149,7 +155,7 @@
                     <c:choose>
                         <c:when test="${not empty rentalOrder.voucherCode and rentalOrder.discountAmount > 0}">
                             <div class="payment-info-row">
-                                <strong>Giá thuê gốc:</strong>
+                                <strong>${isForSale ? "Giá bán gốc:" : "Giá thuê gốc:"}</strong>
                                 <span>
                                     <fmt:formatNumber value="${rentalOrder.totalPrice + rentalOrder.discountAmount}" pattern="#,##0"/> VNĐ
                                 </span>
@@ -161,7 +167,7 @@
                                 </span>
                             </div>
                             <div class="payment-info-row">
-                                <strong>Tiền thuê sau giảm:</strong>
+                                <strong>${isForSale ? "Giá bán sau giảm:" : "Tiền thuê sau giảm:"}</strong>
                                 <span style="color: #333; font-weight: bold;">
                                     <fmt:formatNumber value="${rentalOrder.totalPrice}" pattern="#,##0"/> VNĐ
                                 </span>
@@ -169,7 +175,7 @@
                         </c:when>
                         <c:otherwise>
                             <div class="payment-info-row">
-                                <strong>Tiền thuê:</strong>
+                                <strong>${isForSale ? "Giá bán:" : "Tiền thuê:"}</strong>
                                 <span style="color: #333; font-weight: bold;">
                                     <fmt:formatNumber value="${rentalOrder.totalPrice}" pattern="#,##0"/> VNĐ
                                 </span>
@@ -178,37 +184,39 @@
                     </c:choose>
                     
                     <!-- Tiền cọc chi tiết -->
-                    <c:choose>
-                        <c:when test="${not empty rentalOrder.trustBasedMultiplier and rentalOrder.trustBasedMultiplier > 0 and rentalOrder.trustBasedMultiplier < 1.0}">
-                            <c:set var="baseDeposit" value="${rentalOrder.adjustedDepositAmount / rentalOrder.trustBasedMultiplier}" />
-                            <div class="payment-info-row">
-                                <strong>Tiền cọc gốc:</strong>
-                                <span style="color: #999; font-weight: bold; text-decoration: line-through;">
-                                    <fmt:formatNumber value="${baseDeposit}" pattern="#,##0"/> VNĐ
-                                </span>
-                            </div>
-                            <div class="payment-info-row" style="background-color: #e8f5e9; padding: 8px; border-radius: 4px;">
-                                <strong style="color: #2e7d32;">Voucher đặc biệt:</strong>
-                                <span style="color: #2e7d32; font-weight: bold;">
-                                    -<fmt:formatNumber value="${baseDeposit - rentalOrder.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
-                                </span>
-                            </div>
-                            <div class="payment-info-row">
-                                <strong>Tiền cọc chính thức:</strong>
-                                <span style="color: #2e7d32; font-weight: bold; font-size: 16px;">
-                                    <fmt:formatNumber value="${rentalOrder.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
-                                </span>
-                            </div>
-                        </c:when>
-                        <c:otherwise>
-                            <div class="payment-info-row">
-                                <strong>Tiền cọc:</strong>
-                                <span style="color: #333; font-weight: bold;">
-                                    <fmt:formatNumber value="${rentalOrder.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
-                                </span>
-                            </div>
-                        </c:otherwise>
-                    </c:choose>
+                    <c:if test="${not isForSale}">
+                        <c:choose>
+                            <c:when test="${not empty rentalOrder.trustBasedMultiplier and rentalOrder.trustBasedMultiplier > 0 and rentalOrder.trustBasedMultiplier < 1.0}">
+                                <c:set var="baseDeposit" value="${rentalOrder.adjustedDepositAmount / rentalOrder.trustBasedMultiplier}" />
+                                <div class="payment-info-row">
+                                    <strong>Tiền cọc gốc:</strong>
+                                    <span style="color: #999; font-weight: bold; text-decoration: line-through;">
+                                        <fmt:formatNumber value="${baseDeposit}" pattern="#,##0"/> VNĐ
+                                    </span>
+                                </div>
+                                <div class="payment-info-row" style="background-color: #e8f5e9; padding: 8px; border-radius: 4px;">
+                                    <strong style="color: #2e7d32;">Voucher đặc biệt:</strong>
+                                    <span style="color: #2e7d32; font-weight: bold;">
+                                        -<fmt:formatNumber value="${baseDeposit - rentalOrder.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                                    </span>
+                                </div>
+                                <div class="payment-info-row">
+                                    <strong>Tiền cọc chính thức:</strong>
+                                    <span style="color: #2e7d32; font-weight: bold; font-size: 16px;">
+                                        <fmt:formatNumber value="${rentalOrder.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                                    </span>
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="payment-info-row">
+                                    <strong>Tiền cọc:</strong>
+                                    <span style="color: #333; font-weight: bold;">
+                                        <fmt:formatNumber value="${rentalOrder.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                                    </span>
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
+                    </c:if>
                 </c:otherwise>
             </c:choose>
             <div class="payment-info-row" style="background-color: #fff5fa; padding: 12px; border-radius: 4px; border-top: 2px solid #cc3399; border-bottom: 2px solid #cc3399;">

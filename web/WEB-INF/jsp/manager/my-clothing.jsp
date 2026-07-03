@@ -1,5 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%
+    String userRole = (session != null && session.getAttribute("userRole") != null) ? ((String) session.getAttribute("userRole")).trim() : "";
+    boolean isRenter = "Renter".equals(userRole);
+%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -163,11 +168,11 @@
 <div class="container">
     <div class="page-hero">
         <div>
-            <h1>Quản lý quần áo của tôi</h1>
-            <p>Kiểm soát kho, chỉnh sửa thông tin và cập nhật tình trạng sẵn sàng.</p>
+            <h1><%= isRenter ? "Quản lý sản phẩm bán" : "Quản lý quần áo của tôi" %></h1>
+            <p><%= isRenter ? "Kiểm soát kho, chỉnh sửa thông tin sản phẩm và cập nhật giá bán." : "Kiểm soát kho, chỉnh sửa thông tin và cập nhật tình trạng sẵn sàng." %></p>
         </div>
         <div class="toolbar">
-            <a href="${pageContext.request.contextPath}/clothing?action=upload" class="btn btn-primary">Đăng tải quần áo</a>
+            <a href="${pageContext.request.contextPath}/clothing?action=upload" class="btn btn-primary"><%= isRenter ? "Đăng bán sản phẩm" : "Đăng tải quần áo" %></a>
             <a href="${pageContext.request.contextPath}/manager" class="btn btn-ghost">Về bảng điều khiển</a>
         </div>
     </div>
@@ -185,13 +190,26 @@
                 </div>
                 <div>
                     <h3 class="card-title">${clothing.clothingName}</h3>
-                    <div class="meta">${clothing.style} · ${clothing.occasion} · Size ${clothing.size}</div>
+                    <div class="meta">
+                        <c:choose>
+                            <c:when test="<%= isRenter %>">
+                                Chất liệu: ${clothing.style} · Xuất xứ: ${clothing.occasion} · Size ${clothing.size}
+                            </c:when>
+                            <c:otherwise>
+                                ${clothing.style} · ${clothing.occasion} · Size ${clothing.size}
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
                 </div>
                 <div class="info-grid">
                     <div><span>Số lượng:</span> ${clothing.quantity > 0 ? clothing.quantity : 1} sản phẩm</div>
-                    <div><span>Giá thuê/giờ:</span> <span class="price">${clothing.hourlyPrice} VNĐ</span></div>
-                    <div><span>Có sẵn từ:</span> ${clothing.availableFrom}</div>
-                    <div><span>Đến:</span> ${clothing.availableTo}</div>
+                    <% if (isRenter) { %>
+                        <div><span>Giá bán:</span> <span class="price"><fmt:formatNumber value="${clothing.dailyPrice}" pattern="#,##0"/> VNĐ</span></div>
+                    <% } else { %>
+                        <div><span>Giá thuê/giờ:</span> <span class="price">${clothing.hourlyPrice} VNĐ</span></div>
+                        <div><span>Có sẵn từ:</span> ${clothing.availableFrom}</div>
+                        <div><span>Đến:</span> ${clothing.availableTo}</div>
+                    <% } %>
                 </div>
                 <div class="description">${clothing.description}</div>
                 

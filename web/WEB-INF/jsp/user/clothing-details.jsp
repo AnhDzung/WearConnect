@@ -245,11 +245,11 @@
                 <div><c:choose><c:when test="${not empty clothing.category}">${clothing.category}</c:when><c:otherwise>-</c:otherwise></c:choose></div>
             </div>
             <div class="kv">
-                <div class="kv-label">Phong cách</div>
+                <div class="kv-label"><%= isForSale ? "Chất liệu" : "Phong cách" %></div>
                 <div><c:choose><c:when test="${not empty clothing.style}">${clothing.style}</c:when><c:otherwise>-</c:otherwise></c:choose></div>
             </div>
             <div class="kv">
-                <div class="kv-label">Mục đích</div>
+                <div class="kv-label"><%= isForSale ? "Xuất xứ" : "Mục đích" %></div>
                 <div><c:choose><c:when test="${not empty clothing.occasion}">${clothing.occasion}</c:when><c:otherwise>-</c:otherwise></c:choose></div>
             </div>
             <div class="kv">
@@ -257,7 +257,7 @@
                 <div><c:choose><c:when test="${not empty clothing.size}">${clothing.size}</c:when><c:otherwise>-</c:otherwise></c:choose></div>
             </div>
             <div class="kv">
-                <div class="kv-label">Giá ngày</div>
+                <div class="kv-label"><%= isForSale ? "Giá bán" : "Giá ngày" %></div>
                 <div><fmt:formatNumber value="${clothing.dailyPrice}" pattern="#,##0"/> đ</div>
             </div>
             <div class="kv">
@@ -462,7 +462,7 @@
             window.location.href = '${pageContext.request.contextPath}/login';
             return;
         }
-        window.location.href = '${pageContext.request.contextPath}/rental?action=booking&clothingID=${clothing.clothingID}&hourlyPrice=${clothing.hourlyPrice}&dailyPrice=${clothing.dailyPrice}';
+        window.location.href = '${pageContext.request.contextPath}/rental?action=booking&clothingID=${clothing.clothingID}&hourlyPrice=${clothing.hourlyPrice != null ? clothing.hourlyPrice : 0}&dailyPrice=${clothing.dailyPrice != null ? clothing.dailyPrice : 0}';
     }
 
     function handleAddToCart() {
@@ -471,7 +471,7 @@
             window.location.href = '${pageContext.request.contextPath}/login';
             return;
         }
-        window.location.href = '${pageContext.request.contextPath}/rental?action=booking&clothingID=${clothing.clothingID}&hourlyPrice=${clothing.hourlyPrice}&dailyPrice=${clothing.dailyPrice}&addToCart=true';
+        window.location.href = '${pageContext.request.contextPath}/rental?action=booking&clothingID=${clothing.clothingID}&hourlyPrice=${clothing.hourlyPrice != null ? clothing.hourlyPrice : 0}&dailyPrice=${clothing.dailyPrice != null ? clothing.dailyPrice : 0}&addToCart=true';
     }
 
     function handleBack() {

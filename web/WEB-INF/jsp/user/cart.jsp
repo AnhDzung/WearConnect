@@ -465,6 +465,9 @@
 
 <script>
     function updateSummary() {
+        const selectedCountEl = document.getElementById('selectedCount');
+        if (!selectedCountEl) return;
+        
         const checkboxes = document.querySelectorAll('.item-checkbox:checked');
         let selectedCount = checkboxes.length;
         let sumRent = 0;
@@ -477,7 +480,7 @@
 
         const sumTotal = sumRent + sumDeposit;
 
-        document.getElementById('selectedCount').textContent = selectedCount;
+        selectedCountEl.textContent = selectedCount;
         document.getElementById('sumRent').textContent = Math.round(sumRent).toLocaleString('vi-VN') + 'đ';
         document.getElementById('sumDeposit').textContent = Math.round(sumDeposit).toLocaleString('vi-VN') + 'đ';
         document.getElementById('sumTotal').textContent = Math.round(sumTotal).toLocaleString('vi-VN') + 'đ';

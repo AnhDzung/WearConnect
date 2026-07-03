@@ -1,5 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%
+    String userRole = (session != null && session.getAttribute("userRole") != null) ? ((String) session.getAttribute("userRole")).trim() : "";
+    boolean isRenter = "Renter".equals(userRole);
+%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -205,8 +210,8 @@
 
 <div class="container">
     <div class="page-header">
-        <h1>Sản phẩm của tôi</h1>
-        <a href="${pageContext.request.contextPath}/clothing?action=upload" class="btn-upload">+ Đăng tải sản phẩm mới</a>
+        <h1><%= isRenter ? "Sản phẩm đang bán" : "Sản phẩm của tôi" %></h1>
+        <a href="${pageContext.request.contextPath}/clothing?action=upload" class="btn-upload">+ <%= isRenter ? "Đăng bán sản phẩm mới" : "Đăng tải sản phẩm mới" %></a>
     </div>
     
     <c:if test="${param.success}">
@@ -219,8 +224,8 @@
         <c:when test="${empty myClothing}">
             <div class="empty-state">
                 <h2>Chưa có sản phẩm nào</h2>
-                <p>Hãy đăng tải sản phẩm đầu tiên của bạn để bắt đầu kiếm tiền</p>
-                <a href="${pageContext.request.contextPath}/clothing?action=upload" class="btn-upload">+ Đăng tải sản phẩm</a>
+                <p><%= isRenter ? "Hãy đăng bán sản phẩm đầu tiên của bạn để bắt đầu kiếm tiền" : "Hãy đăng tải sản phẩm đầu tiên của bạn để bắt đầu kiếm tiền" %></p>
+                <a href="${pageContext.request.contextPath}/clothing?action=upload" class="btn-upload">+ <%= isRenter ? "Đăng bán sản phẩm" : "Đăng tải sản phẩm" %></a>
             </div>
         </c:when>
         <c:otherwise>
@@ -232,7 +237,15 @@
                             <h3 class="product-name">${clothing.clothingName}</h3>
                             <span class="product-category">${clothing.category}</span>
                             <div class="product-details">
-                                <div><strong>Phong cách:</strong> ${clothing.style}</div>
+                                <c:choose>
+                                    <c:when test="<%= isRenter %>">
+                                        <div><strong>Chất liệu:</strong> ${clothing.style}</div>
+                                        <div><strong>Xuất xứ:</strong> ${clothing.occasion}</div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div><strong>Phong cách:</strong> ${clothing.style}</div>
+                                    </c:otherwise>
+                                </c:choose>
                                 <div><strong>Size:</strong> ${clothing.size}</div>
                                 <div><strong>Trạng thái:</strong> 
                                     <c:choose>
@@ -245,7 +258,16 @@
                                     </c:choose>
                                 </div>
                             </div>
-                            <div class="product-price">${clothing.hourlyPrice}đ/giờ</div>
+                            <div class="product-price">
+                                <c:choose>
+                                    <c:when test="<%= isRenter %>">
+                                        <fmt:formatNumber value="${clothing.dailyPrice}" pattern="#,##0"/>đ
+                                    </c:when>
+                                    <c:otherwise>
+                                        ${clothing.hourlyPrice}đ/giờ
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
                             <div class="product-actions">
                                 <a href="${pageContext.request.contextPath}/clothing?action=edit&id=${clothing.clothingID}" class="btn btn-edit">Chỉnh sửa</a>
                                 <form method="POST" action="${pageContext.request.contextPath}/clothing" style="flex: 1;">

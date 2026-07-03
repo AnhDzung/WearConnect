@@ -2,6 +2,10 @@
 <%@ page import="java.util.*" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%
+    String userRole = (session != null && session.getAttribute("userRole") != null) ? ((String) session.getAttribute("userRole")).trim() : "";
+    boolean isRenter = "Renter".equals(userRole);
+%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -246,8 +250,8 @@
 
 <div class="container">
     <div class="dashboard-header">
-        <h1>Dashboard Quản Lý</h1>
-        <p>Xem tổng quan doanh số, thống kê sản phẩm và hiệu suất kinh doanh của bạn</p>
+        <h1><%= isRenter ? "Kênh Người Bán Renter" : "Dashboard Quản Lý" %></h1>
+        <p><%= isRenter ? "Xem tổng quan doanh số bán hàng, thống kê sản phẩm và hiệu suất kinh doanh của bạn." : "Xem tổng quan doanh số, thống kê sản phẩm và hiệu suất kinh doanh của bạn" %></p>
     </div>
 
     <c:if test="${confirmedOrders > 0}">

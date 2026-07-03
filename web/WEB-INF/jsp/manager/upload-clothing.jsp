@@ -7,12 +7,14 @@
         ? (int) session.getAttribute("accountID") 
         : -1;
     List<Color> availableColors = ColorDAO.getColorsByManager(managerID);
+    String userRole = (session != null && session.getAttribute("userRole") != null) ? ((String) session.getAttribute("userRole")).trim() : "";
+    boolean isRenter = "Renter".equals(userRole);
 %>
 <!DOCTYPE html>
 <html>
 <head>
     <jsp:include page="/WEB-INF/jsp/components/head.jsp" />
-    <title>Đăng tải quần áo - WearConnect</title>
+    <title><%= isRenter ? "Đăng tải quần áo bán" : "Đăng tải quần áo" %> - WearConnect</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap');
@@ -286,8 +288,8 @@
 <jsp:include page="/WEB-INF/jsp/components/header.jsp" />
 
 <div class="form-container">
-    <h1>Đăng tải quần áo</h1>
-    <p class="upload-subtitle">Tạo sản phẩm mới với thông tin rõ ràng để dễ duyệt và dễ cho thuê hơn.</p>
+    <h1><%= isRenter ? "Đăng tải quần áo để bán" : "Đăng tải quần áo" %></h1>
+    <p class="upload-subtitle"><%= isRenter ? "Tạo sản phẩm bán mới với thông tin rõ ràng để khách hàng dễ mua sắm hơn." : "Tạo sản phẩm mới với thông tin rõ ràng để dễ duyệt và dễ cho thuê hơn." %></p>
     
     <form method="POST" action="${pageContext.request.contextPath}/clothing" enctype="multipart/form-data" onsubmit="return validateForm()">
         <input type="hidden" name="action" value="upload">
@@ -312,39 +314,51 @@
             </select>
         </div>
         
-        <div class="form-group" id="styleSection">
-            <label for="style">Phong cách:</label>
-            <select id="style" name="style" required>
-                <option value="">-- Chọn phong cách --</option>
-                <option value="Thường ngày">Thường ngày</option>
-                <option value="Trang trọng">Trang trọng</option>
-                <option value="Dự tiệc">Dự tiệc</option>
-                <option value="Thể thao">Thể thao</option>
-                <option value="Cổ điển">Cổ điển</option>
-                <option value="Vintage">Vintage</option>
-                <option value="Streetwear">Streetwear</option>
-                <option value="Sexy">Sexy</option>
-                <option value="Minimalist">Minimalist</option>
-            </select>
-        </div>
+        <% if (isRenter) { %>
+            <div class="form-group" id="styleSection">
+                <label for="style">Chất liệu sản phẩm:</label>
+                <input type="text" id="style" name="style" placeholder="Nhập chất liệu (ví dụ: Cotton, Silk, Polyester...)" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="occasion">Xuất xứ:</label>
+                <input type="text" id="occasion" name="occasion" placeholder="Nhập xuất xứ (ví dụ: Việt Nam, Quảng Châu, Hàn Quốc...)" required>
+            </div>
+        <% } else { %>
+            <div class="form-group" id="styleSection">
+                <label for="style">Phong cách:</label>
+                <select id="style" name="style" required>
+                    <option value="">-- Chọn phong cách --</option>
+                    <option value="Thường ngày">Thường ngày</option>
+                    <option value="Trang trọng">Trang trọng</option>
+                    <option value="Dự tiệc">Dự tiệc</option>
+                    <option value="Thể thao">Thể thao</option>
+                    <option value="Cổ điển">Cổ điển</option>
+                    <option value="Vintage">Vintage</option>
+                    <option value="Streetwear">Streetwear</option>
+                    <option value="Sexy">Sexy</option>
+                    <option value="Minimalist">Minimalist</option>
+                </select>
+            </div>
 
-        <div class="form-group">
-            <label for="occasion">Mục đích sử dụng:</label>
-            <select id="occasion" name="occasion" required>
-                <option value="">-- Chọn mục đích --</option>
-                <option value="Dự tiệc">Dự tiệc</option>
-                <option value="Tốt nghiệp">Tốt nghiệp</option>
-                <option value="Đám cưới">Đám cưới</option>
-                <option value="Gala / Sự kiện công ty">Gala / Sự kiện công ty</option>
-                <option value="Biểu diễn">Biểu diễn</option>
-                <option value="Chụp ảnh">Chụp ảnh</option>
-                <option value="Quay video / Content">Quay video / Content</option>
-                <option value="Du lịch">Du lịch</option>
-                <option value="Hẹn hò">Hẹn hò</option>
-                <option value="Đi biển">Đi biển</option>
-                <option value="Street style / Đi chơi concept">Street style / Đi chơi concept</option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label for="occasion">Mục đích sử dụng:</label>
+                <select id="occasion" name="occasion" required>
+                    <option value="">-- Chọn mục đích --</option>
+                    <option value="Dự tiệc">Dự tiệc</option>
+                    <option value="Tốt nghiệp">Tốt nghiệp</option>
+                    <option value="Đám cưới">Đám cưới</option>
+                    <option value="Gala / Sự kiện công ty">Gala / Sự kiện công ty</option>
+                    <option value="Biểu diễn">Biểu diễn</option>
+                    <option value="Chụp ảnh">Chụp ảnh</option>
+                    <option value="Quay video / Content">Quay video / Content</option>
+                    <option value="Du lịch">Du lịch</option>
+                    <option value="Hẹn hò">Hẹn hò</option>
+                    <option value="Đi biển">Đi biển</option>
+                    <option value="Street style / Đi chơi concept">Street style / Đi chơi concept</option>
+                </select>
+            </div>
+        <% } %>
         
         <!-- Cosplay-specific fields (hidden by default) -->
         <div id="cosplayFields" style="display: none;">
@@ -424,7 +438,7 @@
         <div class="form-group">
             <label for="quantity">Số lượng:</label>
             <input type="number" id="quantity" name="quantity" min="1" max="1000" value="1" required>
-            <small style="color: #666; display: block; margin-top: 5px;">Số lượng sản phẩm cùng loại có sẵn để cho thuê</small>
+            <small style="color: #666; display: block; margin-top: 5px;"><%= isRenter ? "Số lượng sản phẩm cùng loại có sẵn để bán" : "Số lượng sản phẩm cùng loại có sẵn để cho thuê" %></small>
         </div>
         
         <div class="form-group">
@@ -432,23 +446,30 @@
             <textarea id="description" name="description" rows="4" required></textarea>
         </div>
         
-        <div class="form-group">
-            <label for="hourlyPrice">Giá thuê/giờ (VNĐ):</label>
-            <input type="number" id="hourlyPrice" name="hourlyPrice" step="0.01" min="10000" max="99999999.99" required>
-            <small style="color: #666; display: block; margin-top: 5px;">Giá tối thiểu: 10.000 VNĐ</small>
-        </div>
+        <% if (isRenter) { %>
+            <input type="hidden" id="hourlyPrice" name="hourlyPrice" value="0">
+            <input type="hidden" id="itemValue" name="itemValue" value="0">
+        <% } else { %>
+            <div class="form-group">
+                <label for="hourlyPrice">Giá thuê/giờ (VNĐ):</label>
+                <input type="number" id="hourlyPrice" name="hourlyPrice" step="0.01" min="10000" max="99999999.99" required>
+                <small style="color: #666; display: block; margin-top: 5px;">Giá tối thiểu: 10.000 VNĐ</small>
+            </div>
+        <% } %>
         
         <div class="form-group">
-            <label for="dailyPrice">Giá thuê/ngày (VNĐ):</label>
+            <label for="dailyPrice"><%= isRenter ? "Giá bán (VNĐ):" : "Giá thuê/ngày (VNĐ):" %></label>
             <input type="number" id="dailyPrice" name="dailyPrice" step="0.01" min="10000" max="99999999.99" required>
-            <small style="color: #666; display: block; margin-top: 5px;">Giá tối thiểu: 10.000 VNĐ</small>
+            <small style="color: #666; display: block; margin-top: 5px;"><%= isRenter ? "Nhập giá bán cho sản phẩm" : "Giá tối thiểu: 10.000 VNĐ" %></small>
         </div>
         
-        <div class="form-group">
-            <label for="itemValue">Item value (VNĐ):</label>
-            <input type="number" id="itemValue" name="itemValue" step="0.01" min="0" max="99999999.99" required>
-            <small style="color: #666; display: block; margin-top: 5px;">Giá trị sản phẩm - người dùng phải trả khi đặt thuê. Người dùng sẽ thanh toán 100% tổng tiền.</small>
-        </div>
+        <% if (!isRenter) { %>
+            <div class="form-group">
+                <label for="itemValue">Item value (VNĐ):</label>
+                <input type="number" id="itemValue" name="itemValue" step="0.01" min="0" max="99999999.99" required>
+                <small style="color: #666; display: block; margin-top: 5px;">Giá trị sản phẩm - người dùng phải trả khi đặt thuê. Người dùng sẽ thanh toán 100% tổng tiền.</small>
+            </div>
+        <% } %>
 
         <div class="form-group">
             <label>Màu sắc hiện có:</label>

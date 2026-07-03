@@ -122,6 +122,19 @@ public class PaymentPageController {
             request.setAttribute("rentalOrderID", firstOrderID); // compatibility for single ID logic
             request.setAttribute("rentalOrderIDsStr", idsParam); // List of IDs as string
 
+            boolean isForSale = false;
+            if (!rentalOrders.isEmpty()) {
+                RentalOrder firstOrder = rentalOrders.get(0);
+                Model.Clothing clothing = DAO.ClothingDAO.getClothingByID(firstOrder.getClothingID());
+                if (clothing != null) {
+                    Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
+                    if (owner != null && "Renter".equals(owner.getUserRole())) {
+                        isForSale = true;
+                    }
+                }
+            }
+            request.setAttribute("isForSale", isForSale);
+
             // Tính toán số tiền cuối cùng và tạo mã QR động
             double baseAmount = totalRentPrice + totalDepositAmount;
             Integer discount = null;

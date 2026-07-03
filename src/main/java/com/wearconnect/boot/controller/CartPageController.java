@@ -77,6 +77,10 @@ public class CartPageController {
                 } else if ("daily".equals(rentalType)) {
                     startDate = LocalDateTime.parse(request.getParameter("dailyStartDate") + "T00:00:00");
                     endDate = LocalDateTime.parse(request.getParameter("dailyEndDate") + "T23:59:59");
+                } else {
+                    // For purchase (rentalType == "buy")
+                    startDate = LocalDateTime.now();
+                    endDate = LocalDateTime.now();
                 }
 
                 Clothing clothing = ClothingDAO.getClothingByID(clothingID);
