@@ -273,6 +273,11 @@
             ⚠️ Một số mặt hàng không khả dụng trong thời gian bạn chọn: <strong style="text-decoration: underline;">${param.conflictItem}</strong>. Vui lòng kiểm tra lại.
         </div>
     </c:if>
+    <c:if test="${param.error eq 'out_of_stock'}">
+        <div class="alert-box">
+            ⚠️ Một số mặt hàng đã hết hàng hoặc không khả dụng: <strong style="text-decoration: underline;">${param.conflictItem}</strong>. Vui lòng kiểm tra lại.
+        </div>
+    </c:if>
     <c:if test="${param.error eq 'no_items_selected'}">
         <div class="alert-box">
             ⚠️ Vui lòng chọn ít nhất 1 sản phẩm để thanh toán.

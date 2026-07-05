@@ -400,7 +400,7 @@
         <c:when test="${sessionScope.userRole == 'Admin'}">
             <button onclick="window.location.href='${pageContext.request.contextPath}/admin?action=orders'" style="padding: 10px 20px; background-color: #6c757d; color: white; border: none; cursor: pointer; margin-bottom: 20px;">Quay lại</button>
         </c:when>
-        <c:when test="${sessionScope.userRole == 'Manager'}">
+        <c:when test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Renter'}">
             <button onclick="window.location.href='${pageContext.request.contextPath}/manager?action=orders'" style="padding: 10px 20px; background-color: #6c757d; color: white; border: none; cursor: pointer; margin-bottom: 20px;">Quay lại</button>
         </c:when>
         <c:otherwise>
@@ -410,436 +410,788 @@
     
     <div class="order-wrapper">
         <div class="order-left">
-            <div class="order-info">
-                <div style="display:flex; gap:20px; align-items:flex-start;">
-                    <div style="flex:1;">
-                        <div class="info-row">
-                            <strong>Mã đơn hàng:</strong> ${order.orderCode}
+            <c:choose>
+                <c:when test="${isMultiple}">
+                    <!-- Multiple Orders Layout -->
+                    <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Renter' || sessionScope.userRole == 'Admin'}">
+                        <!-- Customer details at top for manager/admin -->
+                        <div style="background-color: #fff9e6; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #ffa500; box-shadow: var(--shadow-sm);">
+                            <div style="font-weight: bold; color: #ff8c00; margin-bottom: 12px; font-size: 16px;">📋 Thông tin người đặt</div>
+                            <div class="info-row" style="margin: 6px 0;">
+                                <strong>Họ tên:</strong> ${order.renterFullName}
+                            </div>
+                            <div class="info-row" style="margin: 6px 0;">
+                                <strong>SĐT:</strong> ${order.renterPhone}
+                            </div>
+                            <div class="info-row" style="margin: 6px 0;">
+                                <strong>Email:</strong> ${order.renterEmail}
+                            </div>
+                            <div class="info-row" style="margin: 6px 0;">
+                                <strong>Địa chỉ:</strong> ${order.renterAddress}
+                            </div>
                         </div>
-                        <div class="info-row">
-                            <strong>Quần áo:</strong> ${empty order.clothingName ? order.clothingID : order.clothingName}
-                        </div>
-                        
-                        <!-- Thông tin người thuê (chỉ manager/admin xem được) -->
-                        <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Admin'}">
-                            <div style="background-color: #fff9e6; padding: 12px; border-radius: 6px; margin: 12px 0; border-left: 3px solid #ffa500;">
-                                <div style="font-weight: bold; color: #ff8c00; margin-bottom: 8px;">📋 Thông tin người đặt</div>
-                                <div class="info-row" style="margin: 6px 0;">
-                                    <strong>Họ tên:</strong> ${order.renterFullName}
-                                </div>
-                                <div class="info-row" style="margin: 6px 0;">
-                                    <strong>SĐT:</strong> ${order.renterPhone}
-                                </div>
-                                <div class="info-row" style="margin: 6px 0;">
-                                    <strong>Email:</strong> ${order.renterEmail}
-                                </div>
-                                <div class="info-row" style="margin: 6px 0;">
-                                    <strong>Địa chỉ:</strong> ${order.renterAddress}
-                                </div>
-                            </div>
-                        </c:if>
-                        
-                        <c:if test="${not isPurchase}">
-                            <div class="info-row">
-                                <strong>Ngày bắt đầu:</strong> ${order.rentalStartDate}
-                            </div>
-                            <div class="info-row">
-                                <strong>Ngày kết thúc:</strong> ${order.rentalEndDate}
-                            </div>
-                        </c:if>
-                        <c:choose>
-                            <c:when test="${not empty order.voucherCode and order.discountAmount > 0}">
-                                <div class="info-row">
-                                    <strong>${isPurchase ? 'Giá gốc sản phẩm:' : 'Giá thuê gốc:'}</strong> 
-                                    <span>
-                                        <fmt:formatNumber value="${order.totalPrice + order.discountAmount}" pattern="#,##0"/> VNĐ
-                                    </span>
-                                </div>
-                                <div class="info-row" style="background-color: #eafcf0; padding: 8px; border-radius: 4px; border-left: 3px solid #28a745;">
-                                    <strong style="color: #2563eb;">Voucher áp dụng:</strong>
-                                    <span style="font-weight: 700; color: #28a745;">
-                                        ${order.voucherCode} (-<fmt:formatNumber value="${order.discountAmount}" pattern="#,##0"/> VNĐ)
-                                    </span>
-                                </div>
-                                <div class="info-row">
-                                    <strong>${isPurchase ? 'Giá sau giảm:' : 'Tiền thuê sau giảm:'}</strong> 
-                                    <span style="font-weight: 700; color: #1e3a8a;">
-                                        <fmt:formatNumber value="${order.totalPrice}" pattern="#,##0"/> VNĐ
-                                    </span>
-                                </div>
-                            </c:when>
-                            <c:otherwise>
-                                <div class="info-row">
-                                    <strong>${isPurchase ? 'Tổng giá bán:' : 'Tổng giá thuê:'}</strong> <fmt:formatNumber value="${order.totalPrice}" pattern="#,##0"/> VNĐ
-                                </div>
-                            </c:otherwise>
-                        </c:choose>
-                        <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Admin'}">
-                            <div class="info-row" style="background-color: #eef9f0; padding: 8px; border-radius: 4px; border-left: 3px solid #198754;">
-                                <strong>Thực nhận sau trừ phí (20%):</strong>
-                                <span style="font-weight: 700; color: #198754;">
-                                    <fmt:formatNumber value="${order.totalPrice * 0.80}" pattern="#,##0"/> VNĐ
-                                </span>
-                            </div>
-                        </c:if>
-                        
-                        <c:if test="${sessionScope.userRole != 'Manager'}">
-                            <!-- Tiền cọc chi tiết -->
-                            <c:choose>
-                                <c:when test="${isPurchase}">
-                                    <!-- No deposit for purchase -->
-                                </c:when>
-                                <c:when test="${not empty order.trustBasedMultiplier and order.trustBasedMultiplier > 0 and order.trustBasedMultiplier < 1.0}">
-                                    <c:set var="baseDeposit" value="${order.adjustedDepositAmount / order.trustBasedMultiplier}" />
-                                    <div class="info-row">
-                                        <strong>Tiền cọc gốc:</strong> 
-                                        <span style="text-decoration: line-through; color: #999;">
-                                            <fmt:formatNumber value="${baseDeposit}" pattern="#,##0"/> VNĐ
-                                        </span>
-                                    </div>
-                                    <div class="info-row" style="background-color: #e8f5e9; padding: 8px; border-radius: 4px;">
-                                        <strong style="color: #2e7d32;">Vourcher đặc biệt:</strong> 
-                                        <span style="color: #2e7d32; font-weight: bold;">
-                                            -<fmt:formatNumber value="${baseDeposit - order.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
-                                        </span>
-                                    </div>
-                                    <div class="info-row">
-                                        <strong>Tiền cọc chính thức:</strong> 
-                                        <span style="color: #2e7d32; font-weight: bold; font-size: 16px;">
-                                            <fmt:formatNumber value="${order.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
-                                        </span>
-                                    </div>
-                                </c:when>
-                                <c:otherwise>
-                                    <div class="info-row">
-                                        <strong>Tiền cọc:</strong> <fmt:formatNumber value="${order.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
-                                    </div>
-                                </c:otherwise>
-                            </c:choose>
-                            <div class="info-row" style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; border-left: 3px solid #cc3399;">
-                                <strong style="font-size: 16px; color: #cc3399;">Tổng tiền phải thanh toán:</strong> <span style="font-size: 16px; font-weight: bold; color: #cc3399;"><fmt:formatNumber value="${order.totalPrice + order.adjustedDepositAmount}" pattern="#,##0"/> VNĐ</span>
-                            </div>
-                        </c:if>
-                        <div class="info-row">
-                            <strong>Trạng thái:</strong>
-                            <span class="status ${order.status.toLowerCase()}">
-                                <c:choose>
-                                    <c:when test="${order.status == 'PENDING_PAYMENT'}">Chờ thanh toán</c:when>
-                                    <c:when test="${order.status == 'PAYMENT_SUBMITTED'}">Đã gửi thanh toán</c:when>
-                                    <c:when test="${order.status == 'PAYMENT_VERIFIED'}">Đã xác thực</c:when>
-                                    <c:when test="${order.status == 'DELIVERED_PENDING_CONFIRMATION'}">Chờ nhận hàng</c:when>
-                                    <c:when test="${order.status == 'RENTED'}">Đang thuê</c:when>
-                                    <c:when test="${order.status == 'RETURN_REQUESTED'}">Yêu cầu trả hàng</c:when>
-                                    <c:when test="${order.status == 'RETURNED'}">Đã trả hàng</c:when>
-                                    <c:when test="${order.status == 'COMPLETED'}">Hoàn thành</c:when>
-                                    <c:when test="${order.status == 'ISSUE'}">Có vấn đề</c:when>
-                                    <c:otherwise>${order.status}</c:otherwise>
-                                </c:choose>
-                            </span>
-                        </div>
-                        <div class="info-row">
-                            <strong>Ngày tạo:</strong> ${order.createdAt}
-                        </div>
-                        <c:if test="${not empty order.selectedSize}">
-                            <div class="info-row">
-                                <strong>Size đã chọn:</strong> ${order.selectedSize}
-                            </div>
-                        </c:if>
-                        <c:if test="${order.colorID != null}">
-                            <%
-                                Model.RentalOrder orderObj = (Model.RentalOrder) request.getAttribute("order");
-                                Integer colorID = (orderObj != null) ? orderObj.getColorID() : null;
-                                if (colorID != null) {
-                                    Color color = ColorDAO.getColorByID(colorID);
-                                    if (color != null) {
-                                        pageContext.setAttribute("selectedColor", color);
+                    </c:if>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <c:forEach items="${orderList}" var="ord" varStatus="loop">
+                            <c:set var="currClothing" value="${clothingList[loop.index]}" />
+                            <c:set var="currImages" value="${imagesList[loop.index]}" />
+                            <c:set var="currIsPurchase" value="false" />
+                            <c:if test="${currClothing != null}">
+                                <%
+                                    Model.Clothing c = (Model.Clothing) pageContext.getAttribute("currClothing");
+                                    if (c != null) {
+                                        Model.Account owner = DAO.AccountDAO.findById(c.getRenterID());
+                                        if (owner != null && "Renter".equals(owner.getUserRole())) {
+                                            pageContext.setAttribute("currIsPurchase", true);
+                                        }
                                     }
-                                }
-                            %>
-                            <div class="info-row">
-                                <strong>Màu sắc:</strong>
+                                %>
+                            </c:if>
+                            
+                            <div class="order-info" style="margin-bottom: 10px;">
+                                <div style="display:flex; gap:20px; align-items:flex-start; flex-wrap: wrap;">
+                                    <div style="width:120px; flex-shrink: 0;">
+                                        <c:choose>
+                                            <c:when test="${not empty currImages}">
+                                                <c:forEach var="image" items="${currImages}">
+                                                    <c:if test="${image.primary}">
+                                                        <img src="${pageContext.request.contextPath}/image?imageID=${image.imageID}" alt="${ord.clothingName}" class="product-image" style="max-height: 120px; border-radius: 8px;">
+                                                    </c:if>
+                                                </c:forEach>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <img src="${pageContext.request.contextPath}/image?id=${ord.clothingID}" alt="${ord.clothingName}" class="product-image" style="max-height: 120px; border-radius: 8px;">
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                    <div style="flex:1; min-width: 250px;">
+                                        <h3 style="margin-top: 0; margin-bottom: 10px; color: var(--brand); font-size: 16px; font-weight: 700;">
+                                            ${empty ord.clothingName ? ord.clothingID : ord.clothingName}
+                                        </h3>
+                                        <div class="info-row" style="padding: 6px 0;">
+                                            <strong>Mã đơn hàng:</strong> ${ord.orderCode}
+                                        </div>
+                                        <c:if test="${not currIsPurchase}">
+                                            <div class="info-row" style="padding: 6px 0;">
+                                                <strong>Ngày bắt đầu:</strong> ${ord.rentalStartDate}
+                                            </div>
+                                            <div class="info-row" style="padding: 6px 0;">
+                                                <strong>Ngày kết thúc:</strong> ${ord.rentalEndDate}
+                                            </div>
+                                        </c:if>
+                                        
+                                        <c:if test="${not empty ord.selectedSize}">
+                                            <div class="info-row" style="padding: 6px 0;">
+                                                <strong>Size đã chọn:</strong> ${ord.selectedSize}
+                                            </div>
+                                        </c:if>
+                                        
+                                        <c:if test="${ord.colorID != null}">
+                                            <%
+                                                Model.RentalOrder orderObj = (Model.RentalOrder) pageContext.getAttribute("ord");
+                                                Integer colorID = (orderObj != null) ? orderObj.getColorID() : null;
+                                                if (colorID != null) {
+                                                    Color color = ColorDAO.getColorByID(colorID);
+                                                    if (color != null) {
+                                                        pageContext.setAttribute("currColor", color);
+                                                    }
+                                                }
+                                            %>
+                                            <div class="info-row" style="padding: 6px 0;">
+                                                <strong>Màu sắc:</strong>
+                                                <c:choose>
+                                                    <c:when test="${not empty currColor}">
+                                                        <div class="color-info">
+                                                            <div class="color-swatch order-color-swatch" data-color="${currColor.hexCode}" style="width:16px; height:16px;"></div>
+                                                            <span>${currColor.colorName}</span>
+                                                        </div>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span>#${ord.colorID}</span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
+                                        </c:if>
+                                        
+                                        <div class="info-row" style="padding: 6px 0;">
+                                            <strong>Trạng thái:</strong>
+                                            <span class="status ${ord.status.toLowerCase()}" style="padding: 3px 10px; min-height: auto; font-size: 11px;">
+                                                <c:choose>
+                                                    <c:when test="${ord.status == 'PENDING_PAYMENT'}">Chờ thanh toán</c:when>
+                                                    <c:when test="${ord.status == 'PAYMENT_SUBMITTED'}">Đã gửi thanh toán</c:when>
+                                                    <c:when test="${ord.status == 'PAYMENT_VERIFIED'}">Đã xác thực</c:when>
+                                                    <c:when test="${ord.status == 'DELIVERED_PENDING_CONFIRMATION'}">Chờ nhận hàng</c:when>
+                                                    <c:when test="${ord.status == 'RENTED'}">Đang thuê</c:when>
+                                                    <c:when test="${ord.status == 'RETURN_REQUESTED'}">Yêu cầu trả hàng</c:when>
+                                                    <c:when test="${ord.status == 'RETURNED'}">Đã trả hàng</c:when>
+                                                    <c:when test="${ord.status == 'COMPLETED'}">Hoàn thành</c:when>
+                                                    <c:when test="${ord.status == 'ISSUE'}">Có vấn đề</c:when>
+                                                    <c:otherwise>${ord.status}</c:otherwise>
+                                                </c:choose>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="width: 200px; text-align: right; flex-shrink: 0;">
+                                        <c:choose>
+                                            <c:when test="${not empty ord.voucherCode and ord.discountAmount > 0}">
+                                                <div style="font-size: 12px; text-decoration: line-through; color: #999;">
+                                                    Gốc: <fmt:formatNumber value="${ord.totalPrice + ord.discountAmount}" pattern="#,##0"/> VNĐ
+                                                </div>
+                                                <div style="font-size: 11px; color: #28a745;">
+                                                    Voucher: -<fmt:formatNumber value="${ord.discountAmount}" pattern="#,##0"/> VNĐ
+                                                </div>
+                                                <div style="font-size: 14px; font-weight: 700; color: #1e3a8a;">
+                                                    Giá: <fmt:formatNumber value="${ord.totalPrice}" pattern="#,##0"/> VNĐ
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div style="font-size: 14px; font-weight: 700;">
+                                                    Giá: <fmt:formatNumber value="${ord.totalPrice}" pattern="#,##0"/> VNĐ
+                                                </div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                        <c:if test="${not currIsPurchase}">
+                                            <div style="font-size: 13px; color: #666; margin-top: 4px;">
+                                                Tiền cọc: <fmt:formatNumber value="${ord.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                                            </div>
+                                        </c:if>
+                                        <div style="font-size: 14px; font-weight: 700; color: #cc3399; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #eee;">
+                                            Tổng: <fmt:formatNumber value="${ord.totalPrice + ord.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Actions for this specific item -->
+                                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; display: flex; gap: 10px; flex-wrap: wrap;">
+                                    <c:if test="${ord.status == 'PENDING_PAYMENT' && sessionScope.userRole == 'User'}">
+                                        <a href="${pageContext.request.contextPath}/payment?rentalOrderID=${ord.rentalOrderID}" class="btn" style="margin-top:0;">Thanh toán</a>
+                                        <form method="POST" action="${pageContext.request.contextPath}/rental" style="display:inline;">
+                                            <input type="hidden" name="action" value="cancelOrder">
+                                            <input type="hidden" name="rentalOrderID" value="${ord.rentalOrderID}">
+                                            <button type="submit" class="btn btn-danger" style="margin-top:0;" onclick="return confirm('Bạn chắc chắn muốn hủy đơn?')">Hủy đơn</button>
+                                        </form>
+                                    </c:if>
+                                    
+                                    <c:if test="${ord.status == 'DELIVERED_PENDING_CONFIRMATION' && sessionScope.userRole == 'User'}">
+                                        <form method="POST" action="${pageContext.request.contextPath}/rental" enctype="multipart/form-data" style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                                            <input type="hidden" name="action" value="confirmReceipt">
+                                            <input type="hidden" name="rentalOrderID" value="${ord.rentalOrderID}">
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <label for="receivedImage_${ord.rentalOrderID}" style="font-size: 12px; font-weight: 600;">Chứng nhận nhận hàng:</label>
+                                                <input type="file" id="receivedImage_${ord.rentalOrderID}" name="receivedImage" accept="image/*" style="font-size: 12px;">
+                                            </div>
+                                            <button type="submit" class="btn" style="background-color:#28a745; margin-top:0;">Tôi đã nhận hàng</button>
+                                        </form>
+                                    </c:if>
+                                    
+                                    <c:if test="${ord.status == 'RENTED'}">
+                                        <form method="POST" action="${pageContext.request.contextPath}/rental" style="display:inline;">
+                                            <input type="hidden" name="action" value="requestReturn">
+                                            <input type="hidden" name="rentalOrderID" value="${ord.rentalOrderID}">
+                                            <button type="submit" class="btn" style="background-color:#17a2b8; margin-top:0; margin-right:8px;">Trả hàng</button>
+                                        </form>
+                                        <button type="button" class="btn" style="background-color:#dc3545; margin-top:0;" onclick="openIssueModal('${ord.rentalOrderID}')">Báo cáo vấn đề</button>
+                                    </c:if>
+                                    
+                                    <c:if test="${currIsPurchase && ord.status == 'COMPLETED' && sessionScope.userRole == 'User'}">
+                                        <form method="POST" action="${pageContext.request.contextPath}/rental" style="display:inline;">
+                                            <input type="hidden" name="action" value="requestReturn">
+                                            <input type="hidden" name="rentalOrderID" value="${ord.rentalOrderID}">
+                                            <button type="submit" class="btn" style="background-color:#dc3545; margin-top:0;" onclick="return confirm('Bạn có chắc chắn muốn hoàn trả sản phẩm này?')">Hoàn trả hàng</button>
+                                        </form>
+                                    </c:if>
+                                    
+                                    <c:if test="${ord.status == 'COMPLETED'}">
+                                        <c:if test="${sessionScope.userRole == 'User' && sessionScope.accountID != ord.managerID}">
+                                            <button type="button" class="btn" style="margin-top:0;" onclick="showRatingSection('${ord.rentalOrderID}')">Viết đánh giá</button>
+                                            <div id="ratingSection_${ord.rentalOrderID}" style="display:none; width: 100%; margin-top: 15px; padding: 16px; border: 1px solid #e1e5ee; border-radius: 6px; background: #f8fafc;">
+                                                <h3 style="margin-top: 0;">Đánh giá sản phẩm</h3>
+                                                <form method="POST" action="${pageContext.request.contextPath}/rating">
+                                                    <input type="hidden" name="action" value="submitRating">
+                                                    <input type="hidden" name="rentalOrderID" value="${ord.rentalOrderID}">
+                                                    <div style="margin-bottom: 10px;">
+                                                        <label>Chấm điểm:</label>
+                                                        <div class="star-rating">
+                                                            <input type="radio" id="star5_${ord.rentalOrderID}" name="rating" value="5" required><label for="star5_${ord.rentalOrderID}">&#9733;</label>
+                                                            <input type="radio" id="star4_${ord.rentalOrderID}" name="rating" value="4"><label for="star4_${ord.rentalOrderID}">&#9733;</label>
+                                                            <input type="radio" id="star3_${ord.rentalOrderID}" name="rating" value="3"><label for="star3_${ord.rentalOrderID}">&#9733;</label>
+                                                            <input type="radio" id="star2_${ord.rentalOrderID}" name="rating" value="2"><label for="star2_${ord.rentalOrderID}">&#9733;</label>
+                                                            <input type="radio" id="star1_${ord.rentalOrderID}" name="rating" value="1"><label for="star1_${ord.rentalOrderID}">&#9733;</label>
+                                                        </div>
+                                                    </div>
+                                                    <div style="margin-bottom: 10px;">
+                                                        <label for="comment_${ord.rentalOrderID}">Nhận xét của bạn:</label>
+                                                        <textarea id="comment_${ord.rentalOrderID}" name="comment" rows="3" style="width: 100%; box-sizing: border-box;" placeholder="Chia sẻ trải nghiệm..." required></textarea>
+                                                    </div>
+                                                    <button type="submit" class="btn" style="margin-top:0;">Gửi đánh giá</button>
+                                                </form>
+                                            </div>
+                                        </c:if>
+                                    </c:if>
+                                    
+                                    <c:if test="${ord.status == 'RETURN_REQUESTED' && sessionScope.userRole == 'User' && not empty ord.returnMethod && ord.returnMethod == 'SHIP_TO_MANAGER' && empty ord.returnTrackingNumber}">
+                                        <form method="POST" action="${pageContext.request.contextPath}/rental" style="display:flex; align-items:center; gap:10px; width:100%;">
+                                            <input type="hidden" name="action" value="submitReturnTracking" />
+                                            <input type="hidden" name="rentalOrderID" value="${ord.rentalOrderID}" />
+                                            <label for="returnTracking_${ord.rentalOrderID}" style="font-weight:600; font-size:12px;">Mã vận đơn:</label>
+                                            <input type="text" id="returnTracking_${ord.rentalOrderID}" name="returnTrackingNumber" placeholder="Nhập mã vận đơn" required style="padding:4px 8px; border:1px solid #ddd; border-radius:4px;" />
+                                            <button type="submit" class="btn" style="background-color:#4caf50; margin-top:0;">Gửi</button>
+                                        </form>
+                                    </c:if>
+
+                                    <!-- Manager Actions for this item -->
+                                    <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Renter'}">
+                                        <c:if test="${ord.status == 'RETURN_REQUESTED' && empty ord.returnMethod}">
+                                            <div style="margin-top:12px; padding:12px; border:1px solid #ff9800; border-radius:8px; background:#fff3e0; width: 100%;">
+                                                <h4 style="color:#e65100; margin-top:0; margin-bottom:8px;">⚠️ Khách hàng yêu cầu trả hàng</h4>
+                                                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                                    <form method="POST" action="${pageContext.request.contextPath}/manager" style="margin:0;">
+                                                        <input type="hidden" name="action" value="setReturnMethod" />
+                                                        <input type="hidden" name="rentalOrderID" value="${ord.rentalOrderID}" />
+                                                        <input type="hidden" name="returnMethod" value="MANAGER_PICKUP" />
+                                                        <button type="submit" class="btn" style="background-color:#4caf50; margin-top:0; font-size:12px; padding:8px 12px;"> Lấy trực tiếp</button>
+                                                    </form>
+                                                    <form method="POST" action="${pageContext.request.contextPath}/manager" style="margin:0;">
+                                                        <input type="hidden" name="action" value="setReturnMethod" />
+                                                        <input type="hidden" name="rentalOrderID" value="${ord.rentalOrderID}" />
+                                                        <input type="hidden" name="returnMethod" value="SHIP_TO_MANAGER" />
+                                                        <button type="submit" class="btn" style="background-color:#2196f3; margin-top:0; font-size:12px; padding:8px 12px;"> Khách gửi về</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </c:if>
+                                        
+                                        <c:if test="${ord.status == 'RETURN_REQUESTED' && not empty ord.returnMethod}">
+                                            <div style="margin-top:12px; padding:12px; border:1px solid #2196f3; border-radius:8px; background:#e3f2fd; width: 100%;">
+                                                <h4 style="color:#1565c0; margin-top:0; margin-bottom:8px;">📦 Đang chờ nhận hàng trả về</h4>
+                                                <c:choose>
+                                                    <c:when test="${ord.returnMethod == 'MANAGER_PICKUP'}">
+                                                        <p style="margin: 4px 0; font-size:12px;">Phương thức: <strong>Đến lấy trực tiếp</strong>.</p>
+                                                    </c:when>
+                                                    <c:when test="${ord.returnMethod == 'SHIP_TO_MANAGER'}">
+                                                        <p style="margin: 4px 0; font-size:12px;">Phương thức: <strong>Khách gửi chuyển phát</strong>.</p>
+                                                        <c:if test="${not empty ord.returnTrackingNumber}">
+                                                            <div style="background:#fff; padding:6px; border-radius:4px; margin:6px 0; font-size:12px;">
+                                                                <strong>Mã vận đơn:</strong> ${ord.returnTrackingNumber}
+                                                            </div>
+                                                        </c:if>
+                                                        <c:if test="${empty ord.returnTrackingNumber}">
+                                                            <p style="margin: 4px 0; color:#ff9800; font-size:12px;">⏳ Chờ khách cập nhật mã...</p>
+                                                        </c:if>
+                                                    </c:when>
+                                                </c:choose>
+                                                <form method="POST" action="${pageContext.request.contextPath}/manager" style="margin-top:8px;">
+                                                    <input type="hidden" name="action" value="confirmReturnReceived" />
+                                                    <input type="hidden" name="rentalOrderID" value="${ord.rentalOrderID}" />
+                                                    <button type="submit" class="btn" style="background-color:#4caf50; margin-top:0; font-size:12px; padding:8px 12px;" onclick="return confirm('Xác nhận đã nhận hàng?')">
+                                                        ✅ Xác nhận đã nhận
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </c:if>
+                                        
+                                        <c:if test="${ord.status == 'PAYMENT_VERIFIED'}">
+                                            <form method="POST" action="${pageContext.request.contextPath}/manager" style="margin-top:12px; display:flex; align-items:center; gap:10px; width:100%;">
+                                                <input type="hidden" name="action" value="shipOrder" />
+                                                <input type="hidden" name="rentalOrderID" value="${ord.rentalOrderID}" />
+                                                <input type="text" name="trackingNumber" placeholder="Mã vận đơn (tracking)" required style="padding:6px 8px; border:1px solid #ddd; border-radius:4px;" />
+                                                <button type="submit" class="btn btn-success" style="margin-top:0; padding:8px 12px;">Bàn giao (Gửi)</button>
+                                            </form>
+                                        </c:if>
+                                    </c:if>
+                                </div>
+                                
+                                <c:if test="${ord.status == 'RETURN_REQUESTED' && sessionScope.userRole == 'User' && not empty ord.returnMethod}">
+                                    <%@ page import="DAO.AccountDAO" %>
+                                    <%@ page import="Model.Account" %>
+                                    <%
+                                        Model.RentalOrder ordLoop = (Model.RentalOrder) pageContext.getAttribute("ord");
+                                        if (ordLoop != null && ordLoop.getManagerID() > 0) {
+                                            Account mgr = AccountDAO.findById(ordLoop.getManagerID());
+                                            if (mgr != null) {
+                                                pageContext.setAttribute("currManager", mgr);
+                                            }
+                                        }
+                                    %>
+                                    <c:choose>
+                                        <c:when test="${ord.returnMethod == 'MANAGER_PICKUP'}">
+                                            <div style="margin-top:12px; padding:12px; border:1px solid #4caf50; border-radius:8px; background:#e8f5e9; width:100%; font-size:13px;">
+                                                <h4 style="color:#2e7d32; margin-top:0; margin-bottom:6px;">🚗 ${currIsPurchase ? 'Renter' : 'Manager'} sẽ đến lấy hàng</h4>
+                                                <p style="margin:4px 0;">${currIsPurchase ? 'Renter' : 'Manager'} sẽ liên hệ với bạn để lấy hàng.</p>
+                                                <c:if test="${not empty currManager}">
+                                                    <div style="background:#fff; padding:8px; border-radius:4px; margin-top:6px; font-size:12px;">
+                                                        <strong>Liên hệ:</strong> 📞 ${currManager.phoneNumber} (${currManager.fullName})
+                                                    </div>
+                                                </c:if>
+                                            </div>
+                                        </c:when>
+                                        <c:when test="${ord.returnMethod == 'SHIP_TO_MANAGER'}">
+                                            <div style="margin-top:12px; padding:12px; border:1px solid #2196f3; border-radius:8px; background:#e3f2fd; width:100%; font-size:13px;">
+                                                <h4 style="color:#1565c0; margin-top:0; margin-bottom:6px;">📦 Gửi hàng trả về địa chỉ sau</h4>
+                                                <c:if test="${not empty currManager}">
+                                                    <div style="background:#fff; padding:8px; border-radius:4px; margin-top:6px; border-left:3px solid #2196f3; font-size:12px;">
+                                                        📍 Địa chỉ: ${currManager.address}<br>
+                                                        📞 SĐT: ${currManager.phoneNumber} (Nhận: ${currManager.fullName})
+                                                    </div>
+                                                </c:if>
+                                            </div>
+                                        </c:when>
+                                    </c:choose>
+                                </c:if>
+
+                                <c:if test="${not empty ord.trackingNumber}">
+                                    <div style="margin-top:8px; padding:8px; border:1px solid #e1e5ee; border-radius:6px; background:#f1f7ff; width:100%; font-size:12px;">
+                                        <strong>Mã vận đơn gửi hàng:</strong> ${ord.trackingNumber}
+                                    </div>
+                                </c:if>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <!-- Original single order layout -->
+                    <div class="order-info">
+                        <div style="display:flex; gap:20px; align-items:flex-start;">
+                            <div style="flex:1;">
+                                <div class="info-row">
+                                    <strong>Mã đơn hàng:</strong> ${order.orderCode}
+                                </div>
+                                <div class="info-row">
+                                    <strong>Quần áo:</strong> ${empty order.clothingName ? order.clothingID : order.clothingName}
+                                </div>
+                                
+                                <!-- Thông tin người thuê (chỉ manager/admin xem được) -->
+                                <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Renter' || sessionScope.userRole == 'Admin'}">
+                                    <div style="background-color: #fff9e6; padding: 12px; border-radius: 6px; margin: 12px 0; border-left: 3px solid #ffa500;">
+                                        <div style="font-weight: bold; color: #ff8c00; margin-bottom: 8px;">📋 Thông tin người đặt</div>
+                                        <div class="info-row" style="margin: 6px 0;">
+                                            <strong>Họ tên:</strong> ${order.renterFullName}
+                                        </div>
+                                        <div class="info-row" style="margin: 6px 0;">
+                                            <strong>SĐT:</strong> ${order.renterPhone}
+                                        </div>
+                                        <div class="info-row" style="margin: 6px 0;">
+                                            <strong>Email:</strong> ${order.renterEmail}
+                                        </div>
+                                        <div class="info-row" style="margin: 6px 0;">
+                                            <strong>Địa chỉ:</strong> ${order.renterAddress}
+                                        </div>
+                                    </div>
+                                </c:if>
+                                
+                                <c:if test="${not isPurchase}">
+                                    <div class="info-row">
+                                        <strong>Ngày bắt đầu:</strong> ${order.rentalStartDate}
+                                    </div>
+                                    <div class="info-row">
+                                        <strong>Ngày kết thúc:</strong> ${order.rentalEndDate}
+                                    </div>
+                                </c:if>
                                 <c:choose>
-                                    <c:when test="${not empty selectedColor}">
-                                        <div class="color-info">
-                                            <div class="color-swatch order-color-swatch" data-color="${selectedColor.hexCode}"></div>
-                                            <span>${selectedColor.colorName}</span>
+                                    <c:when test="${not empty order.voucherCode and order.discountAmount > 0}">
+                                        <div class="info-row">
+                                            <strong>${isPurchase ? 'Giá gốc sản phẩm:' : 'Giá thuê gốc:'}</strong> 
+                                            <span>
+                                                <fmt:formatNumber value="${order.totalPrice + order.discountAmount}" pattern="#,##0"/> VNĐ
+                                            </span>
+                                        </div>
+                                        <div class="info-row" style="background-color: #eafcf0; padding: 8px; border-radius: 4px; border-left: 3px solid #28a745;">
+                                            <strong style="color: #2563eb;">Voucher áp dụng:</strong>
+                                            <span style="font-weight: 700; color: #28a745;">
+                                                ${order.voucherCode} (-<fmt:formatNumber value="${order.discountAmount}" pattern="#,##0"/> VNĐ)
+                                            </span>
+                                        </div>
+                                        <div class="info-row">
+                                            <strong>${isPurchase ? 'Giá sau giảm:' : 'Tiền thuê sau giảm:'}</strong> 
+                                            <span style="font-weight: 700; color: #1e3a8a;">
+                                                <fmt:formatNumber value="${order.totalPrice}" pattern="#,##0"/> VNĐ
+                                            </span>
                                         </div>
                                     </c:when>
                                     <c:otherwise>
-                                        <span>#${order.colorID}</span>
+                                        <div class="info-row">
+                                            <strong>${isPurchase ? 'Tổng giá bán:' : 'Tổng giá thuê:'}</strong> <fmt:formatNumber value="${order.totalPrice}" pattern="#,##0"/> VNĐ
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
+                                <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Renter' || sessionScope.userRole == 'Admin'}">
+                                    <div class="info-row" style="background-color: #eef9f0; padding: 8px; border-radius: 4px; border-left: 3px solid #198754;">
+                                        <strong>Thực nhận sau trừ phí (20%):</strong>
+                                        <span style="font-weight: 700; color: #198754;">
+                                            <fmt:formatNumber value="${order.totalPrice * 0.80}" pattern="#,##0"/> VNĐ
+                                        </span>
+                                    </div>
+                                </c:if>
+                                
+                                <c:if test="${sessionScope.userRole != 'Manager' && sessionScope.userRole != 'Renter'}">
+                                    <!-- Tiền cọc chi tiết -->
+                                    <c:choose>
+                                        <c:when test="${isPurchase}">
+                                            <!-- No deposit for purchase -->
+                                        </c:when>
+                                        <c:when test="${not empty order.trustBasedMultiplier and order.trustBasedMultiplier > 0 and order.trustBasedMultiplier < 1.0}">
+                                            <c:set var="baseDeposit" value="${order.adjustedDepositAmount / order.trustBasedMultiplier}" />
+                                            <div class="info-row">
+                                                <strong>Tiền cọc gốc:</strong> 
+                                                <span style="text-decoration: line-through; color: #999;">
+                                                    <fmt:formatNumber value="${baseDeposit}" pattern="#,##0"/> VNĐ
+                                                </span>
+                                            </div>
+                                            <div class="info-row" style="background-color: #e8f5e9; padding: 8px; border-radius: 4px;">
+                                                <strong style="color: #2e7d32;">Vourcher đặc biệt:</strong> 
+                                                <span style="color: #2e7d32; font-weight: bold;">
+                                                    -<fmt:formatNumber value="${baseDeposit - order.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                                                </span>
+                                            </div>
+                                            <div class="info-row">
+                                                <strong>Tiền cọc chính thức:</strong> 
+                                                <span style="color: #2e7d32; font-weight: bold; font-size: 16px;">
+                                                    <fmt:formatNumber value="${order.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                                                </span>
+                                            </div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <div class="info-row">
+                                                <strong>Tiền cọc:</strong> <fmt:formatNumber value="${order.adjustedDepositAmount}" pattern="#,##0"/> VNĐ
+                                            </div>
+                                        </c:otherwise>
+                                    </c:choose>
+                                    <div class="info-row" style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; border-left: 3px solid #cc3399;">
+                                        <strong style="font-size: 16px; color: #cc3399;">Tổng tiền phải thanh toán:</strong> <span style="font-size: 16px; font-weight: bold; color: #cc3399;"><fmt:formatNumber value="${order.totalPrice + order.adjustedDepositAmount}" pattern="#,##0"/> VNĐ</span>
+                                    </div>
+                                </c:if>
+                                <div class="info-row">
+                                    <strong>Trạng thái:</strong>
+                                    <span class="status ${order.status.toLowerCase()}">
+                                        <c:choose>
+                                            <c:when test="${order.status == 'PENDING_PAYMENT'}">Chờ thanh toán</c:when>
+                                            <c:when test="${order.status == 'PAYMENT_SUBMITTED'}">Đã gửi thanh toán</c:when>
+                                            <c:when test="${order.status == 'PAYMENT_VERIFIED'}">Đã xác thực</c:when>
+                                            <c:when test="${order.status == 'DELIVERED_PENDING_CONFIRMATION'}">Chờ nhận hàng</c:when>
+                                            <c:when test="${order.status == 'RENTED'}">Đang thuê</c:when>
+                                            <c:when test="${order.status == 'RETURN_REQUESTED'}">Yêu cầu trả hàng</c:when>
+                                            <c:when test="${order.status == 'RETURNED'}">Đã trả hàng</c:when>
+                                            <c:when test="${order.status == 'COMPLETED'}">Hoàn thành</c:when>
+                                            <c:when test="${order.status == 'ISSUE'}">Có vấn đề</c:when>
+                                            <c:otherwise>${order.status}</c:otherwise>
+                                        </c:choose>
+                                    </span>
+                                </div>
+                                <div class="info-row">
+                                    <strong>Ngày tạo:</strong> ${order.createdAt}
+                                </div>
+                                <c:if test="${not empty order.selectedSize}">
+                                    <div class="info-row">
+                                        <strong>Size đã chọn:</strong> ${order.selectedSize}
+                                    </div>
+                                </c:if>
+                                <c:if test="${order.colorID != null}">
+                                    <%
+                                        Model.RentalOrder orderObj = (Model.RentalOrder) request.getAttribute("order");
+                                        Integer colorID = (orderObj != null) ? orderObj.getColorID() : null;
+                                        if (colorID != null) {
+                                            Color color = ColorDAO.getColorByID(colorID);
+                                            if (color != null) {
+                                                pageContext.setAttribute("selectedColor", color);
+                                            }
+                                        }
+                                    %>
+                                    <div class="info-row">
+                                        <strong>Màu sắc:</strong>
+                                        <c:choose>
+                                            <c:when test="${not empty selectedColor}">
+                                                <div class="color-info">
+                                                    <div class="color-swatch order-color-swatch" data-color="${selectedColor.hexCode}"></div>
+                                                    <span>${selectedColor.colorName}</span>
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span>#${order.colorID}</span>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </c:if>
+                            </div>
+                            <div style="width:320px;">
+                                <c:choose>
+                                    <c:when test="${not empty clothingImages}">
+                                        <c:forEach var="image" items="${clothingImages}">
+                                            <c:if test="${image.primary}">
+                                                <div class="product-image-box">
+                                                    <img src="${pageContext.request.contextPath}/image?imageID=${image.imageID}" alt="${order.clothingName}" class="product-image">
+                                                    <p style="margin: 10px 0 0 0; font-size: 12px; color: #999;">Ảnh sản phẩm</p>
+                                                </div>
+                                            </c:if>
+                                        </c:forEach>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="product-image-box">
+                                            <img src="${pageContext.request.contextPath}/image?id=${order.clothingID}" alt="${order.clothingName}" class="product-image">
+                                            <p style="margin: 10px 0 0 0; font-size: 12px; color: #999;">Ảnh sản phẩm</p>
+                                        </div>
                                     </c:otherwise>
                                 </c:choose>
                             </div>
-                        </c:if>
+                        </div>
                     </div>
-                    <div style="width:320px;">
-                        <c:choose>
-                            <c:when test="${not empty clothingImages}">
-                                <c:forEach var="image" items="${clothingImages}">
-                                    <c:if test="${image.primary}">
-                                        <div class="product-image-box">
-                                            <img src="${pageContext.request.contextPath}/image?imageID=${image.imageID}" alt="${order.clothingName}" class="product-image">
-                                            <p style="margin: 10px 0 0 0; font-size: 12px; color: #999;">Ảnh sản phẩm</p>
-                                        </div>
-                                    </c:if>
-                                </c:forEach>
-                            </c:when>
-                            <c:otherwise>
-                                <div class="product-image-box">
-                                    <img src="${pageContext.request.contextPath}/image?id=${order.clothingID}" alt="${order.clothingName}" class="product-image">
-                                    <p style="margin: 10px 0 0 0; font-size: 12px; color: #999;">Ảnh sản phẩm</p>
-                                </div>
-                            </c:otherwise>
-                        </c:choose>
-                    </div>
-                </div>
-            </div>
-            
-            <c:if test="${param.error == 'cancelled'}">
-                <div class="alert alert-danger" style="margin-top:12px; background-color:#f8d7da; color:#721c24; border:1px solid #f5c6cb; padding:12px; border-radius:4px; margin-bottom:12px;">
-                    ⚠️ Đơn hàng này đã bị hủy hoặc đã quá thời hạn thanh toán (24 giờ). Vui lòng tạo đơn hàng mới.
-                </div>
-            </c:if>
-
-            <c:if test="${order.status == 'PENDING_PAYMENT' && sessionScope.userRole == 'User'}">
-                <a href="${pageContext.request.contextPath}/payment?rentalOrderID=${order.rentalOrderID}" class="btn">Thanh toán</a>
-                <form method="POST" action="${pageContext.request.contextPath}/rental">
-                    <input type="hidden" name="action" value="cancelOrder">
-                    <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}">
-                    <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn chắc chắn muốn hủy đơn?')">Hủy đơn</button>
-                </form>
-            </c:if>
-
-            <c:if test="${order.status == 'DELIVERED_PENDING_CONFIRMATION' && sessionScope.userRole == 'User'}">
-                <c:if test="${param.received == 'true'}">
-                    <div class="alert alert-success" style="margin-top:12px;">
-                        Cảm ơn! Đơn hàng đã được xác nhận là đã nhận. Trạng thái đã chuyển sang "ĐANG THUÊ".
-                    </div>
-                </c:if>
-                <form method="POST" action="${pageContext.request.contextPath}/rental" enctype="multipart/form-data" style="margin-top:12px;">
-                    <input type="hidden" name="action" value="confirmReceipt">
-                    <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}">
-                    <div class="form-group">
-                        <label for="receivedImage">Tải ảnh chứng minh đã nhận hàng (tối đa 5MB):</label>
-                        <input type="file" id="receivedImage" name="receivedImage" accept="image/*" style="padding:8px; border:1px solid #ddd; border-radius:4px; width:100%; box-sizing:border-box;">
-                    </div>
-                    <button type="submit" class="btn" style="background-color:#28a745;">Tôi đã nhận hàng</button>
-                </form>
-            </c:if>
-
-            <c:if test="${order.status == 'RENTED'}">
-                <form method="POST" action="${pageContext.request.contextPath}/rental" style="margin-top: 16px; display:inline-block;">
-                    <input type="hidden" name="action" value="requestReturn">
-                    <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}">
-                    <button type="submit" class="btn" style="background-color:#17a2b8; margin-right:8px;">Đã thuê xong-trả lại</button>
-                </form>
-                <button type="button" class="btn" style="background-color:#dc3545; margin-top:16px;" onclick="openIssueModal('${order.rentalOrderID}')">Báo cáo vấn đề</button>
-            </c:if>
-            
-            <!-- User đã yêu cầu trả hàng - hiển thị thông báo thành công -->
-            <c:if test="${param.returnRequested == 'true'}">
-                <div class="alert alert-success" style="margin-top:12px;">
-                    ✅ Yêu cầu trả hàng đã được gửi! Manager sẽ chọn phương thức nhận hàng sớm.
-                </div>
-            </c:if>
-            
-            <c:if test="${param.trackingSubmitted == 'true'}">
-                <div class="alert alert-success" style="margin-top:12px;">
-                    ✅ Mã vận đơn đã được cập nhật! Manager sẽ theo dõi và xác nhận khi nhận được hàng.
-                </div>
-            </c:if>
-            
-            <!-- User đã yêu cầu trả hàng - chờ manager chọn phương thức -->
-            <c:if test="${order.status == 'RETURN_REQUESTED' && sessionScope.userRole == 'User'}">
-                <c:if test="${empty order.returnMethod}">
-                    <div style="margin-top:20px; padding:16px; border:2px solid #ff9800; border-radius:8px; background:#fff3e0;">
-                        <h3 style="color:#e65100; margin-top:0;">⏳ Đang chờ xác nhận</h3>
-                        <p>Yêu cầu trả hàng của bạn đã được gửi. Manager đang xem xét và sẽ chọn phương thức nhận hàng sớm.</p>
-                    </div>
-                </c:if>
-                
-                <c:if test="${not empty order.returnMethod}">
-                    <%@ page import="DAO.AccountDAO" %>
-                    <%@ page import="Model.Account" %>
-                    <%
-                        Model.RentalOrder ord = (Model.RentalOrder) request.getAttribute("order");
-                        if (ord != null && ord.getManagerID() > 0) {
-                            Account mgr = AccountDAO.findById(ord.getManagerID());
-                            if (mgr != null) {
-                                pageContext.setAttribute("manager", mgr);
-                            }
-                        }
-                    %>
                     
-                    <c:choose>
-                        <c:when test="${order.returnMethod == 'MANAGER_PICKUP'}">
-                            <div style="margin-top:20px; padding:16px; border:2px solid #4caf50; border-radius:8px; background:#e8f5e9;">
-                                <h3 style="color:#2e7d32; margin-top:0;">🚗 Manager sẽ đến lấy hàng</h3>
-                                <p>Manager sẽ liên hệ với bạn để sắp xếp thời gian lấy hàng.</p>
-                                <c:if test="${not empty manager}">
-                                    <div style="background:#fff; padding:12px; border-radius:4px; margin-top:12px;">
-                                        <strong>Thông tin liên hệ Manager:</strong><br/>
-                                        📞 SĐT: ${manager.phoneNumber}<br/>
-                                        👤 Tên: ${manager.fullName}
-                                    </div>
-                                </c:if>
-                            </div>
-                        </c:when>
-                        <c:when test="${order.returnMethod == 'SHIP_TO_MANAGER'}">
-                            <div style="margin-top:20px; padding:16px; border:2px solid #2196f3; border-radius:8px; background:#e3f2fd;">
-                                <h3 style="color:#1565c0; margin-top:0;">📦 Vui lòng gửi hàng về địa chỉ sau</h3>
-                                <c:if test="${not empty manager}">
-                                    <div style="background:#fff; padding:16px; border-radius:4px; margin-top:12px; border-left:4px solid #2196f3;">
-                                        <div style="margin-bottom:10px;"><strong>📍 Địa chỉ:</strong> ${manager.address}</div>
-                                        <div style="margin-bottom:10px;"><strong>📞 SĐT:</strong> ${manager.phoneNumber}</div>
-                                        <div><strong>👤 Người nhận:</strong> ${manager.fullName}</div>
-                                    </div>
-                                </c:if>
-                                
-                                <c:if test="${empty order.returnTrackingNumber}">
-                                    <form method="POST" action="${pageContext.request.contextPath}/rental" style="margin-top:16px;">
-                                        <input type="hidden" name="action" value="submitReturnTracking" />
-                                        <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
-                                        <label for="returnTracking" style="display:block; margin-bottom:8px; font-weight:600;">Mã vận đơn (sau khi gửi):</label>
-                                        <input type="text" id="returnTracking" name="returnTrackingNumber" placeholder="Nhập mã vận đơn" required style="padding:8px; border:1px solid #ddd; border-radius:4px; width:70%; margin-right:8px;" />
-                                        <button type="submit" class="btn" style="background-color:#4caf50;">Xác nhận đã gửi</button>
-                                    </form>
-                                </c:if>
-                                
-                                <c:if test="${not empty order.returnTrackingNumber}">
-                                    <div style="margin-top:16px; padding:12px; background:#fff; border-radius:4px;">
-                                        <strong>✅ Mã vận đơn trả hàng:</strong> ${order.returnTrackingNumber}
-                                        <p style="color:#666; margin-top:8px;">Đang chờ manager xác nhận nhận hàng.</p>
-                                    </div>
-                                </c:if>
-                            </div>
-                        </c:when>
-                    </c:choose>
-                </c:if>
-            </c:if>
-            
-            <!-- Đơn hàng đã trả về - thông báo cho user -->
-            <c:if test="${order.status == 'RETURNED' && sessionScope.userRole == 'User'}">
-                <c:if test="${param.returnConfirmed == 'true'}">
-                    <div class="alert alert-success" style="margin-top:12px;">
-                        ✅ Manager đã xác nhận nhận hàng trả về! 
-                    </div>
-                </c:if>
-                <div style="margin-top:20px; padding:20px; border:2px solid #4caf50; border-radius:8px; background:#e8f5e9;">
-                    <h3 style="color:#2e7d32; margin-top:0;">✅ Đã trả hàng thành công</h3>
-                    <p>Manager đã xác nhận nhận được hàng trả về. Admin đang xử lý hoàn tiền cọc cho bạn.</p>
-                    <p style="color:#666; margin-bottom:0;">Vui lòng chờ thông báo từ admin về việc hoàn tiền.</p>
-                </div>
-            </c:if>
-            
-            <c:if test="${order.status == 'ISSUE'}">
-                <c:if test="${param.issueReported == 'true'}">
-                    <div class="alert alert-success" style="margin-top:12px;">
-                        Vấn đề đã được báo cáo thành công! Manager sẽ kiểm tra và xử lý sớm.
-                    </div>
-                </c:if>
-                <a href="${pageContext.request.contextPath}/orderissue?rentalOrderID=${order.rentalOrderID}" class="btn" style="background-color:#ff6600; margin-top:16px;">
-                    Chi tiết vấn đề
-                </a>
-            </c:if>
-            
-            <c:if test="${order.status == 'COMPLETED'}">
-                <c:if test="${sessionScope.userRole == 'User' && sessionScope.accountID != order.managerID}">
-                    <div style="margin-top: 25px; padding: 16px; border: 1px solid #e1e5ee; border-radius: 6px; background: #f8fafc;">
-                        <h3 style="margin-top: 0;">Đánh giá sản phẩm</h3>
-                        <form method="POST" action="${pageContext.request.contextPath}/rating">
-                            <input type="hidden" name="action" value="submitRating">
-                            <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}">
-                            <div style="margin-bottom: 10px;">
-                                <label for="rating">Chấm điểm:</label>
-                                <div class="star-rating">
-                                    <input type="radio" id="star5" name="rating" value="5" required><label for="star5">&#9733;</label>
-                                    <input type="radio" id="star4" name="rating" value="4"><label for="star4">&#9733;</label>
-                                    <input type="radio" id="star3" name="rating" value="3"><label for="star3">&#9733;</label>
-                                    <input type="radio" id="star2" name="rating" value="2"><label for="star2">&#9733;</label>
-                                    <input type="radio" id="star1" name="rating" value="1"><label for="star1">&#9733;</label>
-                                </div>
-                                <div class="rating-note">Chọn số sao tương ứng với trải nghiệm của bạn.</div>
-                            </div>
-                            <div style="margin-bottom: 10px;">
-                                <label for="comment">Nhận xét của bạn:</label>
-                                <textarea id="comment" name="comment" rows="3" style="width: 100%; box-sizing: border-box;" placeholder="Chia sẻ trải nghiệm để người cho thuê biết" required></textarea>
-                            </div>
-                            <button type="submit" class="btn">Gửi đánh giá</button>
-                        </form>
-                    </div>
-                </c:if>
-            </c:if>
+                    <c:if test="${param.error == 'cancelled'}">
+                        <div class="alert alert-danger" style="margin-top:12px; background-color:#f8d7da; color:#721c24; border:1px solid #f5c6cb; padding:12px; border-radius:4px; margin-bottom:12px;">
+                            ⚠️ Đơn hàng này đã bị hủy hoặc đã quá thời hạn thanh toán (24 giờ). Vui lòng tạo đơn hàng mới.
+                        </div>
+                    </c:if>
 
-            <c:if test="${sessionScope.userRole == 'Manager'}">
-                <!-- Manager chọn phương thức nhận hàng khi user yêu cầu trả -->
-                <c:if test="${order.status == 'RETURN_REQUESTED' && empty order.returnMethod}">
-                    <div style="margin-top:20px; padding:20px; border:2px solid #ff9800; border-radius:8px; background:#fff3e0;">
-                        <h3 style="color:#e65100; margin-top:0;">⚠️ Khách hàng yêu cầu trả hàng</h3>
-                        <p style="margin-bottom:16px;">Vui lòng chọn phương thức nhận hàng:</p>
-                        <form method="POST" action="${pageContext.request.contextPath}/manager" style="margin-bottom:12px;">
-                            <input type="hidden" name="action" value="setReturnMethod" />
-                            <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
-                            <input type="hidden" name="returnMethod" value="MANAGER_PICKUP" />
-                            <button type="submit" class="btn" style="background-color:#4caf50;">🚗 Tôi sẽ đến lấy hàng trực tiếp</button>
+                    <c:if test="${order.status == 'PENDING_PAYMENT' && sessionScope.userRole == 'User'}">
+                        <a href="${pageContext.request.contextPath}/payment?rentalOrderID=${order.rentalOrderID}" class="btn">Thanh toán</a>
+                        <form method="POST" action="${pageContext.request.contextPath}/rental">
+                            <input type="hidden" name="action" value="cancelOrder">
+                            <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn chắc chắn muốn hủy đơn?')">Hủy đơn</button>
                         </form>
-                        <form method="POST" action="${pageContext.request.contextPath}/manager">
-                            <input type="hidden" name="action" value="setReturnMethod" />
-                            <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
-                            <input type="hidden" name="returnMethod" value="SHIP_TO_MANAGER" />
-                            <button type="submit" class="btn" style="background-color:#2196f3;">📦 Khách gửi về địa chỉ của tôi</button>
+                    </c:if>
+
+                    <c:if test="${order.status == 'DELIVERED_PENDING_CONFIRMATION' && sessionScope.userRole == 'User'}">
+                        <c:if test="${param.received == 'true'}">
+                            <div class="alert alert-success" style="margin-top:12px;">
+                                Cảm ơn! Đơn hàng đã được xác nhận là đã nhận. Trạng thái đã chuyển sang "${isPurchase ? 'HOÀN THÀNH' : 'ĐANG THUÊ'}".
+                            </div>
+                        </c:if>
+                        <form method="POST" action="${pageContext.request.contextPath}/rental" enctype="multipart/form-data" style="margin-top:12px;">
+                            <input type="hidden" name="action" value="confirmReceipt">
+                            <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}">
+                            <div class="form-group">
+                                <label for="receivedImage">Tải ảnh chứng minh đã nhận hàng (tối đa 5MB):</label>
+                                <input type="file" id="receivedImage" name="receivedImage" accept="image/*" style="padding:8px; border:1px solid #ddd; border-radius:4px; width:100%; box-sizing:border-box;">
+                            </div>
+                            <button type="submit" class="btn" style="background-color:#28a745;">Tôi đã nhận hàng</button>
                         </form>
-                    </div>
-                </c:if>
-                
-                <!-- Manager xác nhận đã nhận hàng trả về -->
-                <c:if test="${order.status == 'RETURN_REQUESTED' && not empty order.returnMethod}">
-                    <div style="margin-top:20px; padding:20px; border:2px solid #2196f3; border-radius:8px; background:#e3f2fd;">
-                        <h3 style="color:#1565c0; margin-top:0;">📦 Đang chờ nhận hàng trả về</h3>
+                    </c:if>
+
+                    <c:if test="${order.status == 'RENTED'}">
+                        <form method="POST" action="${pageContext.request.contextPath}/rental" style="margin-top: 16px; display:inline-block;">
+                            <input type="hidden" name="action" value="requestReturn">
+                            <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}">
+                            <button type="submit" class="btn" style="background-color:#17a2b8; margin-right:8px;">Đã thuê xong-trả lại</button>
+                        </form>
+                        <button type="button" class="btn" style="background-color:#dc3545; margin-top:16px;" onclick="openIssueModal('${order.rentalOrderID}')">Báo cáo vấn đề</button>
+                    </c:if>
+
+                    <c:if test="${isPurchase && order.status == 'COMPLETED' && sessionScope.userRole == 'User'}">
+                        <form method="POST" action="${pageContext.request.contextPath}/rental" style="margin-top: 16px; display:inline-block;">
+                            <input type="hidden" name="action" value="requestReturn">
+                            <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}">
+                            <button type="submit" class="btn" style="background-color:#dc3545; margin-right:8px;" onclick="return confirm('Bạn có chắc chắn muốn hoàn trả sản phẩm này?')">Hoàn trả hàng</button>
+                        </form>
+                    </c:if>
+                    
+                    <!-- User đã yêu cầu trả hàng - hiển thị thông báo thành công -->
+                    <c:if test="${param.returnRequested == 'true'}">
+                        <div class="alert alert-success" style="margin-top:12px;">
+                            ✅ Yêu cầu trả hàng đã được gửi! ${isPurchase ? 'Renter' : 'Manager'} sẽ chọn phương thức nhận hàng sớm.
+                        </div>
+                    </c:if>
+                    
+                    <c:if test="${param.trackingSubmitted == 'true'}">
+                        <div class="alert alert-success" style="margin-top:12px;">
+                            ✅ Mã vận đơn đã được cập nhật! ${isPurchase ? 'Renter' : 'Manager'} sẽ theo dõi và xác nhận khi nhận được hàng.
+                        </div>
+                    </c:if>
+                    
+                    <!-- User đã yêu cầu trả hàng - chờ manager chọn phương thức -->
+                    <c:if test="${order.status == 'RETURN_REQUESTED' && sessionScope.userRole == 'User'}">
+                        <c:if test="${empty order.returnMethod}">
+                            <div style="margin-top:20px; padding:16px; border:2px solid #ff9800; border-radius:8px; background:#fff3e0;">
+                                <h3 style="color:#e65100; margin-top:0;">⏳ Đang chờ xác nhận</h3>
+                                <p>Yêu cầu trả hàng của bạn đã được gửi. ${isPurchase ? 'Renter' : 'Manager'} đang xem xét và sẽ chọn phương thức nhận hàng sớm.</p>
+                            </div>
+                        </c:if>
                         
-                        <c:choose>
-                            <c:when test="${order.returnMethod == 'MANAGER_PICKUP'}">
-                                <p>Bạn đã chọn <strong>đến lấy hàng trực tiếp</strong>.</p>
-                                <p style="color:#666;">Sau khi lấy hàng từ khách hàng, vui lòng xác nhận bên dưới.</p>
-                            </c:when>
-                            <c:when test="${order.returnMethod == 'SHIP_TO_MANAGER'}">
-                                <p>Khách hàng đang gửi hàng về địa chỉ của bạn.</p>
-                                <c:if test="${not empty order.returnTrackingNumber}">
-                                    <div style="background:#fff; padding:12px; border-radius:4px; margin:12px 0;">
-                                        <strong>📍 Mã vận đơn:</strong> ${order.returnTrackingNumber}
+                        <c:if test="${not empty order.returnMethod}">
+                            <%@ page import="DAO.AccountDAO" %>
+                            <%@ page import="Model.Account" %>
+                            <%
+                                Model.RentalOrder ord = (Model.RentalOrder) request.getAttribute("order");
+                                if (ord != null && ord.getManagerID() > 0) {
+                                    Account mgr = AccountDAO.findById(ord.getManagerID());
+                                    if (mgr != null) {
+                                        pageContext.setAttribute("manager", mgr);
+                                    }
+                                }
+                            %>
+                            
+                            <c:choose>
+                                <c:when test="${order.returnMethod == 'MANAGER_PICKUP'}">
+                                    <div style="margin-top:20px; padding:16px; border:2px solid #4caf50; border-radius:8px; background:#e8f5e9;">
+                                        <h3 style="color:#2e7d32; margin-top:0;">🚗 ${isPurchase ? 'Renter' : 'Manager'} sẽ đến lấy hàng</h3>
+                                        <p>${isPurchase ? 'Renter' : 'Manager'} sẽ liên hệ với bạn để sắp xếp thời gian lấy hàng.</p>
+                                        <c:if test="${not empty manager}">
+                                            <div style="background:#fff; padding:12px; border-radius:4px; margin-top:12px;">
+                                                <strong>Thông tin liên hệ ${isPurchase ? 'Renter' : 'Manager'}:</strong><br/>
+                                                📞 SĐT: ${manager.phoneNumber}<br/>
+                                                👤 Tên: ${manager.fullName}
+                                            </div>
+                                        </c:if>
                                     </div>
-                                    <p style="color:#666;">Sau khi nhận được hàng, vui lòng xác nhận bên dưới.</p>
-                                </c:if>
-                                <c:if test="${empty order.returnTrackingNumber}">
-                                    <p style="color:#ff9800;">⏳ Đang chờ khách hàng cập nhật mã vận đơn...</p>
-                                </c:if>
-                            </c:when>
-                        </c:choose>
+                                </c:when>
+                                <c:when test="${order.returnMethod == 'SHIP_TO_MANAGER'}">
+                                    <div style="margin-top:20px; padding:16px; border:2px solid #2196f3; border-radius:8px; background:#e3f2fd;">
+                                        <h3 style="color:#1565c0; margin-top:0;">📦 Vui lòng gửi hàng về địa chỉ sau</h3>
+                                        <c:if test="${not empty manager}">
+                                            <div style="background:#fff; padding:16px; border-radius:4px; margin-top:12px; border-left:4px solid #2196f3;">
+                                                <div style="margin-bottom:10px;"><strong>📍 Địa chỉ:</strong> ${manager.address}</div>
+                                                <div style="margin-bottom:10px;"><strong>📞 SĐT:</strong> ${manager.phoneNumber}</div>
+                                                <div><strong>👤 Người nhận:</strong> ${manager.fullName}</div>
+                                            </div>
+                                        </c:if>
+                                        
+                                        <c:if test="${empty order.returnTrackingNumber}">
+                                            <form method="POST" action="${pageContext.request.contextPath}/rental" style="margin-top:16px;">
+                                                <input type="hidden" name="action" value="submitReturnTracking" />
+                                                <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
+                                                <label for="returnTracking" style="display:block; margin-bottom:8px; font-weight:600;">Mã vận đơn (Address):</label>
+                                                <input type="text" id="returnTracking" name="returnTrackingNumber" placeholder="Nhập mã vận đơn" required style="padding:8px; border:1px solid #ddd; border-radius:4px; width:70%; margin-right:8px;" />
+                                                <button type="submit" class="btn" style="background-color:#4caf50;">Xác nhận đã gửi</button>
+                                            </form>
+                                        </c:if>
+                                        
+                                        <c:if test="${not empty order.returnTrackingNumber}">
+                                            <div style="margin-top:16px; padding:12px; background:#fff; border-radius:4px;">
+                                                <strong>✅ Mã vận đơn trả hàng:</strong> ${order.returnTrackingNumber}
+                                                <p style="color:#666; margin-top:8px;">Đang chờ ${isPurchase ? 'renter' : 'manager'} xác nhận nhận hàng.</p>
+                                            </div>
+                                        </c:if>
+                                    </div>
+                                </c:when>
+                            </c:choose>
+                        </c:if>
+                    </c:if>
+                    
+                    <!-- Đơn hàng đã trả về - thông báo cho user -->
+                    <c:if test="${order.status == 'RETURNED' && sessionScope.userRole == 'User'}">
+                        <c:if test="${param.returnConfirmed == 'true'}">
+                            <div class="alert alert-success" style="margin-top:12px;">
+                                ✅ ${isPurchase ? 'Renter' : 'Manager'} đã xác nhận nhận hàng trả về! 
+                            </div>
+                        </c:if>
+                        <div style="margin-top:20px; padding:20px; border:2px solid #4caf50; border-radius:8px; background:#e8f5e9;">
+                            <h3 style="color:#2e7d32; margin-top:0;">✅ Đã trả hàng thành công</h3>
+                            <p>${isPurchase ? 'Renter' : 'Manager'} đã xác nhận nhận được hàng trả về. Admin đang xử lý hoàn tiền cho bạn.</p>
+                            <p style="color:#666; margin-bottom:0;">Vui lòng chờ thông báo từ admin về việc hoàn tiền.</p>
+                        </div>
+                    </c:if>
+                    
+                    <c:if test="${order.status == 'ISSUE'}">
+                        <c:if test="${param.issueReported == 'true'}">
+                            <div class="alert alert-success" style="margin-top:12px;">
+                                Vấn đề đã được báo cáo thành công! Manager sẽ kiểm tra và xử lý sớm.
+                            </div>
+                        </c:if>
+                        <a href="${pageContext.request.contextPath}/orderissue?rentalOrderID=${order.rentalOrderID}" class="btn" style="background-color:#ff6600; margin-top:16px;">
+                            Chi tiết vấn đề
+                        </a>
+                    </c:if>
+                    
+                    <c:if test="${order.status == 'COMPLETED'}">
+                        <c:if test="${sessionScope.userRole == 'User' && sessionScope.accountID != order.managerID}">
+                            <div style="margin-top: 25px; padding: 16px; border: 1px solid #e1e5ee; border-radius: 6px; background: #f8fafc;">
+                                <h3 style="margin-top: 0;">Đánh giá sản phẩm</h3>
+                                <form method="POST" action="${pageContext.request.contextPath}/rating">
+                                    <input type="hidden" name="action" value="submitRating">
+                                    <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}">
+                                    <div style="margin-bottom: 10px;">
+                                        <label for="rating">Chấm điểm:</label>
+                                        <div class="star-rating">
+                                            <input type="radio" id="star5" name="rating" value="5" required><label for="star5">&#9733;</label>
+                                            <input type="radio" id="star4" name="rating" value="4"><label for="star4">&#9733;</label>
+                                            <input type="radio" id="star3" name="rating" value="3"><label for="star3">&#9733;</label>
+                                            <input type="radio" id="star2" name="rating" value="2"><label for="star2">&#9733;</label>
+                                            <input type="radio" id="star1" name="rating" value="1"><label for="star1">&#9733;</label>
+                                        </div>
+                                        <div class="rating-note">Chọn số sao tương ứng với trải nghiệm của bạn.</div>
+                                    </div>
+                                    <div style="margin-bottom: 10px;">
+                                        <label for="comment">Nhận xét của bạn:</label>
+                                        <textarea id="comment" name="comment" rows="3" style="width: 100%; box-sizing: border-box;" placeholder="Chia sẻ trải nghiệm..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn">Gửi đánh giá</button>
+                                </form>
+                            </div>
+                        </c:if>
+                    </c:if>
+
+                    <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Renter'}">
+                        <!-- Manager chọn phương thức nhận hàng khi user yêu cầu trả -->
+                        <c:if test="${order.status == 'RETURN_REQUESTED' && empty order.returnMethod}">
+                            <div style="margin-top:20px; padding:20px; border:2px solid #ff9800; border-radius:8px; background:#fff3e0;">
+                                <h3 style="color:#e65100; margin-top:0;">⚠️ Khách hàng yêu cầu trả hàng</h3>
+                                <p style="margin-bottom:16px;">Vui lòng chọn phương thức nhận hàng:</p>
+                                <form method="POST" action="${pageContext.request.contextPath}/manager" style="margin-bottom:12px;">
+                                    <input type="hidden" name="action" value="setReturnMethod" />
+                                    <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
+                                    <input type="hidden" name="returnMethod" value="MANAGER_PICKUP" />
+                                    <button type="submit" class="btn" style="background-color:#4caf50;">🚗 Tôi sẽ đến lấy hàng trực tiếp</button>
+                                </form>
+                                <form method="POST" action="${pageContext.request.contextPath}/manager">
+                                    <input type="hidden" name="action" value="setReturnMethod" />
+                                    <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
+                                    <input type="hidden" name="returnMethod" value="SHIP_TO_MANAGER" />
+                                    <button type="submit" class="btn" style="background-color:#2196f3;">📦 Khách gửi về địa chỉ của tôi</button>
+                                </form>
+                            </div>
+                        </c:if>
                         
-                        <form method="POST" action="${pageContext.request.contextPath}/manager" style="margin-top:16px;">
-                            <input type="hidden" name="action" value="confirmReturnReceived" />
-                            <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
-                            <button type="submit" class="btn" style="background-color:#4caf50;" onclick="return confirm('Xác nhận bạn đã nhận được hàng trả về từ khách hàng?')">
-                                ✅ Xác nhận đã nhận hàng trả về
-                            </button>
-                        </form>
-                    </div>
-                </c:if>
-                
-                <c:if test="${order.status == 'PAYMENT_VERIFIED'}">
-                    <form method="POST" action="${pageContext.request.contextPath}/manager" style="margin-top:16px;">
-                        <input type="hidden" name="action" value="shipOrder" />
-                        <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
-                        <input type="text" name="trackingNumber" placeholder="Mã tracking" required style="padding:6px 8px; margin-right:6px;" />
-                        <button type="submit" class="btn btn-success">Bàn giao (Gửi)</button>
-                    </form>
-                </c:if>
-                <c:if test="${not empty order.trackingNumber}">
-                    <div style="margin-top:12px; padding:12px; border:1px solid #e1e5ee; border-radius:6px; background:#f1f7ff;">
-                        <strong>Mã vận đơn:</strong> ${order.trackingNumber}
-                    </div>
-                </c:if>
-            </c:if>
+                        <!-- Manager xác nhận đã nhận hàng trả về -->
+                        <c:if test="${order.status == 'RETURN_REQUESTED' && not empty order.returnMethod}">
+                            <div style="margin-top:20px; padding:20px; border:2px solid #2196f3; border-radius:8px; background:#e3f2fd;">
+                                <h3 style="color:#1565c0; margin-top:0;">📦 Đang chờ nhận hàng trả về</h3>
+                                
+                                <c:choose>
+                                    <c:when test="${order.returnMethod == 'MANAGER_PICKUP'}">
+                                        <p>Bạn đã chọn <strong>đến lấy hàng trực tiếp</strong>.</p>
+                                        <p style="color:#666;">Sau khi lấy hàng từ khách hàng, vui lòng xác nhận bên dưới.</p>
+                                    </c:when>
+                                    <c:when test="${order.returnMethod == 'SHIP_TO_MANAGER'}">
+                                        <p>Khách hàng đang gửi hàng về địa chỉ của bạn.</p>
+                                        <c:if test="${not empty order.returnTrackingNumber}">
+                                            <div style="background:#fff; padding:12px; border-radius:4px; margin:12px 0;">
+                                                <strong>📍 Mã vận đơn:</strong> ${order.returnTrackingNumber}
+                                            </div>
+                                            <p style="color:#666;">Sau khi nhận được hàng, vui lòng xác nhận bên dưới.</p>
+                                        </c:if>
+                                        <c:if test="${empty order.returnTrackingNumber}">
+                                            <p style="color:#ff9800;">⏳ Đang chờ khách hàng cập nhật mã vận đơn...</p>
+                                        </c:if>
+                                    </c:when>
+                                </c:choose>
+                                
+                                <form method="POST" action="${pageContext.request.contextPath}/manager" style="margin-top:16px;">
+                                    <input type="hidden" name="action" value="confirmReturnReceived" />
+                                    <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
+                                    <button type="submit" class="btn" style="background-color:#4caf50;" onclick="return confirm('Xác nhận bạn đã nhận được hàng?')">
+                                        ✅ Xác nhận đã nhận
+                                    </button>
+                                </form>
+                            </div>
+                        </c:if>
+                        
+                        <c:if test="${order.status == 'PAYMENT_VERIFIED'}">
+                            <form method="POST" action="${pageContext.request.contextPath}/manager" style="margin-top:16px;">
+                                <input type="hidden" name="action" value="shipOrder" />
+                                <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
+                                <input type="text" name="trackingNumber" placeholder="Mã tracking" required style="padding:6px 8px; margin-right:6px;" />
+                                <button type="submit" class="btn btn-success">Bàn giao (Gửi)</button>
+                            </form>
+                        </c:if>
+                        <c:if test="${not empty order.trackingNumber}">
+                            <div style="margin-top:12px; padding:12px; border:1px solid #e1e5ee; border-radius:6px; background:#f1f7ff;">
+                                <strong>Mã vận đơn:</strong> ${order.trackingNumber}
+                            </div>
+                        </c:if>
+                    </c:if>
+                </c:otherwise>
+            </c:choose>
         </div>
     </div>
 
@@ -907,6 +1259,13 @@
             const hex = swatch.getAttribute('data-color');
             swatch.style.backgroundColor = (hex && hex.trim()) ? hex : '#ccc';
         });
+
+        function showRatingSection(orderId) {
+            const section = document.getElementById('ratingSection_' + orderId);
+            if (section) {
+                section.style.display = section.style.display === 'none' ? 'block' : 'none';
+            }
+        }
     </script>
 
     <!-- Payment proof preview (visible only to Admin or the renter user) -->
@@ -953,7 +1312,7 @@
     </c:if>
 
     <!-- Tracking info (non-manager) -->
-    <c:if test="${sessionScope.userRole != 'Manager' && not empty order.trackingNumber}">
+    <c:if test="${sessionScope.userRole != 'Manager' && sessionScope.userRole != 'Renter' && not empty order.trackingNumber}">
         <div style="margin-top:12px; padding:12px; border:1px solid #e1e5ee; border-radius:6px; background:#f1f7ff;">
             <strong>Mã vận đơn:</strong> ${order.trackingNumber}
         </div>

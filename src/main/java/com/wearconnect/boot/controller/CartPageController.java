@@ -195,7 +195,8 @@ public class CartPageController {
             // 1. Verify availability for all items first (prevent partial checkouts)
             for (CartItem item : itemsToCheckout) {
                 if (!RentalOrderController.isAvailable(item.getClothingID(), item.getStartDate(), item.getEndDate())) {
-                    response.sendRedirect(request.getContextPath() + "/cart?error=not_available&conflictItem=" + java.net.URLEncoder.encode(item.getClothingName(), "UTF-8"));
+                    String errorType = "buy".equals(item.getRentalType()) ? "out_of_stock" : "not_available";
+                    response.sendRedirect(request.getContextPath() + "/cart?error=" + errorType + "&conflictItem=" + java.net.URLEncoder.encode(item.getClothingName(), "UTF-8"));
                     return;
                 }
             }

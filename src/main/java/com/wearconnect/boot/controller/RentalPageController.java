@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -178,24 +179,74 @@ public class RentalPageController {
             request.setAttribute("activeFilter", filter);
             request.getRequestDispatcher("/WEB-INF/jsp/user/my-orders.jsp").forward(request, response);
         } else if ("viewOrder".equals(action)) {
-            int rentalOrderID = Integer.parseInt(request.getParameter("id"));
-            RentalOrder order = RentalOrderController.getRentalOrderDetails(rentalOrderID);
-            Payment payment = PaymentController.getPaymentStatus(rentalOrderID);
-            request.setAttribute("order", order);
-            request.setAttribute("payment", payment);
-            if (order != null) {
-                Model.Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
-                request.setAttribute("clothing", clothing);
-                request.setAttribute("clothingImages", ClothingImageDAO.getImagesByClothing(order.getClothingID()));
+            String idsParam = request.getParameter("id");
+            if (idsParam != null && idsParam.contains(",")) {
+                List<RentalOrder> orderList = new ArrayList<>();
+                List<Model.Clothing> clothingList = new ArrayList<>();
+                List<List<Model.ClothingImage>> imagesList = new ArrayList<>();
                 
-                boolean isForSale = false;
-                if (clothing != null) {
-                    Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
-                    if (owner != null && "Renter".equals(owner.getUserRole())) {
-                        isForSale = true;
+                String[] idParts = idsParam.split(",");
+                for (String part : idParts) {
+                    if (!part.trim().isEmpty()) {
+                        try {
+                            int orderId = Integer.parseInt(part.trim());
+                            RentalOrder ord = RentalOrderController.getRentalOrderDetails(orderId);
+                            if (ord != null) {
+                                orderList.add(ord);
+                                clothingList.add(ClothingDAO.getClothingByID(ord.getClothingID()));
+                                imagesList.add(ClothingImageDAO.getImagesByClothing(ord.getClothingID()));
+                            }
+                        } catch (NumberFormatException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-                request.setAttribute("isForSale", isForSale);
+                
+                request.setAttribute("isMultiple", true);
+                request.setAttribute("orderList", orderList);
+                request.setAttribute("clothingList", clothingList);
+                request.setAttribute("imagesList", imagesList);
+                
+                if (!orderList.isEmpty()) {
+                    request.setAttribute("order", orderList.get(0));
+                    request.setAttribute("payment", PaymentController.getPaymentStatus(orderList.get(0).getRentalOrderID()));
+                    Model.Clothing firstClothing = clothingList.get(0);
+                    request.setAttribute("clothing", firstClothing);
+                    request.setAttribute("clothingImages", imagesList.get(0));
+                    
+                    boolean isForSale = false;
+                    if (firstClothing != null) {
+                        Model.Account owner = DAO.AccountDAO.findById(firstClothing.getRenterID());
+                        if (owner != null && "Renter".equals(owner.getUserRole())) {
+                            isForSale = true;
+                        }
+                    }
+                    request.setAttribute("isForSale", isForSale);
+                }
+            } else {
+                try {
+                    int rentalOrderID = Integer.parseInt(idsParam);
+                    RentalOrder order = RentalOrderController.getRentalOrderDetails(rentalOrderID);
+                    Payment payment = PaymentController.getPaymentStatus(rentalOrderID);
+                    request.setAttribute("order", order);
+                    request.setAttribute("payment", payment);
+                    if (order != null) {
+                        Model.Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
+                        request.setAttribute("clothing", clothing);
+                        request.setAttribute("clothingImages", ClothingImageDAO.getImagesByClothing(order.getClothingID()));
+                        
+                        boolean isForSale = false;
+                        if (clothing != null) {
+                            Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
+                            if (owner != null && "Renter".equals(owner.getUserRole())) {
+                                isForSale = true;
+                            }
+                        }
+                        request.setAttribute("isForSale", isForSale);
+                    }
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
             }
             request.getRequestDispatcher("/WEB-INF/jsp/user/order-details.jsp").forward(request, response);
         }
@@ -344,9 +395,22 @@ public class RentalPageController {
                     proofData = readPartBytes(filePart);
                 }
                 RentalOrderController.setReceivedProofPath(rentalOrderID, proofPath, proofData);
-                boolean ok = RentalOrderController.updateOrderStatus(rentalOrderID, "RENTED");
+                
+                RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+                boolean isForSale = false;
+                if (order != null) {
+                    Model.Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
+                    if (clothing != null) {
+                        Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
+                        if (owner != null && "Renter".equals(owner.getUserRole())) {
+                            isForSale = true;
+                        }
+                    }
+                }
+                
+                String nextStatus = isForSale ? "COMPLETED" : "RENTED";
+                boolean ok = RentalOrderController.updateOrderStatus(rentalOrderID, nextStatus);
                 if (ok) {
-                    RentalOrder order = RentalOrderDAO.getRentalOrderByID(rentalOrderID);
                     if (order != null) {
                         String orderCode = "WRC" + String.format("%05d", order.getRentalOrderID());
                         String clothingInfo = order.getClothingName() != null ? order.getClothingName() : "ID: " + order.getClothingID();

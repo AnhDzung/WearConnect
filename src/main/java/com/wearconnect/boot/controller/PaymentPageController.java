@@ -255,12 +255,11 @@ public class PaymentPageController {
                                 }
                             }
                         }
-                        
-                        // Update session cart
+                           // Update session cart
                         List<CartItem> cart = CartDAO.getCartByAccountID(currentUserID);
                         session.setAttribute("cart", cart);
 
-                        response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + firstOrderID + "&paymentSubmitted=true");
+                        response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderIDParam + "&paymentSubmitted=true");
                     } else {
                         response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderIDParam + "&error=uploadfailed");
                     }
@@ -271,7 +270,7 @@ public class PaymentPageController {
                         double amount2 = base2 * (1.0 - discountPercent / 100.0);
                         PaymentController.createPaymentOnly(id, paymentMethod, amount2);
                     }
-                    response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + firstOrderID + "&bankTransferPending=true");
+                    response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderIDParam + "&bankTransferPending=true");
                 }
             } else {
                 boolean allSuccess = true;
@@ -294,7 +293,7 @@ public class PaymentPageController {
                     List<CartItem> cart = CartDAO.getCartByAccountID(currentUserID);
                     session.setAttribute("cart", cart);
 
-                    response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + firstOrderID + "&paymentSuccess=true");
+                    response.sendRedirect(request.getContextPath() + "/rental?action=viewOrder&id=" + rentalOrderIDParam + "&paymentSuccess=true");
                 } else {
                     response.sendRedirect(request.getContextPath() + "/payment?rentalOrderID=" + rentalOrderIDParam + "&error=true");
                 }

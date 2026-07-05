@@ -36,6 +36,7 @@
     boolean isAddToCart = "true".equals(request.getParameter("addToCart"));
 %>
 <c:set var="isAddToCart" value="<%= isAddToCart %>" />
+<c:set var="isForSale" value="<%= isForSale %>" />
 <!DOCTYPE html>
 <html>
 <head>
@@ -428,8 +429,24 @@
     <!-- Error message for unavailability -->
     <c:if test="${not empty error and error == 'notAvailable'}">
         <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 12px; padding: 20px; margin-bottom: 30px; color: #856404; box-shadow: var(--shadow-sm);">
-            <h3 style="margin-top: 0; color: var(--danger-color); font-weight: 700; font-size: 18px;">Không đủ số lượng</h3>
-            <p style="margin-bottom: 10px;"><strong>Tất cả sản phẩm cùng loại này đã được thuê hết trong khoảng thời gian bạn chọn.</strong></p>
+            <h3 style="margin-top: 0; color: var(--danger-color); font-weight: 700; font-size: 18px;">
+                <c:choose>
+                    <c:when test="${isForSale}">Hết hàng / Không khả dụng</c:when>
+                    <c:otherwise>Không đủ số lượng</c:otherwise>
+                </c:choose>
+            </h3>
+            <p style="margin-bottom: 10px;">
+                <strong>
+                    <c:choose>
+                        <c:when test="${isForSale}">
+                            Sản phẩm này đã hết hàng hoặc không khả dụng.
+                        </c:when>
+                        <c:otherwise>
+                            Tất cả sản phẩm cùng loại này đã được thuê hết trong khoảng thời gian bạn chọn.
+                        </c:otherwise>
+                    </c:choose>
+                </strong>
+            </p>
             
             <c:if test="${not empty requestedStartDateDate}">
                 <p style="margin-bottom: 10px;">Thời gian bạn yêu cầu: 

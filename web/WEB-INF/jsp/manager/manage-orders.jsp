@@ -359,9 +359,9 @@
             <tr>
                 <th>Mã đơn hàng</th>
                 <th>Quần áo</th>
-                <th>Người thuê</th>
-                <th>Ngày bắt đầu</th>
-                <th>Ngày kết thúc</th>
+                <th>${sessionScope.userRole == 'Renter' ? 'Người mua' : 'Người thuê'}</th>
+                <th>${sessionScope.userRole == 'Renter' ? 'Ngày mua' : 'Ngày bắt đầu'}</th>
+                <th>${sessionScope.userRole == 'Renter' ? 'Hạn trả hàng' : 'Ngày kết thúc'}</th>
                 <th>Tổng giá (thực nhận)</th>
                 <th>Trạng thái</th>
                 <th></th>
@@ -394,7 +394,7 @@
                             </c:if>
                         </c:if>
                     </td>
-                    <td data-label="Người thuê">
+                    <td data-label="${sessionScope.userRole == 'Renter' ? 'Người mua' : 'Người thuê'}">
                         <c:choose>
                             <c:when test="${not empty order.renterFullName}">
                                 ${order.renterFullName}
@@ -407,8 +407,8 @@
                             </c:otherwise>
                         </c:choose>
                     </td>
-                    <td data-label="Ngày bắt đầu">${order.formattedStartDate}</td>
-                    <td data-label="Ngày kết thúc">${order.formattedEndDate}</td>
+                    <td data-label="${sessionScope.userRole == 'Renter' ? 'Ngày mua' : 'Ngày bắt đầu'}">${order.formattedStartDate}</td>
+                    <td data-label="${sessionScope.userRole == 'Renter' ? 'Hạn trả hàng' : 'Ngày kết thúc'}">${sessionScope.userRole == 'Renter' ? '-' : order.formattedEndDate}</td>
                     <td data-label="Tổng giá (thực nhận)"><fmt:formatNumber value="${order.totalPrice * 0.80}" pattern="#,##0"/> VNĐ</td>
                     <td data-label="Trạng thái">
                         <span class="status ${order.status.toLowerCase()}">
@@ -444,13 +444,13 @@
                             </form>
                         </c:if>
                         <c:if test="${order.status == 'RETURNED'}">
-                            <form method="POST" action="${pageContext.request.contextPath}/manager">
-                                <input type="hidden" name="action" value="updateStatus" />
-                                <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
-                                <input type="hidden" name="status" value="COMPLETED" />
-                                <button type="submit" class="btn btn-success">Đã nhận hàng (hoàn tất)</button>
-                            </form>
-                        </c:if>
+                             <form method="POST" action="${pageContext.request.contextPath}/manager">
+                                 <input type="hidden" name="action" value="updateStatus" />
+                                 <input type="hidden" name="rentalOrderID" value="${order.rentalOrderID}" />
+                                 <input type="hidden" name="status" value="${sessionScope.userRole == 'Renter' ? 'CANCELLED' : 'COMPLETED'}" />
+                                 <button type="submit" class="btn btn-success">${sessionScope.userRole == 'Renter' ? 'Xác nhận hoàn trả (Hủy đơn)' : 'Đã nhận hàng (hoàn tất)'}</button>
+                             </form>
+                         </c:if>
                         <c:if test="${order.status == 'COMPLETED'}">
                             <c:choose>
                                 <c:when test="${ratedMap[order.rentalOrderID]}">

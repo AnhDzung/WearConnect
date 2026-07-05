@@ -352,7 +352,7 @@ public class DashboardService {
         String sql = "SELECT DISTINCT " +
                  "ro.RentalOrderID, ro.Status, ro.TotalPrice, ro.AdjustedDepositAmount, ro.CreatedAt, " +
                      "c.ClothingName, c.Category, " +
-                     "manager.FullName as ManagerName, " +
+                     "manager.FullName as ManagerName, manager.UserRole as OwnerRole, " +
                      "renter.FullName as RenterName, " +
                      "(SELECT TOP 1 PaymentStatus FROM Payment WHERE RentalOrderID = ro.RentalOrderID ORDER BY PaymentID DESC) as PaymentStatus, " +
                      "(SELECT TOP 1 PaymentProofImage FROM Payment WHERE RentalOrderID = ro.RentalOrderID ORDER BY PaymentID DESC) as PaymentProofImage " +
@@ -389,6 +389,7 @@ public class DashboardService {
                     row.put("clothingName", rs.getString("ClothingName"));
                     row.put("category", rs.getString("Category"));
                     row.put("managerName", rs.getString("ManagerName"));
+                    row.put("ownerRole", rs.getString("OwnerRole"));
                     row.put("renterName", rs.getString("RenterName"));
                     row.put("paymentStatus", rs.getString("PaymentStatus"));
                     row.put("paymentProofImage", rs.getString("PaymentProofImage"));

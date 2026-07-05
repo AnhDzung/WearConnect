@@ -264,11 +264,52 @@
             color: #666;
         }
         
-        .no-data svg {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 20px;
-            opacity: 0.3;
+        
+        /* Dynamic and Premium Tab System */
+        .tabs-wrapper {
+            display: flex;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 25px;
+            gap: 8px;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #64748b;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            outline: none;
+        }
+
+        .tab-button:hover {
+            color: #0f172a;
+        }
+
+        .tab-button.active {
+            color: #6366f1;
+            border-bottom-color: #6366f1;
+        }
+
+        .tab-button .badge {
+            background-color: #f1f5f9;
+            color: #64748b;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active .badge {
+            background-color: #e0e7ff;
+            color: #6366f1;
         }
     </style>
 </head>
@@ -314,6 +355,31 @@
             </div>
         </form>
         
+        <c:set var="rentalCount" value="0" />
+        <c:set var="purchaseCount" value="0" />
+        <c:forEach var="order" items="${orders}">
+            <c:choose>
+                <c:when test="${order.ownerRole == 'Renter'}">
+                    <c:set var="purchaseCount" value="${purchaseCount + 1}" />
+                </c:when>
+                <c:otherwise>
+                    <c:set var="rentalCount" value="${rentalCount + 1}" />
+                </c:otherwise>
+            </c:choose>
+        </c:forEach>
+
+        <div class="tabs-wrapper">
+            <button id="tab-all" class="tab-button active" onclick="switchTab('all')">
+                Tất cả đơn hàng <span class="badge">${orders != null ? orders.size() : 0}</span>
+            </button>
+            <button id="tab-rental" class="tab-button" onclick="switchTab('rental')">
+                Đơn thuê <span class="badge">${rentalCount}</span>
+            </button>
+            <button id="tab-purchase" class="tab-button" onclick="switchTab('purchase')">
+                Đơn mua <span class="badge">${purchaseCount}</span>
+            </button>
+        </div>
+        
         <!-- Orders Table -->
         <div class="table-container">
             <c:choose>
@@ -323,9 +389,9 @@
                             <tr>
                                 <th>Mã ĐH</th>
                                 <th>Sản phẩm</th>
-                                <th>Người thuê</th>
-                                <th>Manager</th>
-                                <th>Giá thuê</th>
+                                <th>Người mua / thuê</th>
+                                <th>Manager / Renter</th>
+                                <th>Giá bán / thuê</th>
                                 <th>Tiền cọc</th>
                                 <th>Trạng thái</th>
                                 <th>Thanh toán</th>
@@ -335,7 +401,7 @@
                         </thead>
                         <tbody>
                             <c:forEach var="order" items="${orders}">
-                                <tr>
+                                <tr class="order-row ${order.ownerRole == 'Renter' ? 'type-purchase' : 'type-rental'}">
                                     <td>#${order.rentalOrderID}</td>
                                     <td>
                                         <strong>${order.clothingName}</strong><br>
@@ -347,7 +413,14 @@
                                         <fmt:formatNumber value="${order.totalPrice}" type="number" groupingUsed="true"/>đ
                                     </td>
                                     <td class="price">
-                                        <fmt:formatNumber value="${order.adjustedDepositAmount}" type="number" groupingUsed="true"/>đ
+                                        <c:choose>
+                                            <c:when test="${order.ownerRole == 'Renter'}">
+                                                <span style="color: #999; font-weight: normal;">-</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <fmt:formatNumber value="${order.adjustedDepositAmount}" type="number" groupingUsed="true"/>đ
+                                            </c:otherwise>
+                                        </c:choose>
                                     </td>
                                     <td>
                                         <span class="status ${order.status.toLowerCase()}">
@@ -403,6 +476,15 @@
                             </c:forEach>
                         </tbody>
                     </table>
+                    
+                    <!-- Dynamic client-side no-data for tabs -->
+                    <div id="js-no-data" class="no-data" style="display: none;">
+                        <svg fill="currentColor" viewBox="0 0 20 20" style="width: 80px; height: 80px; margin-bottom: 20px; opacity: 0.3;">
+                            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z"/>
+                        </svg>
+                        <h3>Không có đơn hàng</h3>
+                        <p>Không tìm thấy đơn hàng nào thuộc danh mục này.</p>
+                    </div>
                 </c:when>
                 <c:otherwise>
                     <div class="no-data">
@@ -488,6 +570,59 @@
                 document.getElementById('rejectForm').submit();
             }
         }
+
+        function switchTab(type) {
+            // Update active tab button style
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeBtn = document.getElementById('tab-' + type);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+
+            // Show/hide rows
+            let visibleCount = 0;
+            document.querySelectorAll('.order-row').forEach(row => {
+                if (type === 'all') {
+                    row.style.display = '';
+                    visibleCount++;
+                } else if (type === 'rental') {
+                    if (row.classList.contains('type-rental')) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                } else if (type === 'purchase') {
+                    if (row.classList.contains('type-purchase')) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+
+            // Update "no-data" state
+            const noDataEl = document.getElementById('js-no-data');
+            if (noDataEl) {
+                if (visibleCount === 0) {
+                    noDataEl.style.display = 'block';
+                } else {
+                    noDataEl.style.display = 'none';
+                }
+            }
+            
+            // Store selected tab in sessionStorage to persist across page reloads
+            sessionStorage.setItem('adminOrdersTab', type);
+        }
+        
+        // Auto restore last selected tab on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTab = sessionStorage.getItem('adminOrdersTab') || 'all';
+            switchTab(savedTab);
+        });
     </script>
 </body>
 </html>
