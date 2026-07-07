@@ -63,6 +63,140 @@
         .back-link:hover {
             color: var(--primary-color) !important;
         }
+
+        /* Custom Login Prompt Modal */
+        .wc-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+
+        .wc-modal-overlay.active {
+            opacity: 1;
+        }
+
+        .wc-modal-container {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(241, 245, 249, 0.8);
+            transform: translateY(20px) scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .wc-modal-overlay.active .wc-modal-container {
+            transform: translateY(0) scale(1);
+        }
+
+        .wc-modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #94a3b8;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .wc-modal-close:hover {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .wc-modal-icon {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+            color: var(--primary-color, #6366f1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: inset 0 2px 4px 0 rgba(99, 102, 241, 0.06);
+        }
+
+        .wc-modal-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 12px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .wc-modal-message {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #64748b;
+            margin: 0 0 28px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .wc-modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .wc-modal-btn {
+            display: block;
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .wc-btn-primary {
+            background: var(--primary-gradient, linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #06b6d4 100%));
+            color: #ffffff !important;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2), 0 2px 4px -1px rgba(99, 102, 241, 0.1);
+        }
+
+        .wc-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3), 0 4px 6px -2px rgba(99, 102, 241, 0.15);
+        }
+
+        .wc-btn-secondary {
+            background: #f8fafc;
+            color: #475569 !important;
+            border: 1px solid #e2e8f0;
+        }
+
+        .wc-btn-secondary:hover {
+            background: #f1f5f9;
+            color: #0f172a !important;
+            border-color: #cbd5e1;
+        }
     </style>
 </head>
 <body class="clothing-page">
@@ -456,10 +590,37 @@
 
     const isLoggedIn = <%= isLoggedIn %>;
 
+    function showLoginModal() {
+        const modal = document.getElementById('loginPromptModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            modal.offsetHeight; // force reflow
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeLoginModal() {
+        const modal = document.getElementById('loginPromptModal');
+        if (modal) {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }, 300);
+        }
+    }
+
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('loginPromptModal');
+        if (event.target === modal) {
+            closeLoginModal();
+        }
+    });
+
     function handleBooking() {
         if (!isLoggedIn) {
-            alert("Bạn vui lòng đăng nhập hoặc đăng ký hệ thống để sử dụng dịch vụ nhé!");
-            window.location.href = '${pageContext.request.contextPath}/login';
+            showLoginModal();
             return;
         }
         window.location.href = '${pageContext.request.contextPath}/rental?action=booking&clothingID=${clothing.clothingID}&hourlyPrice=${clothing.hourlyPrice != null ? clothing.hourlyPrice : 0}&dailyPrice=${clothing.dailyPrice != null ? clothing.dailyPrice : 0}';
@@ -467,8 +628,7 @@
 
     function handleAddToCart() {
         if (!isLoggedIn) {
-            alert("Bạn vui lòng đăng nhập hoặc đăng ký hệ thống để sử dụng dịch vụ nhé!");
-            window.location.href = '${pageContext.request.contextPath}/login';
+            showLoginModal();
             return;
         }
         window.location.href = '${pageContext.request.contextPath}/rental?action=booking&clothingID=${clothing.clothingID}&hourlyPrice=${clothing.hourlyPrice != null ? clothing.hourlyPrice : 0}&dailyPrice=${clothing.dailyPrice != null ? clothing.dailyPrice : 0}&addToCart=true';
@@ -503,6 +663,26 @@
         return false;
     }
 </script>
+
+<!-- Login Prompt Modal -->
+<div id="loginPromptModal" class="wc-modal-overlay" style="display: none;">
+    <div class="wc-modal-container">
+        <button class="wc-modal-close" onclick="closeLoginModal()">&times;</button>
+        <div class="wc-modal-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <polyline points="10 17 15 12 10 7"></polyline>
+                <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+        </div>
+        <h3 class="wc-modal-title">Yêu cầu Đăng nhập</h3>
+        <p class="wc-modal-message">Bạn vui lòng đăng nhập hoặc đăng ký tài khoản để tiếp tục thuê, mua trang phục hoặc thêm vào giỏ hàng nhé!</p>
+        <div class="wc-modal-actions">
+            <a href="${pageContext.request.contextPath}/login" class="wc-modal-btn wc-btn-primary">Đăng nhập</a>
+            <a href="${pageContext.request.contextPath}/register" class="wc-modal-btn wc-btn-secondary">Đăng ký ngay</a>
+        </div>
+    </div>
+</div>
 
 <jsp:include page="/WEB-INF/jsp/components/footer.jsp" />
 </body>
