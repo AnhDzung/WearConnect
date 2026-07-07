@@ -101,6 +101,16 @@ public class DatabaseConnection {
     }
 
     private static void initializeDatabaseSchema() {
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            if (conn != null) {
+                stmt.execute("UPDATE Accounts SET UserRole = 'Seller' WHERE UserRole = 'Renter'");
+                System.out.println("[DatabaseConnection] Migrated user role Renter to Seller successfully!");
+            }
+        } catch (SQLException e) {
+            System.err.println("[DatabaseConnection] Error running UserRole migration: " + e.getMessage());
+        }
+
         String sql = "IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='CartItems' AND xtype='U')\n" +
                      "BEGIN\n" +
                      "    CREATE TABLE CartItems (\n" +

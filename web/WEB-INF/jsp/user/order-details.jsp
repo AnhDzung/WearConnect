@@ -400,7 +400,7 @@
         <c:when test="${sessionScope.userRole == 'Admin'}">
             <button onclick="window.location.href='${pageContext.request.contextPath}/admin?action=orders'" style="padding: 10px 20px; background-color: #6c757d; color: white; border: none; cursor: pointer; margin-bottom: 20px;">Quay lại</button>
         </c:when>
-        <c:when test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Renter'}">
+        <c:when test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Seller'}">
             <button onclick="window.location.href='${pageContext.request.contextPath}/manager?action=orders'" style="padding: 10px 20px; background-color: #6c757d; color: white; border: none; cursor: pointer; margin-bottom: 20px;">Quay lại</button>
         </c:when>
         <c:otherwise>
@@ -413,7 +413,7 @@
             <c:choose>
                 <c:when test="${isMultiple}">
                     <!-- Multiple Orders Layout -->
-                    <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Renter' || sessionScope.userRole == 'Admin'}">
+                    <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Seller' || sessionScope.userRole == 'Admin'}">
                         <!-- Customer details at top for manager/admin -->
                         <div style="background-color: #fff9e6; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #ffa500; box-shadow: var(--shadow-sm);">
                             <div style="font-weight: bold; color: #ff8c00; margin-bottom: 12px; font-size: 16px;">📋 Thông tin người đặt</div>
@@ -442,7 +442,7 @@
                                     Model.Clothing c = (Model.Clothing) pageContext.getAttribute("currClothing");
                                     if (c != null) {
                                         Model.Account owner = DAO.AccountDAO.findById(c.getRenterID());
-                                        if (owner != null && "Renter".equals(owner.getUserRole())) {
+                                        if (owner != null && "Seller".equals(owner.getUserRole())) {
                                             pageContext.setAttribute("currIsPurchase", true);
                                         }
                                     }
@@ -642,7 +642,7 @@
                                     </c:if>
 
                                     <!-- Manager Actions for this item -->
-                                    <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Renter'}">
+                                    <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Seller'}">
                                         <c:if test="${ord.status == 'RETURN_REQUESTED' && empty ord.returnMethod}">
                                             <div style="margin-top:12px; padding:12px; border:1px solid #ff9800; border-radius:8px; background:#fff3e0; width: 100%;">
                                                 <h4 style="color:#e65100; margin-top:0; margin-bottom:8px;">⚠️ Khách hàng yêu cầu trả hàng</h4>
@@ -718,8 +718,8 @@
                                     <c:choose>
                                         <c:when test="${ord.returnMethod == 'MANAGER_PICKUP'}">
                                             <div style="margin-top:12px; padding:12px; border:1px solid #4caf50; border-radius:8px; background:#e8f5e9; width:100%; font-size:13px;">
-                                                <h4 style="color:#2e7d32; margin-top:0; margin-bottom:6px;">🚗 ${currIsPurchase ? 'Renter' : 'Manager'} sẽ đến lấy hàng</h4>
-                                                <p style="margin:4px 0;">${currIsPurchase ? 'Renter' : 'Manager'} sẽ liên hệ với bạn để lấy hàng.</p>
+                                                <h4 style="color:#2e7d32; margin-top:0; margin-bottom:6px;">🚗 ${currIsPurchase ? 'Seller' : 'Manager'} sẽ đến lấy hàng</h4>
+                                                <p style="margin:4px 0;">${currIsPurchase ? 'Seller' : 'Manager'} sẽ liên hệ với bạn để lấy hàng.</p>
                                                 <c:if test="${not empty currManager}">
                                                     <div style="background:#fff; padding:8px; border-radius:4px; margin-top:6px; font-size:12px;">
                                                         <strong>Liên hệ:</strong> 📞 ${currManager.phoneNumber} (${currManager.fullName})
@@ -763,7 +763,7 @@
                                 </div>
                                 
                                 <!-- Thông tin người thuê (chỉ manager/admin xem được) -->
-                                <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Renter' || sessionScope.userRole == 'Admin'}">
+                                <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Seller' || sessionScope.userRole == 'Admin'}">
                                     <div style="background-color: #fff9e6; padding: 12px; border-radius: 6px; margin: 12px 0; border-left: 3px solid #ffa500;">
                                         <div style="font-weight: bold; color: #ff8c00; margin-bottom: 8px;">📋 Thông tin người đặt</div>
                                         <div class="info-row" style="margin: 6px 0;">
@@ -816,7 +816,7 @@
                                         </div>
                                     </c:otherwise>
                                 </c:choose>
-                                <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Renter' || sessionScope.userRole == 'Admin'}">
+                                <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Seller' || sessionScope.userRole == 'Admin'}">
                                     <div class="info-row" style="background-color: #eef9f0; padding: 8px; border-radius: 4px; border-left: 3px solid #198754;">
                                         <strong>Thực nhận sau trừ phí (20%):</strong>
                                         <span style="font-weight: 700; color: #198754;">
@@ -825,7 +825,7 @@
                                     </div>
                                 </c:if>
                                 
-                                <c:if test="${sessionScope.userRole != 'Manager' && sessionScope.userRole != 'Renter'}">
+                                <c:if test="${sessionScope.userRole != 'Manager' && sessionScope.userRole != 'Seller'}">
                                     <!-- Tiền cọc chi tiết -->
                                     <c:choose>
                                         <c:when test="${isPurchase}">
@@ -989,13 +989,13 @@
                     <!-- User đã yêu cầu trả hàng - hiển thị thông báo thành công -->
                     <c:if test="${param.returnRequested == 'true'}">
                         <div class="alert alert-success" style="margin-top:12px;">
-                            ✅ Yêu cầu trả hàng đã được gửi! ${isPurchase ? 'Renter' : 'Manager'} sẽ chọn phương thức nhận hàng sớm.
+                            ✅ Yêu cầu trả hàng đã được gửi! ${isPurchase ? 'Seller' : 'Manager'} sẽ chọn phương thức nhận hàng sớm.
                         </div>
                     </c:if>
                     
                     <c:if test="${param.trackingSubmitted == 'true'}">
                         <div class="alert alert-success" style="margin-top:12px;">
-                            ✅ Mã vận đơn đã được cập nhật! ${isPurchase ? 'Renter' : 'Manager'} sẽ theo dõi và xác nhận khi nhận được hàng.
+                            ✅ Mã vận đơn đã được cập nhật! ${isPurchase ? 'Seller' : 'Manager'} sẽ theo dõi và xác nhận khi nhận được hàng.
                         </div>
                     </c:if>
                     
@@ -1004,7 +1004,7 @@
                         <c:if test="${empty order.returnMethod}">
                             <div style="margin-top:20px; padding:16px; border:2px solid #ff9800; border-radius:8px; background:#fff3e0;">
                                 <h3 style="color:#e65100; margin-top:0;">⏳ Đang chờ xác nhận</h3>
-                                <p>Yêu cầu trả hàng của bạn đã được gửi. ${isPurchase ? 'Renter' : 'Manager'} đang xem xét và sẽ chọn phương thức nhận hàng sớm.</p>
+                                <p>Yêu cầu trả hàng của bạn đã được gửi. ${isPurchase ? 'Seller' : 'Manager'} đang xem xét và sẽ chọn phương thức nhận hàng sớm.</p>
                             </div>
                         </c:if>
                         
@@ -1024,11 +1024,11 @@
                             <c:choose>
                                 <c:when test="${order.returnMethod == 'MANAGER_PICKUP'}">
                                     <div style="margin-top:20px; padding:16px; border:2px solid #4caf50; border-radius:8px; background:#e8f5e9;">
-                                        <h3 style="color:#2e7d32; margin-top:0;">🚗 ${isPurchase ? 'Renter' : 'Manager'} sẽ đến lấy hàng</h3>
-                                        <p>${isPurchase ? 'Renter' : 'Manager'} sẽ liên hệ với bạn để sắp xếp thời gian lấy hàng.</p>
+                                        <h3 style="color:#2e7d32; margin-top:0;">🚗 ${isPurchase ? 'Seller' : 'Manager'} sẽ đến lấy hàng</h3>
+                                        <p>${isPurchase ? 'Seller' : 'Manager'} sẽ liên hệ với bạn để sắp xếp thời gian lấy hàng.</p>
                                         <c:if test="${not empty manager}">
                                             <div style="background:#fff; padding:12px; border-radius:4px; margin-top:12px;">
-                                                <strong>Thông tin liên hệ ${isPurchase ? 'Renter' : 'Manager'}:</strong><br/>
+                                                <strong>Thông tin liên hệ ${isPurchase ? 'Seller' : 'Manager'}:</strong><br/>
                                                 📞 SĐT: ${manager.phoneNumber}<br/>
                                                 👤 Tên: ${manager.fullName}
                                             </div>
@@ -1059,7 +1059,7 @@
                                         <c:if test="${not empty order.returnTrackingNumber}">
                                             <div style="margin-top:16px; padding:12px; background:#fff; border-radius:4px;">
                                                 <strong>✅ Mã vận đơn trả hàng:</strong> ${order.returnTrackingNumber}
-                                                <p style="color:#666; margin-top:8px;">Đang chờ ${isPurchase ? 'renter' : 'manager'} xác nhận nhận hàng.</p>
+                                                <p style="color:#666; margin-top:8px;">Đang chờ ${isPurchase ? 'seller' : 'manager'} xác nhận nhận hàng.</p>
                                             </div>
                                         </c:if>
                                     </div>
@@ -1072,12 +1072,12 @@
                     <c:if test="${order.status == 'RETURNED' && sessionScope.userRole == 'User'}">
                         <c:if test="${param.returnConfirmed == 'true'}">
                             <div class="alert alert-success" style="margin-top:12px;">
-                                ✅ ${isPurchase ? 'Renter' : 'Manager'} đã xác nhận nhận hàng trả về! 
+                                ✅ ${isPurchase ? 'Seller' : 'Manager'} đã xác nhận nhận hàng trả về! 
                             </div>
                         </c:if>
                         <div style="margin-top:20px; padding:20px; border:2px solid #4caf50; border-radius:8px; background:#e8f5e9;">
                             <h3 style="color:#2e7d32; margin-top:0;">✅ Đã trả hàng thành công</h3>
-                            <p>${isPurchase ? 'Renter' : 'Manager'} đã xác nhận nhận được hàng trả về. Admin đang xử lý hoàn tiền cho bạn.</p>
+                            <p>${isPurchase ? 'Seller' : 'Manager'} đã xác nhận nhận được hàng trả về. Admin đang xử lý hoàn tiền cho bạn.</p>
                             <p style="color:#666; margin-bottom:0;">Vui lòng chờ thông báo từ admin về việc hoàn tiền.</p>
                         </div>
                     </c:if>
@@ -1121,7 +1121,7 @@
                         </c:if>
                     </c:if>
 
-                    <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Renter'}">
+                    <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Seller'}">
                         <!-- Manager chọn phương thức nhận hàng khi user yêu cầu trả -->
                         <c:if test="${order.status == 'RETURN_REQUESTED' && empty order.returnMethod}">
                             <div style="margin-top:20px; padding:20px; border:2px solid #ff9800; border-radius:8px; background:#fff3e0;">
@@ -1312,7 +1312,7 @@
     </c:if>
 
     <!-- Tracking info (non-manager) -->
-    <c:if test="${sessionScope.userRole != 'Manager' && sessionScope.userRole != 'Renter' && not empty order.trackingNumber}">
+    <c:if test="${sessionScope.userRole != 'Manager' && sessionScope.userRole != 'Seller' && not empty order.trackingNumber}">
         <div style="margin-top:12px; padding:12px; border:1px solid #e1e5ee; border-radius:6px; background:#f1f7ff;">
             <strong>Mã vận đơn:</strong> ${order.trackingNumber}
         </div>

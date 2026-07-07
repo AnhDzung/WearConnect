@@ -43,7 +43,7 @@ public class AuthPageController {
             session.setAttribute("cart", cart);
 
             String role = account.getUserRole();
-            if ("User".equals(role) || "Manager".equals(role) || "Renter".equals(role)) {
+            if ("User".equals(role) || "Manager".equals(role) || "Seller".equals(role)) {
                 checkProfileCompletionAndNotify(account);
             }
 
@@ -52,7 +52,7 @@ public class AuthPageController {
             }
             if ("Admin".equals(role)) {
                 response.sendRedirect(request.getContextPath() + "/admin");
-            } else if ("Manager".equals(role) || "Renter".equals(role)) {
+            } else if ("Manager".equals(role) || "Seller".equals(role)) {
                 response.sendRedirect(request.getContextPath() + "/manager");
             } else if ("User".equals(role)) {
                 response.sendRedirect(request.getContextPath() + "/home");
@@ -173,7 +173,7 @@ public class AuthPageController {
             if (isIncomplete && missingFields.length() > 0) {
                 String fields = missingFields.substring(0, missingFields.length() - 2);
                 String role = account.getUserRole() == null ? "" : account.getUserRole().trim();
-                String chatbotGuidance = ("Manager".equals(role) || "Renter".equals(role))
+                String chatbotGuidance = ("Manager".equals(role) || "Seller".equals(role))
                         ? "Bên cạnh đó nếu bạn muốn tìm hiểu về quy trình đăng tải quần áo lên website thì có thể vào phần chatbot và hỏi về quy trình đăng tải quần áo."
                         : "Bên cạnh đó nếu bạn muốn tìm hiểu về quy trình thuê hàng thì có thể vào phần chatbot và hỏi về quy trình đặt thuê.";
                 String message = "Cảm ơn bạn đã tin tưởng và sử dụng WearConnect. Hãy cập nhật đầy đủ thông tin của bạn trong profile để trải nghiệm tốt hơn!"

@@ -4,7 +4,7 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%
     String userRole = (session != null && session.getAttribute("userRole") != null) ? ((String) session.getAttribute("userRole")).trim() : "";
-    boolean isRenter = "Renter".equals(userRole);
+    boolean isRenter = "Seller".equals(userRole);
 %>
 <!DOCTYPE html>
 <html>

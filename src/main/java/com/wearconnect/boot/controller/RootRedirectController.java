@@ -17,7 +17,7 @@ public class RootRedirectController {
         if ("Admin".equals(role)) {
             return "redirect:/admin";
         }
-        if ("Manager".equals(role) || "Renter".equals(role)) {
+        if ("Manager".equals(role) || "Seller".equals(role)) {
             return "redirect:/manager";
         }
         if ("User".equals(role)) {

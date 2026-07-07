@@ -26,12 +26,12 @@ public class BuyPageController {
         int currentPage = Math.max(page, 1);
 
         // Filter products with Renter role (products for sale)
-        int totalItems = ClothingDAO.countHomeProducts("Renter", type, query, categories, dateFrom, dateTo);
+        int totalItems = ClothingDAO.countHomeProducts("Seller", type, query, categories, dateFrom, dateTo);
         int totalPages = Math.max((int) Math.ceil(totalItems / (double) pageSize), 1);
         if (currentPage > totalPages) currentPage = totalPages;
 
         List<Clothing> products = ClothingDAO.getHomeProducts(
-                "Renter",
+                "Seller",
                 type,
                 query,
                 categories,

@@ -217,7 +217,7 @@ public class RentalPageController {
                     boolean isForSale = false;
                     if (firstClothing != null) {
                         Model.Account owner = DAO.AccountDAO.findById(firstClothing.getRenterID());
-                        if (owner != null && "Renter".equals(owner.getUserRole())) {
+                        if (owner != null && "Seller".equals(owner.getUserRole())) {
                             isForSale = true;
                         }
                     }
@@ -238,7 +238,7 @@ public class RentalPageController {
                         boolean isForSale = false;
                         if (clothing != null) {
                             Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
-                            if (owner != null && "Renter".equals(owner.getUserRole())) {
+                            if (owner != null && "Seller".equals(owner.getUserRole())) {
                                 isForSale = true;
                             }
                         }
@@ -402,7 +402,7 @@ public class RentalPageController {
                     Model.Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
                     if (clothing != null) {
                         Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
-                        if (owner != null && "Renter".equals(owner.getUserRole())) {
+                        if (owner != null && "Seller".equals(owner.getUserRole())) {
                             isForSale = true;
                         }
                     }

@@ -638,7 +638,7 @@ public class AdminPageController {
     private void showRentersPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            List<Account> renters = AccountDAO.findByRole("Renter");
+            List<Account> renters = AccountDAO.findByRole("Seller");
             request.setAttribute("renters", renters);
             request.setAttribute("view", "renters");
 
@@ -682,7 +682,7 @@ public class AdminPageController {
             }
             
             String hashedPassword = util.PasswordUtil.hashPassword(password);
-            Account account = new Account(username, hashedPassword, email, "Renter", fullName);
+            Account account = new Account(username, hashedPassword, email, "Seller", fullName);
             
             boolean created = AccountDAO.create(account);
             if (created) {

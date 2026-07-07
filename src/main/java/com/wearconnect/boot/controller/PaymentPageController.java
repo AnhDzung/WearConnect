@@ -128,7 +128,7 @@ public class PaymentPageController {
                 Model.Clothing clothing = DAO.ClothingDAO.getClothingByID(firstOrder.getClothingID());
                 if (clothing != null) {
                     Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
-                    if (owner != null && "Renter".equals(owner.getUserRole())) {
+                    if (owner != null && "Seller".equals(owner.getUserRole())) {
                         isForSale = true;
                     }
                 }

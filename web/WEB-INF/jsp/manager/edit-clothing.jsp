@@ -41,7 +41,7 @@
     List<Color> availableColors = ColorDAO.getColorsByManager(managerID);
     List<Color> clothingColors = clothingID > 0 ? ColorDAO.getColorsByClothing(clothingID) : new java.util.ArrayList<>();
     String userRole = (session != null && session.getAttribute("userRole") != null) ? ((String) session.getAttribute("userRole")).trim() : "";
-    boolean isRenter = "Renter".equals(userRole);
+    boolean isRenter = "Seller".equals(userRole);
 %>
 <!DOCTYPE html>
 <html>

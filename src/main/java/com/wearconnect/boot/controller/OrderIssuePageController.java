@@ -40,7 +40,7 @@ public class OrderIssuePageController {
                     int currentUserID = (int) session.getAttribute("accountID");
                     String userRole = (String) session.getAttribute("userRole");
                     boolean isAdmin = "Admin".equals(userRole);
-                    boolean isManager = "Manager".equals(userRole) || "Renter".equals(userRole);
+                    boolean isManager = "Manager".equals(userRole) || "Seller".equals(userRole);
                     boolean canView = isAdmin
                             || (isManager && order.getManagerID() == currentUserID)
                             || order.getRenterUserID() == currentUserID;

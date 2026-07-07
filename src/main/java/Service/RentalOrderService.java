@@ -27,7 +27,7 @@ public class RentalOrderService {
         if (clothing == null) return -1;
         
         Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
-        boolean isForSale = owner != null && "Renter".equals(owner.getUserRole());
+        boolean isForSale = owner != null && "Seller".equals(owner.getUserRole());
         
         double totalPrice = 0.0;
         double depositAmount = 0.0;
@@ -166,7 +166,7 @@ public class RentalOrderService {
         if (clothing == null) return false;
         
         Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
-        boolean isForSale = owner != null && "Renter".equals(owner.getUserRole());
+        boolean isForSale = owner != null && "Seller".equals(owner.getUserRole());
         
         if (!isForSale && (startDate == null || endDate == null)) {
             return false;
@@ -204,7 +204,7 @@ public class RentalOrderService {
         if (clothing == null) return conflictingOrders;
         
         Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
-        boolean isForSale = owner != null && "Renter".equals(owner.getUserRole());
+        boolean isForSale = owner != null && "Seller".equals(owner.getUserRole());
         if (isForSale) {
             // For sale items, we don't have overlapping date conflicts. They only conflict if out of stock.
             return conflictingOrders;
@@ -230,7 +230,7 @@ public class RentalOrderService {
         if (clothing == null) return 0;
         
         Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
-        boolean isForSale = owner != null && "Renter".equals(owner.getUserRole());
+        boolean isForSale = owner != null && "Seller".equals(owner.getUserRole());
         
         if (!isForSale && (startDate == null || endDate == null)) {
             return 0;

@@ -8,7 +8,7 @@
         : -1;
     List<Color> availableColors = ColorDAO.getColorsByManager(managerID);
     String userRole = (session != null && session.getAttribute("userRole") != null) ? ((String) session.getAttribute("userRole")).trim() : "";
-    boolean isRenter = "Renter".equals(userRole);
+    boolean isRenter = "Seller".equals(userRole);
 %>
 <!DOCTYPE html>
 <html>

@@ -598,11 +598,11 @@
             <% } %>
             
 
-            <!-- Menu cho Manager hoặc Renter -->
-            <% if ("Manager".equals(userRole) || "Renter".equals(userRole)) { %>
+            <!-- Menu cho Manager hoặc Seller -->
+            <% if ("Manager".equals(userRole) || "Seller".equals(userRole)) { %>
                 <li><a href="${pageContext.request.contextPath}/manager">Dashboard</a></li>
                 <li><a href="${pageContext.request.contextPath}/clothing?action=myClothing">Quản Lý Sản Phẩm</a></li>
-                <li><a href="${pageContext.request.contextPath}/manager?action=orders"><%= "Renter".equals(userRole) ? "Đơn Hàng Bán" : "Đơn Đặt Thuê" %></a></li>
+                <li><a href="${pageContext.request.contextPath}/manager?action=orders"><%= "Seller".equals(userRole) ? "Đơn Hàng Bán" : "Đơn Đặt Thuê" %></a></li>
                 <li><a href="${pageContext.request.contextPath}/manager?action=ratings">Đánh Giá</a></li>
             <% } %>
             

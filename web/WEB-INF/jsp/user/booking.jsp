@@ -29,7 +29,7 @@
     boolean isForSale = false;
     if (clothing != null) {
         Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
-        if (owner != null && "Renter".equals(owner.getUserRole())) {
+        if (owner != null && "Seller".equals(owner.getUserRole())) {
             isForSale = true;
         }
     }

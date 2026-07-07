@@ -213,7 +213,7 @@
     Model.Clothing clothing = (Model.Clothing) request.getAttribute("clothing");
     if (clothing != null) {
         Model.Account owner = DAO.AccountDAO.findById(clothing.getRenterID());
-        if (owner != null && "Renter".equals(owner.getUserRole())) {
+        if (owner != null && "Seller".equals(owner.getUserRole())) {
             isForSale = true;
         }
     }
@@ -342,7 +342,7 @@
             </c:choose>
 
             <div class="action-row">
-                <% if (!"Manager".equals(role) && !"Admin".equals(role) && !"Renter".equals(role)) { %>
+                <% if (!"Manager".equals(role) && !"Admin".equals(role) && !"Seller".equals(role)) { %>
                     <% if (isForSale) { %>
                         <button class="btn btn-book" onclick="handleBooking()" type="button">Mua ngay</button>
                         <button class="btn btn-book" onclick="handleAddToCart()" type="button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-left: 10px;">Thêm vào giỏ hàng 🛒</button>

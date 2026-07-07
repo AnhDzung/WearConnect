@@ -203,7 +203,7 @@ public class RentalOrderDAO {
 
     public static List<RentalOrder> getRentalOrdersByStatus(String status) {
         List<RentalOrder> list = new ArrayList<>();
-        String sql = "SELECT ro.*, c.ClothingName, " +
+        String sql = "SELECT ro.*, c.ClothingName, c.RenterID, " +
                  "a.Username AS RenterUsername, a.FullName AS RenterFullName, " +
                  "a.Email AS RenterEmail, a.PhoneNumber AS RenterPhone, a.Address AS RenterAddress " +
                  "FROM RentalOrder ro " +
@@ -475,6 +475,21 @@ public class RentalOrderDAO {
             ps.setInt(1, rentalOrderID);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static boolean cancelOverdueUnshippedOrder(int rentalOrderID, double penaltyAmount, double refundAmount) {
+        String sql = "UPDATE RentalOrder SET Status = 'CANCELLED', AdditionalCharges = ?, RefundAmount = ? WHERE RentalOrderID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDouble(1, penaltyAmount);
+            ps.setDouble(2, refundAmount);
+            ps.setInt(3, rentalOrderID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("[RentalOrderDAO] Error auto-cancelling overdue order: " + e.getMessage());
             e.printStackTrace();
         }
         return false;
