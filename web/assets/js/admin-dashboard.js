@@ -3,7 +3,7 @@
         return window.WEARCONNECT_CTX || '';
     }
 
-    function openPaymentModal(orderID, depositAmount, totalAmount) {
+    function openPaymentModal(orderID, depositAmount, totalAmount, isForSale) {
         const rentalAmount = parseFloat(totalAmount) || 0;
         const systemFee = rentalAmount * 0.20;
         const managerReceive = rentalAmount - systemFee;
@@ -15,6 +15,30 @@
         const managerReceiveEl = document.getElementById('managerReceiveDisplay');
         if (systemFeeEl) systemFeeEl.textContent = systemFee.toLocaleString('vi-VN');
         if (managerReceiveEl) managerReceiveEl.textContent = managerReceive.toLocaleString('vi-VN');
+
+        const depositSection = document.getElementById('depositSection');
+        const refundProofInput = document.querySelector('input[name="refundProof"]');
+        const rentalLabel = document.getElementById('rentalLabel');
+        const recipientRoleDisplay = document.getElementById('recipientRoleDisplay');
+        const proofLabel = document.getElementById('proofLabel');
+
+        if (isForSale) {
+            if (depositSection) depositSection.style.display = 'none';
+            if (refundProofInput) {
+                refundProofInput.removeAttribute('required');
+                refundProofInput.value = '';
+            }
+            if (rentalLabel) rentalLabel.innerHTML = '<strong>Tiền mua trả cho Seller:</strong>';
+            if (recipientRoleDisplay) recipientRoleDisplay.textContent = 'Seller';
+            if (proofLabel) proofLabel.textContent = 'Upload ảnh chứng minh đã trả tiền cho Seller:';
+        } else {
+            if (depositSection) depositSection.style.display = 'block';
+            if (refundProofInput) refundProofInput.setAttribute('required', 'required');
+            if (rentalLabel) rentalLabel.innerHTML = '<strong>Tiền thuê trả cho Manager:</strong>';
+            if (recipientRoleDisplay) recipientRoleDisplay.textContent = 'Manager';
+            if (proofLabel) proofLabel.textContent = 'Upload ảnh chứng minh đã trả tiền cho Manager:';
+        }
+
         document.getElementById('paymentModal').classList.add('show');
     }
 
@@ -23,11 +47,12 @@
         const orderID = container.querySelector('.payment-order-id')?.textContent?.trim();
         const depositAmount = container.querySelector('.payment-deposit-amount')?.textContent?.trim();
         const totalAmount = container.querySelector('.payment-total-amount')?.textContent?.trim();
+        const isForSale = container.querySelector('.payment-is-for-sale')?.textContent?.trim() === 'true';
         if (!orderID) {
             alert('Không tìm thấy thông tin đơn hàng.');
             return;
         }
-        openPaymentModal(orderID, depositAmount || '0', totalAmount || '0');
+        openPaymentModal(orderID, depositAmount || '0', totalAmount || '0', isForSale);
     }
 
     function closePaymentModal() {

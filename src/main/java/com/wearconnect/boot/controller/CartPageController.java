@@ -201,22 +201,59 @@ public class CartPageController {
                 }
             }
 
-            // 2. Create rental orders
+            // 2. Create rental orders (grouped by shop/manager & rental/buy type)
             List<Integer> createdOrderIDs = new ArrayList<>();
             try {
+                // Group itemsToCheckout by (managerID, isBuy)
+                java.util.Map<String, List<CartItem>> groups = new java.util.LinkedHashMap<>();
                 for (CartItem item : itemsToCheckout) {
-                    int orderID = RentalOrderController.createRentalOrder(
-                            item.getClothingID(),
+                    Clothing clothing = ClothingDAO.getClothingByID(item.getClothingID());
+                    int managerID = (clothing != null) ? clothing.getRenterID() : 0;
+                    boolean isBuy = "buy".equalsIgnoreCase(item.getRentalType());
+                    String groupKey = managerID + "_" + (isBuy ? "buy" : "rent");
+                    groups.computeIfAbsent(groupKey, k -> new ArrayList<>()).add(item);
+                }
+
+                for (java.util.Map.Entry<String, List<CartItem>> entry : groups.entrySet()) {
+                    List<CartItem> groupItems = entry.getValue();
+                    if (groupItems.isEmpty()) continue;
+
+                    // Create the first order in the group to get its ID
+                    CartItem firstItem = groupItems.get(0);
+                    int firstOrderID = RentalOrderController.createRentalOrder(
+                            firstItem.getClothingID(),
                             userID,
-                            item.getStartDate(),
-                            item.getEndDate(),
-                            item.getSelectedSize(),
-                            item.getColorID()
+                            firstItem.getStartDate(),
+                            firstItem.getEndDate(),
+                            firstItem.getSelectedSize(),
+                            firstItem.getColorID()
                     );
-                    if (orderID > 0) {
-                        createdOrderIDs.add(orderID);
-                    } else {
-                        throw new Exception("Lỗi khi tạo đơn thuê cho sản phẩm: " + item.getClothingName());
+
+                    if (firstOrderID <= 0) {
+                        throw new Exception("Lỗi khi tạo đơn hàng cho sản phẩm: " + firstItem.getClothingName());
+                    }
+                    createdOrderIDs.add(firstOrderID);
+
+                    // Generate a shared OrderCode based on firstOrderID
+                    String orderCode = "WRC" + String.format("%05d", firstOrderID);
+                    DAO.RentalOrderDAO.updateOrderCode(firstOrderID, orderCode);
+
+                    // Create subsequent orders in the same group and associate them with the same OrderCode
+                    for (int i = 1; i < groupItems.size(); i++) {
+                        CartItem otherItem = groupItems.get(i);
+                        int otherOrderID = RentalOrderController.createRentalOrder(
+                                otherItem.getClothingID(),
+                                userID,
+                                otherItem.getStartDate(),
+                                otherItem.getEndDate(),
+                                otherItem.getSelectedSize(),
+                                otherItem.getColorID()
+                        );
+                        if (otherOrderID <= 0) {
+                            throw new Exception("Lỗi khi tạo đơn hàng cho sản phẩm: " + otherItem.getClothingName());
+                        }
+                        createdOrderIDs.add(otherOrderID);
+                        DAO.RentalOrderDAO.updateOrderCode(otherOrderID, orderCode);
                     }
                 }
                 

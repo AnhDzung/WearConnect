@@ -49,6 +49,14 @@ public class DatabaseMigrationConfig implements CommandLineRunner {
                 "END;";
             stmt.execute(addDiscountAmountColumn);
             
+            // 4. Add OrderCode column to RentalOrder if not exists
+            String addOrderCodeColumn = 
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RentalOrder') AND name = 'OrderCode') " +
+                "BEGIN " +
+                "    ALTER TABLE RentalOrder ADD OrderCode VARCHAR(50) NULL; " +
+                "END;";
+            stmt.execute(addOrderCodeColumn);
+            
             System.out.println("[DatabaseMigrationConfig] Database migrations checked and executed successfully!");
         } catch (Exception e) {
             System.err.println("[DatabaseMigrationConfig] Database migration failed: " + e.getMessage());

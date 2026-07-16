@@ -25,4 +25,9 @@ public class RootRedirectController {
         }
         return "redirect:/home";
     }
+
+    @GetMapping("/install")
+    public String install() {
+        return "install";
+    }
 }

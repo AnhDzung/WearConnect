@@ -403,6 +403,10 @@
                                 if (manager != null && manager.getBankAccountNumber() != null && !manager.getBankAccountNumber().trim().isEmpty()) {
                                     managerBankInfo = manager.getBankAccountNumber() + " - " + (manager.getBankName() != null ? manager.getBankName() : "");
                                 }
+                                boolean isOrderForSale = false;
+                                if (manager != null && "Seller".equals(manager.getUserRole())) {
+                                    isOrderForSale = true;
+                                }
                         %>
                             <tr>
                                 <td>#<%= order.getRentalOrderID() %></td>
@@ -427,6 +431,7 @@
                                     <span class="payment-order-id" style="display:none;"><%= order.getRentalOrderID() %></span>
                                     <span class="payment-deposit-amount" style="display:none;"><%= order.getDepositAmount() %></span>
                                     <span class="payment-total-amount" style="display:none;"><%= order.getTotalPrice() %></span>
+                                    <span class="payment-is-for-sale" style="display:none;"><%= isOrderForSale %></span>
                                 </td>
                             </tr>
                         <%
@@ -568,7 +573,7 @@
                 <input type="hidden" name="action" value="confirmPayment">
                 <input type="hidden" name="orderID" id="paymentOrderID">
                 <div style="padding: 15px 0; display: grid; gap: 15px;">
-                    <div>
+                    <div id="depositSection">
                         <strong>Tiền cọc trả lại User:</strong> <span id="depositDisplay"></span> VND
                         <div style="margin-top: 8px;">
                             <label style="display: block; margin-bottom: 5px;">Upload ảnh chứng minh đã hoàn cọc:</label>
@@ -576,13 +581,13 @@
                         </div>
                     </div>
                     <div>
-                        <strong>Tiền thuê trả cho Manager:</strong> <span id="rentalDisplay"></span> VND
+                        <span id="rentalLabel"><strong>Tiền thuê trả cho Manager:</strong></span> <span id="rentalDisplay"></span> VND
                         <div style="margin-top: 6px; color: #555;">
                             <div>Phí hệ thống (20%): <strong><span id="systemFeeDisplay">0</span> VND</strong></div>
-                            <div>Số tiền Manager nhận: <strong><span id="managerReceiveDisplay">0</span> VND</strong></div>
+                            <div>Số tiền <span id="recipientRoleDisplay">Manager</span> nhận: <strong><span id="managerReceiveDisplay">0</span> VND</strong></div>
                         </div>
                         <div style="margin-top: 8px;">
-                            <label style="display: block; margin-bottom: 5px;">Upload ảnh chứng minh đã trả tiền cho Manager:</label>
+                            <label style="display: block; margin-bottom: 5px;" id="proofLabel">Upload ảnh chứng minh đã trả tiền cho Manager:</label>
                             <input type="file" name="managerPaymentProof" accept="image/*" required style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                         </div>
                     </div>

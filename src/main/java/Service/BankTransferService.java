@@ -60,6 +60,10 @@ public class BankTransferService {
      */
     public static BankTransferConfig.BankDetails getDisplayBankDetails(int rentalOrderID, double amount) {
         BankTransferConfig.BankDetails details = BankTransferConfig.getMBBankDetails(amount, rentalOrderID);
+        Model.RentalOrder order = DAO.RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+        if (order != null && order.getOrderCode() != null && !order.getOrderCode().isEmpty()) {
+            details.setOrderReference(order.getOrderCode());
+        }
         return details;
     }
     
@@ -79,6 +83,10 @@ public class BankTransferService {
             
             // Tạo nội dung chuyển khoản chuẩn với giao diện (VD: WRC00001)
             String orderReference = "WRC" + String.format("%05d", rentalOrderID);
+            Model.RentalOrder order = DAO.RentalOrderDAO.getRentalOrderByID(rentalOrderID);
+            if (order != null && order.getOrderCode() != null && !order.getOrderCode().isEmpty()) {
+                orderReference = order.getOrderCode();
+            }
             
             String addInfo = java.net.URLEncoder.encode(orderReference, "UTF-8").replace("+", "%20");
             String accountName = java.net.URLEncoder.encode(BankTransferConfig.ACCOUNT_HOLDER_NAME, "UTF-8").replace("+", "%20");

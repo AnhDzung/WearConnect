@@ -354,6 +354,7 @@ public class RentalOrderDAO {
         try { order.setAdjustedDepositAmount(rs.getDouble("AdjustedDepositAmount")); } catch (SQLException ignore) {}
         try { order.setVoucherCode(rs.getString("VoucherCode")); } catch (SQLException ignore) {}
         try { order.setDiscountAmount(rs.getDouble("DiscountAmount")); } catch (SQLException ignore) {}
+        try { order.setOrderCode(rs.getString("OrderCode")); } catch (SQLException ignore) {}
         
         // Map return/refund fields
         try { 
@@ -820,6 +821,42 @@ public class RentalOrderDAO {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static boolean updateOrderCode(int rentalOrderID, String orderCode) {
+        String sql = "UPDATE RentalOrder SET OrderCode = ? WHERE RentalOrderID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, orderCode);
+            ps.setInt(2, rentalOrderID);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static List<RentalOrder> getRentalOrdersByOrderCode(String orderCode) {
+        List<RentalOrder> list = new ArrayList<>();
+        String sql = "SELECT ro.*, c.ClothingName, " +
+                     "a.Username AS RenterUsername, a.FullName AS RenterFullName, " +
+                     "a.Email AS RenterEmail, a.PhoneNumber AS RenterPhone, a.Address AS RenterAddress " +
+                     "FROM RentalOrder ro " +
+                     "LEFT JOIN Clothing c ON ro.ClothingID = c.ClothingID " +
+                     "LEFT JOIN Accounts a ON ro.RenterUserID = a.AccountID " +
+                     "WHERE ro.OrderCode = ? ORDER BY ro.RentalOrderID";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, orderCode);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRowToRentalOrder(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     private static boolean hasColumn(Connection conn, String tableName, String columnName) {

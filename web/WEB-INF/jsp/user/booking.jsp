@@ -524,24 +524,44 @@
             <% } %>
             
             <div class="pricing-card">
-                <div class="pricing-item">
-                    <span class="pricing-label">Thuê theo giờ</span>
-                    <span class="pricing-value"><fmt:formatNumber value="${hourlyPrice}" type="number" />đ<small style="font-weight: 500; font-size: 11px; color: var(--gray-500);">/giờ</small></span>
-                </div>
-                <div class="pricing-item">
-                    <span class="pricing-label">Thuê theo ngày</span>
-                    <span class="pricing-value"><fmt:formatNumber value="${dailyPrice}" type="number" />đ<small style="font-weight: 500; font-size: 11px; color: var(--gray-500);">/ngày</small></span>
-                </div>
+                <c:choose>
+                    <c:when test="${isForSale}">
+                        <div class="pricing-item">
+                            <span class="pricing-label">Giá bán sản phẩm</span>
+                            <span class="pricing-value" style="color: #d97706;"><fmt:formatNumber value="${dailyPrice}" type="number" />đ</span>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="pricing-item">
+                            <span class="pricing-label">Thuê theo giờ</span>
+                            <span class="pricing-value"><fmt:formatNumber value="${hourlyPrice}" type="number" />đ<small style="font-weight: 500; font-size: 11px; color: var(--gray-500);">/giờ</small></span>
+                        </div>
+                        <div class="pricing-item">
+                            <span class="pricing-label">Thuê theo ngày</span>
+                            <span class="pricing-value"><fmt:formatNumber value="${dailyPrice}" type="number" />đ<small style="font-weight: 500; font-size: 11px; color: var(--gray-500);">/ngày</small></span>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
             </div>
             <% } else { %>
             <p>Không tìm thấy thông tin sản phẩm.</p>
             <% } %>
             
             <div class="policy-box">
-                <strong style="display: block; margin-bottom: 4px; font-weight: 700;">🛡️ Chính sách đặt thuê của WearConnect:</strong>
-                • Tiền cọc sẽ được tính tự động dựa trên giá trị thực tế của sản phẩm.<br>
-                • Bạn sẽ được hoàn tiền cọc 100% sau khi trả lại hàng sạch sẽ, nguyên vẹn và không hư hỏng.<br>
-                • Vui lòng chọn chính xác khung thời gian bắt đầu và kết thúc thuê.
+                <c:choose>
+                    <c:when test="${isForSale}">
+                        <strong style="display: block; margin-bottom: 4px; font-weight: 700;">🛡️ Chính sách mua hàng của WearConnect:</strong>
+                        • Sản phẩm mua đứt sẽ thuộc quyền sở hữu vĩnh viễn của bạn.<br>
+                        • Đơn hàng sẽ được xử lý đóng gói và vận chuyển bởi Seller.<br>
+                        • Vui lòng kiểm tra kỹ thông tin sản phẩm và phân loại trước khi đặt mua.
+                    </c:when>
+                    <c:otherwise>
+                        <strong style="display: block; margin-bottom: 4px; font-weight: 700;">🛡️ Chính sách đặt thuê của WearConnect:</strong>
+                        • Tiền cọc sẽ được tính tự động dựa trên giá trị thực tế của sản phẩm.<br>
+                        • Bạn sẽ được hoàn tiền cọc 100% sau khi trả lại hàng sạch sẽ, nguyên vẹn và không hư hỏng.<br>
+                        • Vui lòng chọn chính xác khung thời gian bắt đầu và kết thúc thuê.
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
         

@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 
 @Controller
@@ -260,29 +261,45 @@ public class AdminPageController {
             throws ServletException, IOException {
         try {
             int orderID = Integer.parseInt(request.getParameter("orderID"));
-            RentalOrderService.updateOrderStatus(orderID, "PAYMENT_VERIFIED");
-
-            try {
-                Payment payment = PaymentController.getPaymentStatus(orderID);
-                if (payment != null) {
-                    PaymentController.completePayment(payment.getPaymentID());
+            RentalOrder targetOrder = RentalOrderController.getRentalOrderByID(orderID);
+            List<RentalOrder> ordersToVerify = new ArrayList<>();
+            if (targetOrder != null) {
+                ordersToVerify.add(targetOrder);
+                String orderCode = targetOrder.getOrderCode();
+                if (orderCode != null && !orderCode.isEmpty()) {
+                    List<RentalOrder> relatedOrders = DAO.RentalOrderDAO.getRentalOrdersByOrderCode(orderCode);
+                    for (RentalOrder ro : relatedOrders) {
+                        if (ro.getRentalOrderID() != orderID) {
+                            ordersToVerify.add(ro);
+                        }
+                    }
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin?action=orders&error=notfound");
+                return;
             }
 
-            try {
-                RentalOrder ro = RentalOrderController.getRentalOrderByID(orderID);
-                if (ro != null) {
+            for (RentalOrder ro : ordersToVerify) {
+                int id = ro.getRentalOrderID();
+                RentalOrderService.updateOrderStatus(id, "PAYMENT_VERIFIED");
+                try {
+                    Payment payment = PaymentController.getPaymentStatus(id);
+                    if (payment != null) {
+                        PaymentController.completePayment(payment.getPaymentID());
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                try {
                     int managerUserID = ro.getManagerID();
                     if (managerUserID > 0) {
                         NotificationController.createNotification(managerUserID,
                                 "Đơn hàng đã được xác nhận",
-                                "Đơn hàng #" + orderID + " đã được xác nhận bởi quản trị viên.", orderID);
+                                "Đơn hàng " + ro.getOrderCode() + " đã được xác nhận bởi quản trị viên.", id);
                     }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
             }
             response.sendRedirect(request.getContextPath() + "/admin?action=orders&status=ALL&verified=true");
         } catch (Exception e) {
@@ -297,22 +314,36 @@ public class AdminPageController {
             int orderID = Integer.parseInt(request.getParameter("orderID"));
             String reason = request.getParameter("reason");
             if (reason == null) reason = "Lý do không được cung cấp";
-            RentalOrderController.setPaymentProofPath(orderID, null);
-            RentalOrderController.updateOrderStatusWithNotes(orderID, "CANCELLED", reason);
-            Payment payment = PaymentController.getPaymentStatus(orderID);
-            if (payment != null) {
-                PaymentController.failPayment(payment.getPaymentID());
+
+            RentalOrder targetOrder = RentalOrderController.getRentalOrderByID(orderID);
+            List<RentalOrder> ordersToReject = new ArrayList<>();
+            if (targetOrder != null) {
+                ordersToReject.add(targetOrder);
+                String orderCode = targetOrder.getOrderCode();
+                if (orderCode != null && !orderCode.isEmpty()) {
+                    List<RentalOrder> relatedOrders = DAO.RentalOrderDAO.getRentalOrdersByOrderCode(orderCode);
+                    for (RentalOrder ro : relatedOrders) {
+                        if (ro.getRentalOrderID() != orderID) {
+                            ordersToReject.add(ro);
+                        }
+                    }
+                }
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin?action=orders&error=notfound");
+                return;
             }
 
-            try {
-                RentalOrder ro = RentalOrderController.getRentalOrderByID(orderID);
-                if (ro != null) {
-                    NotificationController.createNotification(ro.getRenterUserID(),
-                            "Đơn hàng bị từ chối",
-                            "Đơn hàng #" + orderID + " của bạn đã bị từ chối. Lý do: " + reason, orderID);
+            for (RentalOrder ro : ordersToReject) {
+                int id = ro.getRentalOrderID();
+                RentalOrderController.setPaymentProofPath(id, null);
+                RentalOrderController.updateOrderStatusWithNotes(id, "CANCELLED", reason);
+                Payment payment = PaymentController.getPaymentStatus(id);
+                if (payment != null) {
+                    PaymentController.failPayment(payment.getPaymentID());
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
+                NotificationController.createNotification(ro.getRenterUserID(),
+                        "Đơn hàng bị từ chối",
+                        "Đơn hàng " + ro.getOrderCode() + " của bạn đã bị từ chối. Lý do: " + reason, id);
             }
             response.sendRedirect(request.getContextPath() + "/admin?action=orders&status=ALL&rejected=true");
         } catch (Exception e) {
@@ -458,27 +489,64 @@ public class AdminPageController {
             throws ServletException, IOException {
         try {
             int orderID = Integer.parseInt(request.getParameter("orderID"));
+            Model.RentalOrder order = RentalOrderService.getRentalOrderDetails(orderID);
+            if (order == null) {
+                response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true&notFound=true");
+                return;
+            }
 
-            Part refundProofPart = request.getPart("refundProof");
+            boolean isForSale = false;
+            Clothing clothingObj = ClothingDAO.getClothingByID(order.getClothingID());
+            if (clothingObj != null) {
+                Account owner = AccountDAO.findById(clothingObj.getRenterID());
+                if (owner != null && "Seller".equals(owner.getUserRole())) {
+                    isForSale = true;
+                }
+            }
+
+            Part refundProofPart = null;
+            if (!isForSale) {
+                refundProofPart = request.getPart("refundProof");
+                if (refundProofPart == null || refundProofPart.getSize() <= 0) {
+                    response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true&missingProof=true");
+                    return;
+                }
+            }
+
             Part managerProofPart = request.getPart("managerPaymentProof");
-            if (refundProofPart == null || refundProofPart.getSize() <= 0
-                    || managerProofPart == null || managerProofPart.getSize() <= 0) {
+            if (managerProofPart == null || managerProofPart.getSize() <= 0) {
                 response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true&missingProof=true");
                 return;
             }
 
-            String refundProofPath = buildProofKey(refundProofPart, "refund", orderID);
+            String refundProofPath = null;
+            byte[] refundProofData = null;
+            if (!isForSale) {
+                refundProofPath = buildProofKey(refundProofPart, "refund", orderID);
+                refundProofData = readPartBytes(refundProofPart);
+                if (refundProofPath == null || refundProofData == null) {
+                    response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true&uploadFailed=true");
+                    return;
+                }
+            }
+
             String managerProofPath = buildProofKey(managerProofPart, "manager", orderID);
-            byte[] refundProofData = readPartBytes(refundProofPart);
             byte[] managerProofData = readPartBytes(managerProofPart);
-            if (refundProofPath == null || managerProofPath == null || refundProofData == null || managerProofData == null) {
+            if (managerProofPath == null || managerProofData == null) {
                 response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true&uploadFailed=true");
                 return;
             }
 
-            boolean savedRefund = RentalOrderService.setRefundProofImagePath(orderID, refundProofPath, refundProofData);
+            if (!isForSale) {
+                boolean savedRefund = RentalOrderService.setRefundProofImagePath(orderID, refundProofPath, refundProofData);
+                if (!savedRefund) {
+                    response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true&saveProofFailed=true");
+                    return;
+                }
+            }
+
             boolean savedManager = RentalOrderService.setManagerPaymentProofImagePath(orderID, managerProofPath, managerProofData);
-            if (!savedRefund || !savedManager) {
+            if (!savedManager) {
                 response.sendRedirect(request.getContextPath() + "/admin?action=payments&error=true&saveProofFailed=true");
                 return;
             }
@@ -486,31 +554,45 @@ public class AdminPageController {
             boolean success = RentalOrderService.updateOrderStatus(orderID, "COMPLETED");
             if (success) {
                 RentalOrderService.markPaymentProcessed(orderID);
-                Model.RentalOrder order = RentalOrderService.getRentalOrderDetails(orderID);
                 if (order != null) {
-                    double depositRefundAmount = order.getAdjustedDepositAmount() > 0
-                            ? order.getAdjustedDepositAmount() : order.getDepositAmount();
                     double rentalAmount = order.getTotalPrice();
                     double systemFeeAmount = rentalAmount * SYSTEM_FEE_RATE;
                     double managerReceiveAmount = rentalAmount - systemFeeAmount;
 
-                    NotificationService.createNotification(
-                            order.getRenterUserID(),
-                            "Hoàn tiền cọc",
-                            "Tiền cọc " + String.format("%,.0f", depositRefundAmount) + " VND của đơn hàng #" + orderID + " đã được hoàn lại vào tài khoản ngân hàng của bạn. Cảm ơn bạn đã sử dụng WearConnect!"
-                    );
-
-                    Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
-                    if (clothing != null) {
+                    if (isForSale) {
+                        Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
+                        if (clothing != null) {
+                            NotificationService.createNotification(
+                                    clothing.getRenterID(),
+                                    "Thanh toán tiền bán sản phẩm đã hoàn tất",
+                                    "Đơn hàng " + order.getOrderCode() + " đã được admin xác thực và thanh toán thành công.\n"
+                                            + "Số tiền bán sản phẩm: " + String.format("%,.0f", rentalAmount) + " VND\n"
+                                            + "Phí hệ thống: " + String.format("%.0f", SYSTEM_FEE_RATE * 100) + "%\n"
+                                            + "Số tiền bạn nhận được: " + String.format("%,.0f", managerReceiveAmount) + " VND\n"
+                                            + "Cảm ơn bạn đã tin tưởng và sử dụng hệ thống. Khoản thanh toán đã được thực hiện."
+                            );
+                        }
+                    } else {
+                        double depositRefundAmount = order.getAdjustedDepositAmount() > 0
+                                ? order.getAdjustedDepositAmount() : order.getDepositAmount();
                         NotificationService.createNotification(
-                                clothing.getRenterID(),
-                                "Thanh toán tiền thuê đã hoàn tất",
-                                "Đơn hàng #" + orderID + " đã được admin xác thực và thanh toán thành công.\n"
-                                        + "Số tiền thuê: " + String.format("%,.0f", rentalAmount) + " VND\n"
-                                        + "Phí hệ thống: " + String.format("%.0f", SYSTEM_FEE_RATE * 100) + "%\n"
-                                        + "Số tiền bạn sẽ nhận được: " + String.format("%,.0f", managerReceiveAmount) + " VND\n"
-                                        + "Cảm ơn bạn đã tin tưởng và sử dụng hệ thống. Khoản thanh toán đã được thực hiện."
+                                order.getRenterUserID(),
+                                "Hoàn tiền cọc",
+                                "Tiền cọc " + String.format("%,.0f", depositRefundAmount) + " VND của đơn hàng #" + orderID + " đã được hoàn lại vào tài khoản ngân hàng của bạn. Cảm ơn bạn đã sử dụng WearConnect!"
                         );
+
+                        Clothing clothing = ClothingDAO.getClothingByID(order.getClothingID());
+                        if (clothing != null) {
+                            NotificationService.createNotification(
+                                    clothing.getRenterID(),
+                                    "Thanh toán tiền thuê đã hoàn tất",
+                                    "Đơn hàng #" + orderID + " đã được admin xác thực và thanh toán thành công.\n"
+                                            + "Số tiền thuê: " + String.format("%,.0f", rentalAmount) + " VND\n"
+                                            + "Phí hệ thống: " + String.format("%.0f", SYSTEM_FEE_RATE * 100) + "%\n"
+                                            + "Số tiền bạn sẽ nhận được: " + String.format("%,.0f", managerReceiveAmount) + " VND\n"
+                                            + "Cảm ơn bạn đã tin tưởng và sử dụng hệ thống. Khoản thanh toán đã được thực hiện."
+                            );
+                        }
                     }
                 }
                 response.sendRedirect(request.getContextPath() + "/admin?action=payments&success=true");

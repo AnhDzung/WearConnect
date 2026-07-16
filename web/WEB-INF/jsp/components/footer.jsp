@@ -76,6 +76,7 @@
         <li><a href="${pageContext.request.contextPath}/login">Đăng Nhập</a></li>
         <li><a href="${pageContext.request.contextPath}/register">Đăng Ký</a></li>
         <li><a href="${pageContext.request.contextPath}/clothing?action=myClothing">Quản Lý Sản Phẩm</a></li>
+        <li><a href="${pageContext.request.contextPath}/install">Cài đặt Ứng dụng</a></li>
       </ul>
     </div>
 

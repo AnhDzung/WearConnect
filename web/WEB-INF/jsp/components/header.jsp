@@ -571,6 +571,7 @@
                 <li><a class="header-nav-main-btn" href="${pageContext.request.contextPath}/home">Thuê Đồ</a></li>
                 <li><a class="header-nav-main-btn" href="${pageContext.request.contextPath}/buy">Mua Sản Phẩm</a></li>
                 <li><a class="header-nav-main-btn cosplay-highlight" href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes</a></li>
+                <li><a class="header-nav-main-btn" href="${pageContext.request.contextPath}/install" style="color: var(--primary-color); font-weight: bold;">Cài đặt App</a></li>
             <% } %>
             
             <!-- Menu cho User -->
@@ -578,6 +579,7 @@
                 <li><a class="header-nav-main-btn" href="${pageContext.request.contextPath}/home">Thuê Đồ</a></li>
                 <li><a class="header-nav-main-btn" href="${pageContext.request.contextPath}/buy">Mua Sản Phẩm</a></li>
                 <li><a class="header-nav-main-btn cosplay-highlight" href="${pageContext.request.contextPath}/cosplay">Cosplay & Fes</a></li>
+                <li><a class="header-nav-main-btn" href="${pageContext.request.contextPath}/install" style="color: var(--primary-color); font-weight: bold;">Cài đặt App</a></li>
                 <li><a href="${pageContext.request.contextPath}/rental?action=myOrders">Đơn Thuê Của Tôi</a></li>
                 <li><a href="${pageContext.request.contextPath}/user?action=favorites">Yêu Thích</a></li>
                 <%
@@ -1020,6 +1022,7 @@
             <a href="${pageContext.request.contextPath}/home" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Thuê Đồ</a>
             <a href="${pageContext.request.contextPath}/buy" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Mua Sản Phẩm</a>
             <a href="${pageContext.request.contextPath}/cosplay" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Cosplay & Fes</a>
+            <a href="${pageContext.request.contextPath}/install" style="padding:12px 10px; border-radius:8px; background:#eef2ff; text-decoration:none; color:var(--primary-color); font-weight:700;">Cài đặt App 📲</a>
             <a href="${pageContext.request.contextPath}/rental?action=myOrders" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Đơn Thuê Của Tôi</a>
             <a href="${pageContext.request.contextPath}/user?action=favorites" style="padding:12px 10px; border-radius:8px; background:#f7f7fb; text-decoration:none; color:#111;">Yêu Thích</a>
             <c:if test="${sessionScope.userRole == 'Manager' || sessionScope.userRole == 'Renter'}">

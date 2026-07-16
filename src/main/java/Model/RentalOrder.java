@@ -48,6 +48,7 @@ public class RentalOrder {
     private byte[] refundProofImageData;
     private byte[] managerPaymentProofImageData;
     private LocalDateTime paymentProcessedDate; // Ngày admin xử lý thanh toán
+    private String orderCode;
 
     public RentalOrder() {}
 
@@ -181,7 +182,14 @@ public class RentalOrder {
 
     // Format order code as WRC + 5-digit ID (e.g., WRC00001)
     public String getOrderCode() {
+        if (orderCode != null && !orderCode.isEmpty()) {
+            return orderCode;
+        }
         return String.format("WRC%05d", rentalOrderID);
+    }
+
+    public void setOrderCode(String orderCode) {
+        this.orderCode = orderCode;
     }
 
     // Format dates for JSP display
